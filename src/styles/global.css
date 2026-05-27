@@ -1,0 +1,150 @@
+@import "tailwindcss";
+
+:root {
+	color-scheme: dark;
+	font-family:
+		"Arial Narrow", "Aptos Narrow", "Roboto Condensed", "Helvetica Neue", Arial, sans-serif;
+	background: #090909;
+	color: #f7f7f4;
+}
+
+html {
+	scroll-behavior: smooth;
+}
+
+body {
+	min-width: 320px;
+	background:
+		linear-gradient(90deg, rgba(255, 255, 255, 0.045) 1px, transparent 1px),
+		linear-gradient(180deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+		#090909;
+	background-size: 64px 64px;
+}
+
+body::before {
+	content: "";
+	position: fixed;
+	inset: 0;
+	z-index: -1;
+	pointer-events: none;
+	background:
+		linear-gradient(128deg, transparent 0 28%, rgba(255, 255, 255, 0.08) 28% 28.35%, transparent 28.35% 100%),
+		linear-gradient(44deg, transparent 0 62%, rgba(255, 255, 255, 0.06) 62% 62.4%, transparent 62.4% 100%);
+}
+
+::selection {
+	background: #f7f7f4;
+	color: #090909;
+}
+
+.mono {
+	font-family: "Cascadia Code", "IBM Plex Mono", "Courier New", monospace;
+}
+
+.noise {
+	position: fixed;
+	inset: 0;
+	z-index: 50;
+	pointer-events: none;
+	opacity: 0.09;
+	mix-blend-mode: screen;
+	background-image: url("/texture_roughness.png");
+	background-size: 420px;
+}
+
+.marquee {
+	animation: drift 26s linear infinite;
+}
+
+.cut-panel {
+	clip-path: polygon(0 0, 100% 0, 92% 100%, 0 86%);
+}
+
+.reverse-cut {
+	clip-path: polygon(8% 0, 100% 12%, 100% 100%, 0 100%);
+}
+
+.vertical-label {
+	writing-mode: vertical-rl;
+	text-orientation: mixed;
+}
+
+.stroke-title {
+	-webkit-text-stroke: 1px rgba(255, 255, 255, 0.88);
+	color: transparent;
+}
+
+.contrast-cross {
+	mix-blend-mode: difference;
+	color: #fff;
+}
+
+.word-clip {
+	display: inline-block;
+	overflow: hidden;
+	perspective: 900px;
+	vertical-align: bottom;
+}
+
+.word-core {
+	display: inline-block;
+	transform-origin: 50% 100%;
+	backface-visibility: hidden;
+	will-change: transform, opacity;
+}
+
+@media (min-width: 768px) {
+	.project-card-even {
+		grid-template-columns: 0.56fr 0.44fr;
+	}
+
+	.project-card-odd {
+		grid-template-columns: 0.32fr 0.68fr;
+	}
+
+	.project-card-odd .project-identity {
+		order: 1;
+		border-right: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.project-card-odd .project-summary {
+		order: 2;
+		border-left: 0;
+	}
+
+	.project-card-even .project-summary {
+		order: 1;
+		border-right: 1px solid rgba(255, 255, 255, 0.1);
+	}
+
+	.project-card-even .project-identity {
+		order: 2;
+		border-right: 0;
+	}
+}
+
+@keyframes drift {
+	from {
+		transform: translateX(0);
+	}
+
+	to {
+		transform: translateX(-50%);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	* {
+		animation-duration: 0.01ms !important;
+		animation-iteration-count: 1 !important;
+		scroll-behavior: auto !important;
+	}
+}
+
+@media (max-width: 767px) {
+	.cut-panel,
+	.reverse-cut {
+		clip-path: none;
+	}
+
+}
