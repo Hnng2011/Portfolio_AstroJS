@@ -1,48 +1,95 @@
-# Astro Starter Kit: Basics
+# Phi Hung Portfolio
 
-```sh
-npm create astro@latest -- --template basics
-```
+Portfolio cá nhân của Phi Hung, Frontend Engineer tập trung vào React, Next.js, TypeScript, Tailwind CSS, Web3 product UI và các giao diện sản phẩm responsive.
 
-[![Open in StackBlitz](https://developer.stackblitz.com/img/open_in_stackblitz.svg)](https://stackblitz.com/github/withastro/astro/tree/latest/examples/basics)
-[![Open with CodeSandbox](https://assets.codesandbox.io/github/button-edit-lime.svg)](https://codesandbox.io/p/sandbox/github/withastro/astro/tree/latest/examples/basics)
-[![Open in GitHub Codespaces](https://github.com/codespaces/badge.svg)](https://codespaces.new/withastro/astro?devcontainer_path=.devcontainer/basics/devcontainer.json)
+Website được xây dựng bằng Astro, dùng Tailwind CSS cho styling và GSAP ScrollTrigger cho hiệu ứng chữ khi cuộn trang.
 
-> 🧑‍🚀 **Seasoned astronaut?** Delete this file. Have fun!
+## Tech Stack
 
-![just-the-basics](https://github.com/withastro/astro/assets/2244813/a0a5533c-a856-4198-8470-2d67b1d7c554)
+- Astro 5
+- Tailwind CSS 4
+- GSAP
+- TypeScript
+- Cloudflare Pages
 
-## 🚀 Project Structure
+## Tính Năng
 
-Inside of your Astro project, you'll see the following folders and files:
+- Trang portfolio một trang với hero, selected work, skill collection, work experience và contact.
+- Nội dung dự án và kinh nghiệm được quản lý trực tiếp trong `src/pages/index.astro`.
+- Hiệu ứng word reveal sử dụng GSAP và tôn trọng thiết lập `prefers-reduced-motion`.
+- Giao diện responsive cho desktop và mobile.
+- Cấu hình build sẵn cho Cloudflare Pages qua `wrangler.toml`.
+
+## Cấu Trúc Dự Án
 
 ```text
 /
-├── public/
-│   └── favicon.svg
+├── public/                 Static assets và texture
 ├── src/
-│   ├── layouts/
-│   │   └── Layout.astro
-│   └── pages/
-│       └── index.astro
-└── package.json
+│   ├── layouts/            Layout HTML chung
+│   ├── pages/              Astro pages
+│   ├── styles/             Global CSS và Tailwind import
+│   └── assets/             Assets dùng trong source
+├── astro.config.mjs        Cấu hình Astro và Tailwind Vite plugin
+├── wrangler.toml           Cấu hình Cloudflare Pages
+└── package.json            Scripts và dependencies
 ```
 
-To learn more about the folder structure of an Astro project, refer to [our guide on project structure](https://docs.astro.build/en/basics/project-structure/).
+## Yêu Cầu
 
-## 🧞 Commands
+- Node.js `>=20`
+- npm
 
-All commands are run from the root of the project, from a terminal:
+## Chạy Local
 
-| Command                   | Action                                           |
-| :------------------------ | :----------------------------------------------- |
-| `npm install`             | Installs dependencies                            |
-| `npm run dev`             | Starts local dev server at `localhost:4321`      |
-| `npm run build`           | Build your production site to `./dist/`          |
-| `npm run preview`         | Preview your build locally, before deploying     |
-| `npm run astro ...`       | Run CLI commands like `astro add`, `astro check` |
-| `npm run astro -- --help` | Get help using the Astro CLI                     |
+```sh
+npm install
+npm run dev
+```
 
-## 👀 Want to learn more?
+Dev server mặc định chạy tại:
 
-Feel free to check [our documentation](https://docs.astro.build) or jump into our [Discord server](https://astro.build/chat).
+```text
+http://localhost:4321
+```
+
+## Scripts
+
+| Command | Mô tả |
+| :-- | :-- |
+| `npm run dev` | Chạy dev server |
+| `npm run build` | Build production vào thư mục `dist/` |
+| `npm run preview` | Preview bản build production |
+| `npm run astro` | Chạy Astro CLI |
+
+## Build
+
+```sh
+npm run build
+```
+
+Kết quả build nằm trong:
+
+```text
+dist/
+```
+
+## Deploy
+
+Repo đã có `wrangler.toml` với output:
+
+```toml
+pages_build_output_dir = "dist"
+```
+
+Khi deploy lên Cloudflare Pages, dùng lệnh build:
+
+```sh
+npm run build
+```
+
+và output directory:
+
+```text
+dist
+```
