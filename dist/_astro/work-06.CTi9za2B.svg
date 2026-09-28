@@ -1,0 +1,26 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" fill="none">
+  <rect width="800" height="600" fill="#f6f5f1"/>
+  <rect x="120" y="90" width="420" height="420" fill="#37d6a8" opacity="0.12" transform="rotate(45 330 300)"/>
+  <g id="nested-boxes">
+    <rect x="160" y="130" width="340" height="340" stroke="#14151a" stroke-width="2"/>
+    <rect x="205" y="175" width="250" height="250" stroke="#37d6a8" stroke-width="2"/>
+    <rect x="250" y="220" width="160" height="160" fill="#14151a"/>
+    <rect x="292" y="262" width="76" height="76" fill="#37d6a8"/>
+    <rect x="160" y="130" width="70" height="70" fill="#37d6a8" opacity="0.85"/>
+  </g>
+  <line x1="600" y1="60" x2="600" y2="540" stroke="#14151a" stroke-width="1" opacity="0.15"/>
+  <g id="recycle-loop">
+    <path d="M620.8 181.8A120 120 0 0 1 712.8 341" stroke="#37d6a8" stroke-width="12"/>
+    <polygon points="706.6,357.9 722.2,344.4 703.4,337.6" fill="#14151a"/>
+    <path d="M691.9 377.1A120 120 0 0 1 508.1 377.1" stroke="#37d6a8" stroke-width="12"/>
+    <polygon points="496.5,363.3 515.8,370.7 500.4,383.5" fill="#14151a"/>
+    <path d="M487.2 341A120 120 0 0 1 579.2 181.8" stroke="#37d6a8" stroke-width="12"/>
+    <polygon points="596.9,178.7 577.5,171.9 580.9,191.7" fill="#14151a"/>
+    <circle cx="600" cy="300" r="52" stroke="#14151a" stroke-width="1.5" opacity="0.5"/>
+    <circle cx="600" cy="300" r="14" fill="#14151a"/>
+  </g>
+  <g stroke="#14151a" stroke-width="1" opacity="0.2">
+    <line x1="80" y1="540" x2="740" y2="540"/>
+    <line x1="80" y1="562" x2="300" y2="562"/>
+  </g>
+</svg>
