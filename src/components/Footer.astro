@@ -1,0 +1,144 @@
+---
+import { contactLinks, profile } from '../data/portfolio';
+
+const [roleFirst, roleSecond] = profile.role.split(' ');
+
+const statementLines = [
+	[
+		{ text: roleFirst, accent: false },
+		{ text: roleSecond, accent: false },
+	],
+	[
+		{ text: 'building', accent: false },
+		{ text: 'responsive,', accent: true },
+	],
+	[
+		{ text: 'reusable,', accent: true },
+		{ text: 'product-ready', accent: false },
+	],
+	[{ text: 'interfaces.', accent: false }],
+];
+
+const facts = [
+	{ label: 'Location', value: profile.location },
+	{ label: 'Language', value: profile.language },
+	{ label: 'Education', value: profile.education },
+];
+---
+
+<footer id="contact" class="tone-dark">
+	<div class="swiss-container relative py-24">
+		<div
+			class="glass-dark glass-edge rounded-glass pointer-events-none absolute -top-8 right-8 hidden rotate-3 px-8 py-6 lg:block"
+			aria-hidden="true"
+		>
+			<span class="font-mono text-6xl font-black text-frost">PH</span>
+		</div>
+
+		<div class="grid grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-6">
+			<div class="lg:col-span-8">
+				<h2 class="text-4xl leading-[0.95] font-black uppercase sm:text-5xl lg:text-7xl">
+					{
+						statementLines.map((line) => (
+							<span class="block">
+								{line.map((word) => (
+									<span class="word-clip" data-footer-reveal>
+										<span class={`word-core ${word.accent ? 'text-accent' : ''}`}>{word.text}</span>
+									</span>
+								))}
+							</span>
+						))
+					}
+				</h2>
+			</div>
+
+			<div class="lg:col-span-4 lg:col-start-9">
+				<dl class="flex flex-col gap-6">
+					{
+						facts.map((fact) => (
+							<div>
+								<dt class="t-label text-frost-dim">{fact.label}</dt>
+								<dd class="mt-2 text-sm text-frost">{fact.value}</dd>
+							</div>
+						))
+					}
+				</dl>
+
+				<div class="mt-10">
+					{
+						contactLinks.map((link) => (
+							<a
+								href={link.url}
+								data-contact-row
+								class="group flex items-center justify-between border-t border-white/15 py-4 transition-[padding,color] duration-300 ease-spring hover:pl-2 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
+								{...(link.url.startsWith('mailto:') ? {} : { target: '_blank', rel: 'noreferrer' })}
+							>
+								<span class="text-xl font-black uppercase">{link.label}</span>
+								<span class="transition-transform duration-300 ease-spring group-hover:translate-x-1 group-hover:-translate-y-1">
+									↗
+								</span>
+							</a>
+						))
+					}
+				</div>
+			</div>
+		</div>
+
+		<div
+			class="mt-16 flex flex-col gap-4 border-t border-white/10 py-6 md:flex-row md:items-center md:justify-between"
+		>
+			<span class="t-label text-frost-dim">© 2026 Phi Hung</span>
+			<span class="t-label text-frost-dim">Built with Astro + GSAP</span>
+			<a
+				href="#top"
+				class="t-label text-frost-dim transition-colors duration-300 hover:text-frost focus-visible:ring-2 focus-visible:ring-accent"
+			>
+				Back to top ↑
+			</a>
+		</div>
+	</div>
+</footer>
+
+<script>
+	import gsap from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const footer = document.querySelector('#contact');
+
+	if (footer) {
+		const words = gsap.utils.toArray('[data-footer-reveal] .word-core', footer);
+		const rows = gsap.utils.toArray('[data-contact-row]', footer);
+
+		if (reduceMotion) {
+			gsap.set([...words, ...rows], { clearProps: 'all', opacity: 1 });
+		} else {
+			gsap.fromTo(
+				words,
+				{ yPercent: 120 },
+				{
+					yPercent: 0,
+					duration: 1.1,
+					ease: 'expo.out',
+					stagger: 0.04,
+					scrollTrigger: { trigger: footer, start: 'top 85%', once: true },
+				}
+			);
+
+			gsap.fromTo(
+				rows,
+				{ opacity: 0, y: 24 },
+				{
+					opacity: 1,
+					y: 0,
+					duration: 0.9,
+					ease: 'power4.out',
+					stagger: 0.08,
+					scrollTrigger: { trigger: footer, start: 'top 75%', once: true },
+				}
+			);
+		}
+	}
+</script>

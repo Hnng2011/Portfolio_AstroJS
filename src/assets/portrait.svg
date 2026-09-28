@@ -1,0 +1,47 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 1100" fill="none">
+  <g id="depth-layers">
+    <circle cx="470" cy="470" r="330" fill="#eef1f8" opacity="0.05"/>
+    <circle cx="430" cy="700" r="280" fill="#eef1f8" opacity="0.06"/>
+    <rect x="330" y="695" width="320" height="90" fill="#eef1f8" opacity="0.1" transform="translate(24 20)"/>
+  </g>
+  <g id="grid-hairlines" stroke="#99a2b8" stroke-width="1.5" opacity="0.32">
+    <line x1="170" y1="60" x2="170" y2="1040"/>
+    <line x1="730" y1="160" x2="730" y2="980"/>
+    <line x1="60" y1="250" x2="840" y2="250"/>
+    <line x1="120" y1="850" x2="880" y2="850"/>
+  </g>
+  <g id="halo">
+    <circle cx="470" cy="460" r="330" stroke="#eef1f8" stroke-width="2.5" opacity="0.9"/>
+    <circle cx="470" cy="460" r="352" stroke="#99a2b8" stroke-width="1" opacity="0.35"/>
+    <path d="M159.9 347.1A330 330 0 0 1 527.3 135" stroke="#4f7cff" stroke-width="3.5" stroke-linecap="square" opacity="0.8"/>
+  </g>
+  <g id="chair" stroke="#99a2b8" stroke-width="2" opacity="0.55">
+    <path d="M285 480V840h315"/>
+    <line x1="300" y1="840" x2="278" y2="1012"/>
+    <line x1="580" y1="840" x2="592" y2="1012"/>
+  </g>
+  <g id="figure">
+    <rect x="393" y="398" width="44" height="62" fill="#eef1f8"/>
+    <path d="M320 780V540q0-95 95-95t95 95v240Z" fill="#14151a" stroke="#99a2b8" stroke-width="1.5" stroke-opacity="0.35"/>
+    <rect x="330" y="695" width="320" height="90" fill="#eef1f8"/>
+    <rect x="565" y="785" width="85" height="205" fill="#14151a" stroke="#99a2b8" stroke-width="1.5" stroke-opacity="0.35"/>
+    <rect x="565" y="975" width="158" height="34" fill="#14151a" stroke="#99a2b8" stroke-width="1.5" stroke-opacity="0.35"/>
+    <g id="head">
+      <circle cx="415" cy="330" r="88" fill="#eef1f8"/>
+      <path d="M415 242a88 88 0 0 1 0 176Z" fill="#14151a"/>
+    </g>
+    <g id="arms" stroke="#eef1f8" stroke-width="4" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M470 520 555 650l70 40"/>
+      <path d="M370 520 350 660l45-225"/>
+    </g>
+    <circle cx="398" cy="432" r="11" fill="#eef1f8"/>
+  </g>
+  <g id="ground" stroke="#99a2b8" stroke-width="1.5" opacity="0.5">
+    <line x1="120" y1="1014" x2="800" y2="1014"/>
+  </g>
+  <g id="accents">
+    <circle cx="655" cy="268" r="28" fill="#e8380d" opacity="0.85"/>
+    <rect x="152" y="832" width="36" height="36" fill="#4f7cff" opacity="0.8"/>
+    <rect x="415" y="242" width="88" height="6" fill="#e8380d" opacity="0.8"/>
+  </g>
+</svg>

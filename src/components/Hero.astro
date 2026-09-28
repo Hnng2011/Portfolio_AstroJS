@@ -1,0 +1,237 @@
+---
+import { profile } from '../data/portfolio';
+import portrait from '../assets/portrait.svg';
+
+const stats = [
+	{ value: '07', label: 'Projects shipped' },
+	{ value: '05', label: 'Teams' },
+	{ value: '03', label: 'Years' },
+];
+---
+
+<section id="top" data-hero class="tone-dark min-h-screen">
+	<div class="swiss-container flex min-h-screen items-center pb-24 pt-28 lg:pt-36">
+		<div class="grid w-full grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-6">
+			<div class="flex flex-col justify-center gap-8 lg:col-span-7 lg:gap-10">
+				<div data-fade class="flex items-center gap-4">
+					<span class="t-label whitespace-nowrap text-frost-dim">01 — Frontend Engineer / Vietnam</span>
+					<span class="h-px flex-1 bg-frost/15" aria-hidden="true"></span>
+					<span class="h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden="true"></span>
+				</div>
+
+				<h1 data-title data-word-reveal class="t-display t-expanded text-frost">PHI<br /><span class="stroke-title">HUNG</span></h1>
+
+				<p data-fade class="max-w-xl text-lg leading-relaxed text-frost-dim">{profile.tagline}</p>
+
+				<div data-fade class="flex flex-wrap items-center gap-4">
+					<a
+						href="#work"
+						class="rounded-full bg-accent px-7 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-white transition duration-300 ease-spring hover:scale-105 hover:bg-accent-soft hover:shadow-lift focus-visible:ring-2 focus-visible:ring-accent"
+					>
+						View work
+					</a>
+					<a
+						href="#contact"
+						class="glass-dark rounded-full px-7 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-frost transition duration-300 ease-spring hover:-translate-y-0.5 hover:text-white focus-visible:ring-2 focus-visible:ring-accent"
+					>
+						Get in touch
+					</a>
+				</div>
+
+				<div data-fade class="grid max-w-xl grid-cols-3 gap-3 sm:gap-4">
+					{
+						stats.map((stat) => (
+							<div class="glass-dark rounded-panel px-4 py-4 sm:px-5">
+								<div class="text-3xl font-black leading-none text-frost sm:text-4xl">{stat.value}</div>
+								<div class="t-label mt-2 text-frost-dim">{stat.label}</div>
+							</div>
+						))
+					}
+				</div>
+			</div>
+
+			<div data-fade class="flex items-center lg:col-span-5">
+				<div data-panel class="glass-dark glass-edge relative min-h-[70vh] w-full overflow-hidden rounded-glass">
+					<img
+						src={portrait.src}
+						alt=""
+						aria-hidden="true"
+						class="absolute inset-0 h-full w-full scale-110 object-cover grayscale opacity-15 blur-sm"
+					/>
+					<img
+						src={portrait.src}
+						alt="Portrait of Phi Hung, thoughtful young man sitting, hand-drawn cartoon style"
+						class="absolute inset-0 m-auto h-[82%] w-auto max-w-none object-contain grayscale contrast-125"
+					/>
+
+					<span class="pointer-events-none absolute inset-x-0 top-[36%] h-px bg-frost/10" aria-hidden="true"></span>
+					<span class="pointer-events-none absolute inset-y-0 left-[58%] w-px bg-frost/10" aria-hidden="true"></span>
+
+					<div class="absolute left-5 top-5 flex gap-1.5" aria-hidden="true">
+						<span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
+						<span class="h-1.5 w-1.5 rounded-full bg-frost/25"></span>
+						<span class="h-1.5 w-1.5 rounded-full bg-frost/25"></span>
+					</div>
+
+					<span class="vertical-label t-label absolute right-4 top-1/2 -translate-y-1/2 text-frost-dim">
+						React + Web3 Product UI
+					</span>
+
+					<div data-spec class="spec-glow pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 rounded-full" aria-hidden="true"></div>
+
+					<div data-fade class="glass-dark absolute bottom-5 left-5 inline-flex items-center gap-2.5 rounded-full px-4 py-2">
+						<span class="badge-dot h-2 w-2 rounded-full bg-mint" aria-hidden="true"></span>
+						<span class="t-label text-frost">Open to frontend roles</span>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<div class="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex">
+		<span class="t-label text-frost-dim">Scroll</span>
+		<span class="scroll-line block h-12 w-px bg-frost/15" aria-hidden="true"></span>
+	</div>
+</section>
+
+<style>
+	.spec-glow {
+		background: radial-gradient(circle, rgb(255 255 255 / 0.2) 0%, rgb(255 255 255 / 0.06) 40%, transparent 65%);
+		opacity: 0;
+	}
+
+	.badge-dot {
+		animation: badge-pulse 2s var(--ease-glass) infinite;
+	}
+
+	@keyframes badge-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+
+		50% {
+			opacity: 0.5;
+			transform: scale(0.8);
+		}
+	}
+
+	.scroll-line {
+		position: relative;
+		overflow: hidden;
+	}
+
+	.scroll-line::after {
+		content: "";
+		position: absolute;
+		inset-inline: 0;
+		top: 0;
+		height: 45%;
+		background: var(--color-accent);
+		animation: scroll-drift 1.9s var(--ease-glass) infinite alternate;
+	}
+
+	@keyframes scroll-drift {
+		from {
+			transform: translateY(-110%);
+		}
+
+		to {
+			transform: translateY(220%);
+		}
+	}
+</style>
+
+<script>
+	import gsap from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const section = document.querySelector('[data-hero]');
+
+	if (section) {
+		const title = section.querySelector('[data-title]');
+		const panel = section.querySelector('[data-panel]');
+		const spec = section.querySelector('[data-spec]');
+		const fades = gsap.utils.toArray('[data-fade]', section);
+
+		const splitWords = (el: Element): HTMLElement[] => {
+			const cores: HTMLElement[] = [];
+			Array.from(el.childNodes).forEach((node) => {
+				if (node.nodeType === Node.TEXT_NODE) {
+					const words = node.textContent.split(/\s+/).filter(Boolean);
+					const frag = document.createDocumentFragment();
+					words.forEach((word, i) => {
+						const clip = document.createElement('span');
+						clip.className = 'word-clip';
+						const core = document.createElement('span');
+						core.className = 'word-core';
+						core.textContent = word;
+						clip.appendChild(core);
+						frag.appendChild(clip);
+						if (i < words.length - 1) frag.appendChild(document.createTextNode(' '));
+						cores.push(core);
+					});
+					node.replaceWith(frag);
+				} else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'BR') {
+					cores.push(...splitWords(node as Element));
+				}
+			});
+			return cores;
+		};
+
+		const cores = title ? splitWords(title) : [];
+		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+		if (reduceMotion) {
+			gsap.set([...cores, ...fades, title, panel, spec].filter(Boolean), { clearProps: 'all', opacity: 1 });
+		} else {
+			gsap.set(spec, { xPercent: -50, yPercent: -50 });
+
+			gsap
+				.timeline({ defaults: { ease: 'power4.out' } })
+				.from(cores, { yPercent: 130, rotate: -6, opacity: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08 }, 0.15)
+				.from(fades, { y: 40, opacity: 0, duration: 0.85, stagger: 0.09 }, 0.25);
+
+			gsap.to(panel, {
+				y: -60,
+				ease: 'none',
+				scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
+			});
+
+			gsap.to(title, {
+				y: 80,
+				opacity: 0.6,
+				ease: 'none',
+				scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
+			});
+
+			panel.addEventListener('mousemove', (e: MouseEvent) => {
+				const rect = panel.getBoundingClientRect();
+				const px = (e.clientX - rect.left) / rect.width - 0.5;
+				const py = (e.clientY - rect.top) / rect.height - 0.5;
+				gsap.to(panel, {
+					rotateY: px * 10,
+					rotateX: -py * 10,
+					duration: 0.6,
+					ease: 'power3.out',
+					transformPerspective: 800,
+				});
+				gsap.to(spec, {
+					x: px * rect.width * 0.7,
+					y: py * rect.height * 0.7,
+					opacity: 1,
+					duration: 0.6,
+					ease: 'power3.out',
+				});
+			});
+
+			panel.addEventListener('mouseleave', () => {
+				gsap.to(panel, { rotateX: 0, rotateY: 0, duration: 1.4, ease: 'elastic.out(1, 0.5)' });
+				gsap.to(spec, { x: 0, y: 0, opacity: 0, duration: 0.8, ease: 'power3.out' });
+			});
+		}
+	}
+</script>

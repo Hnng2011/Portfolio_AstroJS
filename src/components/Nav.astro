@@ -1,0 +1,185 @@
+---
+import { navLinks } from '../data/portfolio';
+---
+
+<header data-nav class="fixed left-1/2 top-4 z-80 w-[calc(100%-1.5rem)] max-w-3xl -translate-x-1/2">
+	<div
+		data-nav-pill
+		class="nav-pill glass-dark glass-edge flex items-center justify-between gap-3 rounded-full px-4 py-2.5 sm:px-5"
+	>
+		<a
+			href="#top"
+			class="flex items-center gap-2 rounded-full focus-visible:ring-2 focus-visible:ring-accent"
+			aria-label="Phi Hung — back to top"
+		>
+			<span class="text-sm font-black uppercase tracking-[0.14em] text-frost">Phi Hung</span>
+			<span class="nav-dot" aria-hidden="true"></span>
+		</a>
+
+		<nav class="hidden items-center gap-6 lg:flex xl:gap-8" aria-label="Primary">
+			{
+				navLinks.map((link) => (
+					<a
+						href={link.href}
+						class="group relative rounded-panel px-1 py-1.5 t-label text-frost-dim transition-colors duration-300 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
+					>
+						{link.label}
+						<span
+							class="absolute inset-x-1 -bottom-0.5 h-px origin-left scale-x-0 bg-accent transition-transform duration-300 ease-spring group-hover:scale-x-100"
+							aria-hidden="true"
+						/>
+					</a>
+				))
+			}
+		</nav>
+
+		<div class="flex items-center gap-2">
+			<a
+				href="#contact"
+				class="rounded-full bg-accent px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white transition duration-300 ease-spring hover:scale-105 hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent"
+			>
+				Hire me
+			</a>
+			<button
+				type="button"
+				data-menu-toggle
+				class="glass-dark flex h-9 w-9 items-center justify-center rounded-full text-frost transition-colors duration-300 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
+				aria-label="Open menu"
+				aria-expanded="false"
+				aria-controls="mobile-menu"
+			>
+				<svg class="icon-open h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+					<path d="M1.5 4.5h13M1.5 11.5h13" />
+				</svg>
+				<svg class="icon-close h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
+					<path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
+				</svg>
+			</button>
+		</div>
+	</div>
+</header>
+
+<div id="mobile-menu" data-menu class="menu-overlay fixed inset-0 z-70 lg:hidden" aria-hidden="true">
+	<div class="glass-dark absolute inset-0 backdrop-blur-2xl"></div>
+	<nav class="relative flex h-full flex-col items-center justify-center gap-7 px-6" aria-label="Mobile">
+		{
+			navLinks.map((link, i) => (
+				<a href={link.href} class="menu-link flex items-baseline gap-3" style={`transition-delay:${0.08 + i * 0.06}s`}>
+					<span class="t-label text-accent">0{i + 1}</span>
+					<span class="text-4xl font-black uppercase text-frost transition-colors duration-300 hover:text-accent sm:text-5xl">
+						{link.label}
+					</span>
+				</a>
+			))
+		}
+		<a
+			href="#contact"
+			class="menu-link mt-4 rounded-full bg-accent px-7 py-3 text-sm font-bold uppercase tracking-[0.12em] text-white"
+			style="transition-delay:0.42s">Hire me</a
+		>
+	</nav>
+</div>
+
+<style>
+	.nav-pill {
+		transition:
+			padding 0.45s var(--ease-glass),
+			background-color 0.45s var(--ease-glass);
+	}
+
+	.nav-pill.is-scrolled {
+		padding-block: 0.28rem;
+		background-color: color-mix(in srgb, var(--color-night) 72%, transparent);
+	}
+
+	.nav-dot {
+		width: 0.45rem;
+		height: 0.45rem;
+		border-radius: 9999px;
+		background: var(--color-accent);
+		animation: nav-pulse 2.4s var(--ease-glass) infinite;
+	}
+
+	@keyframes nav-pulse {
+		0%,
+		100% {
+			opacity: 1;
+			transform: scale(1);
+		}
+
+		50% {
+			opacity: 0.4;
+			transform: scale(0.75);
+		}
+	}
+
+	.icon-close {
+		display: none;
+	}
+
+	header.is-open .icon-open {
+		display: none;
+	}
+
+	header.is-open .icon-close {
+		display: block;
+	}
+
+	.menu-overlay {
+		opacity: 0;
+		visibility: hidden;
+		transition:
+			opacity 0.4s var(--ease-glass),
+			visibility 0s linear 0.4s;
+	}
+
+	.menu-overlay.is-open {
+		opacity: 1;
+		visibility: visible;
+		transition:
+			opacity 0.4s var(--ease-glass),
+			visibility 0s;
+	}
+
+	.menu-link {
+		opacity: 0;
+		transform: translateY(1.25rem);
+		transition:
+			opacity 0.5s var(--ease-glass),
+			transform 0.5s var(--ease-spring);
+	}
+
+	.menu-overlay.is-open .menu-link {
+		opacity: 1;
+		transform: translateY(0);
+	}
+</style>
+
+<script>
+	const header = document.querySelector('[data-nav]');
+	const pill = document.querySelector('[data-nav-pill]');
+	const toggle = document.querySelector('[data-menu-toggle]');
+	const menu = document.querySelector('[data-menu]');
+
+	const applyScroll = () => {
+		pill.classList.toggle('is-scrolled', window.scrollY > 40);
+	};
+
+	window.addEventListener('scroll', applyScroll, { passive: true });
+	applyScroll();
+
+	const setMenu = (open: boolean) => {
+		menu.classList.toggle('is-open', open);
+		header.classList.toggle('is-open', open);
+		toggle.setAttribute('aria-expanded', String(open));
+		toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+		menu.setAttribute('aria-hidden', String(!open));
+		document.body.style.overflow = open ? 'hidden' : '';
+	};
+
+	toggle.addEventListener('click', () => setMenu(!menu.classList.contains('is-open')));
+	menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') setMenu(false);
+	});
+</script>

@@ -1,0 +1,19 @@
+---
+import { skills } from '../data/portfolio';
+---
+
+<div class="overflow-x-clip">
+	<div class="-rotate-1 scale-105 bg-accent py-4 text-white">
+		<div class="marquee-track flex w-max">
+			<span class="whitespace-nowrap pr-12 text-4xl font-black uppercase sm:text-6xl">
+				{skills.marquee}
+			</span>
+			<span
+				class="whitespace-nowrap pr-12 text-4xl font-black uppercase sm:text-6xl"
+				aria-hidden="true"
+			>
+				{skills.marquee}
+			</span>
+		</div>
+	</div>
+</div>

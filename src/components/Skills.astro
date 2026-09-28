@@ -1,0 +1,136 @@
+---
+import { skills } from '../data/portfolio';
+
+const secondaryStyles = [
+	{ placement: 'lg:col-start-8 lg:col-span-4 lg:row-start-1 lg:mt-6', rot: -2, tone: 'text-accent' },
+	{ placement: 'lg:col-start-8 lg:col-span-5 lg:row-start-2 lg:mt-2', rot: 2, tone: 'stroke-title' },
+	{ placement: 'lg:col-start-1 lg:col-span-5 lg:row-start-3', rot: -1.5, tone: '' },
+	{ placement: 'lg:col-start-6 lg:col-span-4 lg:row-start-3 lg:mt-10', rot: 2.5, tone: 'stroke-title' },
+	{ placement: 'lg:col-start-9 lg:col-span-4 lg:row-start-4', rot: -2, tone: '' },
+];
+
+const chipColumns = [
+	'lg:col-start-1',
+	'lg:col-start-3',
+	'lg:col-start-5',
+	'lg:col-start-7',
+	'lg:col-start-9',
+	'lg:col-start-11',
+];
+---
+
+<section id="stack" class="tone-light py-24 lg:py-32">
+	<div class="swiss-container">
+		<header class="grid grid-cols-1 gap-8 lg:grid-cols-12 lg:gap-6">
+			<div class="lg:col-span-7">
+				<div class="flex items-center gap-3">
+					<span class="font-mono text-sm text-accent">04 —</span>
+					<span class="t-label text-ink-faint">Skills collection</span>
+				</div>
+				<h2 class="t-headline mt-6 text-ink">Working<br />stack.</h2>
+			</div>
+			<p class="font-mono text-sm leading-relaxed text-ink-soft lg:col-span-4 lg:col-start-9 lg:pt-12">
+				Tools change. Typographic discipline and reusable thinking stay.
+			</p>
+		</header>
+
+		<div
+			class="mt-16 grid grid-cols-2 items-start gap-4 lg:mt-24 lg:grid-cols-12 lg:gap-6 lg:min-h-[560px]"
+		>
+			<div class="col-span-2 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1">
+				{
+					skills.primary.map((word) => (
+						<span class="t-display block text-ink">
+							<span class="word-clip">
+								<span class="word-core">{word}</span>
+							</span>
+						</span>
+					))
+				}
+			</div>
+
+			{
+				skills.secondary.map((item, i) => (
+					<div
+						class={`col-span-2 self-start text-3xl font-black uppercase md:text-4xl xl:text-5xl ${secondaryStyles[i].placement} ${secondaryStyles[i].tone}`}
+						style={`rotate: ${secondaryStyles[i].rot}deg`}
+						data-scatter
+					>
+						{item}
+					</div>
+				))
+			}
+
+			{
+				skills.tertiary.map((item, i) => (
+					<div
+						class={`glass-light glass-edge rounded-panel col-span-1 justify-self-start px-4 py-3 font-mono text-sm uppercase text-ink transition-[translate,background-color,color,border-color] duration-500 ease-spring hover:-translate-y-1 hover:bg-none hover:bg-ink hover:text-paper lg:col-span-2 ${chipColumns[i]} lg:row-start-5`}
+						data-scatter
+					>
+						{item}
+					</div>
+				))
+			}
+
+			<div
+				class="stroke-title col-span-2 mt-10 text-4xl font-black uppercase md:text-6xl xl:text-7xl lg:col-span-12 lg:col-start-1 lg:row-start-6 lg:mt-0"
+				style="-webkit-text-stroke-width: 2px"
+				data-scatter
+			>
+				{skills.statement}
+			</div>
+		</div>
+	</div>
+</section>
+
+<script>
+	import gsap from 'gsap';
+	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+	gsap.registerPlugin(ScrollTrigger);
+
+	const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const section = document.querySelector('#stack');
+
+	if (section) {
+		const scatter = gsap.utils.toArray('[data-scatter]', section);
+		const words = gsap.utils.toArray('.word-core', section);
+
+		if (reduceMotion) {
+			gsap.set(scatter, { opacity: 1, clearProps: 'transform' });
+			gsap.set(words, { opacity: 1, clearProps: 'transform' });
+		} else {
+			gsap.fromTo(
+				words,
+				{ yPercent: 120 },
+				{
+					yPercent: 0,
+					duration: 1.2,
+					ease: 'expo.out',
+					stagger: 0.09,
+					scrollTrigger: { trigger: section, start: 'top 85%', once: true },
+				}
+			);
+
+			gsap.fromTo(
+				scatter,
+				{
+					opacity: 0,
+					x: () => gsap.utils.random(-30, 30),
+					y: () => gsap.utils.random(-30, 30),
+					rotate: () => gsap.utils.random(-12, 12),
+				},
+				{
+					opacity: 1,
+					x: 0,
+					y: 0,
+					rotate: 0,
+					duration: 1.1,
+					ease: 'back.out(1.6)',
+					stagger: 0.05,
+					scrollTrigger: { trigger: section, start: 'top 85%', once: true },
+				}
+			);
+		}
+	}
+</script>
