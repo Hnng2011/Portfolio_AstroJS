@@ -2,9 +2,8 @@ import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { SplitText } from 'gsap/SplitText';
-import { Draggable } from 'gsap/Draggable';
 
-gsap.registerPlugin(ScrollTrigger, SplitText, Draggable);
+gsap.registerPlugin(ScrollTrigger, SplitText);
 
 export const reduced =
 	typeof matchMedia !== 'undefined' && matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -64,6 +63,26 @@ export function scramble(el: HTMLElement, finalText: string, duration = 1.1) {
 	});
 }
 
+export function revealWipe(
+	el: Element,
+	opts: { dur?: number; delay?: number; start?: string } = {},
+) {
+	if (reduced) return;
+	gsap.fromTo(
+		el,
+		{ opacity: 0, clipPath: 'inset(0 0 100% 0)' },
+		{
+			opacity: 1,
+			clipPath: 'inset(0 0 0% 0)',
+			duration: opts.dur ?? 0.9,
+			delay: opts.delay ?? 0,
+			ease: 'power3.out',
+			clearProps: 'clipPath,opacity',
+			scrollTrigger: { trigger: el, start: opts.start ?? 'top 90%', once: true },
+		},
+	);
+}
+
 export function magnetic(el: HTMLElement, strength = 0.35) {
 	if (reduced) return;
 	const xTo = gsap.quickTo(el, 'x', { duration: 0.5, ease: 'elastic.out(1, 0.4)' });
@@ -79,13 +98,4 @@ export function magnetic(el: HTMLElement, strength = 0.35) {
 	});
 }
 
-export function timecode(progress: number): string {
-	const total = progress * 96;
-	const mm = Math.floor(total / 60);
-	const ss = Math.floor(total % 60);
-	const ff = Math.floor((total % 1) * 24);
-	const pad = (n: number) => String(n).padStart(2, '0');
-	return `00:${pad(mm)}:${pad(ss)}:${pad(ff)}`;
-}
-
-export { gsap, ScrollTrigger, SplitText, Draggable };
+export { gsap, ScrollTrigger, SplitText };

@@ -62,9 +62,8 @@ import { navLinks, contactLinks, profile } from '../data/portfolio';
 	<a href="#top" data-chapter="top"><span>01 Intro</span><i></i></a>
 	<a href="#work" data-chapter="work"><span>02 Work</span><i></i></a>
 	<a href="#stack" data-chapter="stack"><span>03 Stack</span><i></i></a>
-	<a href="#lab" data-chapter="lab"><span>04 Lab</span><i></i></a>
-	<a href="#path" data-chapter="path"><span>05 Path</span><i></i></a>
-	<a href="#contact" data-chapter="contact"><span>06 Contact</span><i></i></a>
+	<a href="#path" data-chapter="path"><span>04 Path</span><i></i></a>
+	<a href="#contact" data-chapter="contact"><span>05 Contact</span><i></i></a>
 </nav>
 
 <style>
@@ -113,7 +112,17 @@ import { navLinks, contactLinks, profile } from '../data/portfolio';
 </style>
 
 <script>
-	import { gsap, ScrollTrigger, initLenis, timecode, reduced } from '../lib/motion';
+	import { gsap, ScrollTrigger, initLenis, reduced } from '../lib/motion';
+
+	const tcEl = document.querySelector('[data-timecode]');
+	const pad = (n: number) => String(n).padStart(2, '0');
+	const vnTick = () => {
+		if (!tcEl) return;
+		const d = new Date(new Date().toLocaleString('en-US', { timeZone: 'Asia/Ho_Chi_Minh' }));
+		tcEl.textContent = `${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}:${pad(Math.floor(d.getMilliseconds() / 41.667))}`;
+	};
+	vnTick();
+	setInterval(vnTick, 80);
 
 	initLenis();
 
@@ -163,9 +172,7 @@ import { navLinks, contactLinks, profile } from '../data/portfolio';
 			nav.classList.toggle('is-solid', y > 40);
 			if (!open) nav.classList.toggle('is-hidden', y > lastY && y > 400);
 			lastY = y;
-			const tc = document.querySelector('[data-timecode]');
 			const pr = document.querySelector('[data-progress]');
-			if (tc) tc.textContent = timecode(self.progress);
 			if (pr) pr.textContent = String(Math.round(self.progress * 100)).padStart(3, '0');
 			syncChapter(y);
 		},
@@ -176,7 +183,7 @@ import { navLinks, contactLinks, profile } from '../data/portfolio';
 	}
 
 	const chapters = document.querySelectorAll('[data-chapter]');
-	const chapterIds = ['top', 'work', 'stack', 'lab', 'path', 'contact'];
+	const chapterIds = ['top', 'work', 'stack', 'path', 'contact'];
 	const chapterEls = chapterIds
 		.map((id) => document.getElementById(id))
 		.filter(Boolean) as HTMLElement[];

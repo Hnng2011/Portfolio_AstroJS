@@ -5,7 +5,7 @@ import { experiences, profile } from '../data/portfolio';
 <section id="path" class="relative bg-coal py-28 lg:py-40">
 	<div class="reel-container grid gap-14 lg:grid-cols-12">
 		<div class="lg:col-span-4">
-			<p class="t-mono text-flame" data-path-reveal>05 — Path</p>
+			<p class="t-mono text-flame" data-path-reveal>04 — Path</p>
 			<h2 class="t-title mt-6 text-bone">
 				<span class="mask-line"><span data-path-line>Three years,</span></span>
 				<span class="mask-line"><span class="stroke-text" data-path-line>five teams,</span></span>
@@ -46,7 +46,7 @@ import { experiences, profile } from '../data/portfolio';
 </section>
 
 <script>
-	import { gsap, ScrollTrigger, reduced } from '../lib/motion';
+	import { gsap, ScrollTrigger, reduced, revealWipe } from '../lib/motion';
 
 	if (!reduced) {
 		gsap.utils.toArray('[data-path-line]').forEach((line) => {
@@ -57,15 +57,7 @@ import { experiences, profile } from '../data/portfolio';
 				scrollTrigger: { trigger: line, start: 'top 90%' },
 			});
 		});
-		gsap.utils.toArray('[data-path-reveal]').forEach((el) => {
-			gsap.from(el, {
-				y: 26,
-				opacity: 0,
-				duration: 0.9,
-				ease: 'power3.out',
-				scrollTrigger: { trigger: el, start: 'top 92%' },
-			});
-		});
+		gsap.utils.toArray('[data-path-reveal]').forEach((el) => revealWipe(el));
 
 		const list = document.querySelector('[data-path-item]')!.parentElement!;
 		gsap.to('[data-path-line-progress]', {
@@ -74,13 +66,7 @@ import { experiences, profile } from '../data/portfolio';
 			scrollTrigger: { trigger: list, start: 'top 75%', end: 'bottom 60%', scrub: 0.6 },
 		});
 		gsap.utils.toArray('[data-path-item]').forEach((item, i) => {
-			gsap.from(item, {
-				x: 40,
-				opacity: 0,
-				duration: 0.9,
-				ease: 'power3.out',
-				scrollTrigger: { trigger: item, start: 'top 88%' },
-			});
+			revealWipe(item, { start: 'top 88%' });
 			gsap.from(item.querySelector('span'), {
 				scale: 0,
 				duration: 0.6,

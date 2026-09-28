@@ -263,7 +263,6 @@ export const contactLinks = [
 
 export const navLinks = [
 	{ label: 'Work', href: '#work' },
-	{ label: 'Lab', href: '#lab' },
 	{ label: 'Stack', href: '#stack' },
 	{ label: 'Path', href: '#path' },
 	{ label: 'Contact', href: '#contact' },

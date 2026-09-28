@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="Aphrodite marble bust">
+	<rect width="400" height="300" fill="#151210"/>
+	<g stroke="#FF3B1F" stroke-width="1.5" fill="none">
+		<path d="M14 14h22v8h-14v8h22M386 14h-22v8h14v8h-22M14 286h22v-8h-14v-8h22M386 286h-22v-8h14v-8h-22"/>
+	</g>
+	<g stroke="#3A352C" stroke-width="1" fill="none">
+		<path d="M40 26h12v6h-6v6h12M64 26h12v6h-6v6h12M88 26h12v6h-6v6h12M112 26h12v6h-6v6h12M136 26h12v6h-6v6h12M160 26h12v6h-6v6h12M184 26h12v6h-6v6h12M208 26h12v6h-6v6h12M232 26h12v6h-6v6h12M256 26h12v6h-6v6h12M280 26h12v6h-6v6h12M304 26h12v6h-6v6h12M328 26h12v6h-6v6h12"/>
+	</g>
+	<g stroke="#ECE8DF" stroke-width="1.5" fill="none" stroke-linecap="round">
+		<ellipse cx="200" cy="120" rx="34" ry="43"/>
+		<path d="M196 120q-6 8 2 12M184 108q6-4 12 0M208 108q6-4 12 0M190 140h24"/>
+		<path d="M166 118q-2-40 34-40q36 0 34 40"/>
+		<path d="M166 118q-8 26-4 44M234 118q8 26 4 44"/>
+		<path d="M172 96q14-10 28-10q14 0 28 10"/>
+		<path d="M186 163h28v25h-28z"/>
+		<path d="M120 244q16-40 52-50q14-4 28-4q14 0 28 4q36 10 52 50"/>
+		<path d="M158 240q8-24 28-34M242 240q-8-24-28-34M200 190v54"/>
+		<path d="M164 210q16 14 36 14q20 0 36-14"/>
+	</g>
+	<g stroke="#FF3B1F" stroke-width="2" fill="none" stroke-linejoin="round">
+		<path d="M300 190q-22-6-22-26q0-14 11-18q-3 10 4 14q2-16 14-18q-6 8-2 14q8-10 17-6q-12 4-10 16q10-6 16 0q-14 0-16 14q-4 8-12 10z"/>
+		<path d="M92 208q0-18 18-18q14 0 16 12q10-4 14 4q4 10-8 12h-32q-8-2-8-10z"/>
+	</g>
+	<g stroke="#ECE8DF" stroke-width="1.5" fill="none">
+		<path d="M140 244h120v16h-120zM120 260h160v14h-160z"/>
+	</g>
+	<text x="16" y="288" font-family="ui-monospace, monospace" font-size="10" letter-spacing="2" fill="#8A8578">FRAME 05 / APHRODITE — MILO ROSE</text>
+</svg>

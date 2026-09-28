@@ -76,6 +76,18 @@
 	if (reduced) {
 		finish();
 	} else {
+		const loaded =
+			document.readyState === 'complete'
+				? Promise.resolve()
+				: new Promise<void>((r) => window.addEventListener('load', () => r(), { once: true }));
+		const fonts = document.fonts?.ready ?? Promise.resolve();
+		Promise.race([
+			Promise.all([loaded, fonts]),
+			new Promise((r) => setTimeout(r, 3000)),
+		]).then(start);
+	}
+
+	function start() {
 		const state = { n: 0 };
 		const tl = gsap.timeline({
 			onComplete: () => {

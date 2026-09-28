@@ -7,49 +7,90 @@ const cards = [
 	...skills.secondary.map((s) => ({ kind: 'md', label: 'Secondary', body: s })),
 	...skills.tertiary.map((s) => ({ kind: 'sm', label: 'Tooling', body: s })),
 ];
+
+const marks: Record<string, string> = {
+	intro: 'M5 12h14M13 6l6 6-6 6',
+	xl: 'M12 4a8 8 0 1 0 0 16 8 8 0 0 0 0-16z',
+	md: 'M12 4l8 8-8 8-8-8z',
+	sm: 'M12 5l8 14H4z',
+};
 ---
 
 <section id="stack" class="relative">
 	<div data-stack-pin class="overflow-hidden bg-coal">
-		<div class="flex min-h-svh items-center py-24">
+		<span class="stack-bg-word stroke-text pointer-events-none absolute top-1/2 -translate-y-1/2 select-none text-bone/10" aria-hidden="true">
+			STACK
+		</span>
+		<p class="t-mono absolute top-6 left-5 z-30 text-dim md:left-8" aria-hidden="true">
+			Card <span class="text-flame" data-stack-count>01</span> / {String(cards.length + 1).padStart(2, '0')}
+		</p>
+		<div class="flex min-h-svh items-center py-24" style="perspective: 1400px">
 			<div
 				data-track
-				class="grid grid-cols-1 gap-4 px-5 py-16 md:flex md:items-stretch md:gap-8 md:px-8 md:py-24"
+				class="grid grid-cols-1 gap-4 px-5 py-16 md:flex md:items-stretch md:gap-0 md:px-8 md:py-24"
 			>
 				{
-					cards.map((c, i) => (
-						<div
-							class:list={[
-								'skill-card group relative flex shrink-0 flex-col justify-between border border-bone/12 p-6 transition-colors duration-500 hover:border-flame/60 md:p-8',
-								c.kind === 'intro' && 'w-full bg-flame md:w-[36rem]',
-								c.kind === 'xl' && 'w-full bg-smoke md:w-[30rem]',
-								c.kind === 'md' && 'w-full bg-coal md:w-[22rem]',
-								c.kind === 'sm' && 'w-full bg-void md:w-[17rem]',
-							]}
-							data-card
-						>
-							<div class="flex items-center justify-between">
-								<span class:list={['t-mono', c.kind === 'intro' ? 'text-void/70' : 'text-dim']}>
-									{c.label}
-								</span>
-								<span class:list={['t-mono', c.kind === 'intro' ? 'text-void/70' : 'text-dim']}>
+					cards.map((c, i) => {
+						const accent = c.kind !== 'intro' && i % 5 === 4;
+						return (
+							<div
+								class:list={[
+									'skill-card group relative flex shrink-0 flex-col justify-between border p-6 transition-colors duration-500 md:p-8',
+									i > 0 && 'md:-ml-10',
+									c.kind === 'intro' && 'w-full bg-flame md:w-[36rem]',
+									accent && 'w-full bg-flame md:w-[22rem]',
+									c.kind === 'xl' && !accent && 'w-full glass-dark md:w-[30rem]',
+									c.kind === 'md' && !accent && 'w-full glass-dark md:w-[22rem]',
+									c.kind === 'sm' && !accent && 'w-full glass-dark md:w-[17rem]',
+									!accent && c.kind !== 'intro' && 'border-bone/12 hover:border-flame/60',
+									(accent || c.kind === 'intro') && 'border-flame',
+								]}
+								style={`z-index:${i + 1}`}
+								data-card
+							>
+								<span
+									class:list={[
+										'ghost-num stroke-text pointer-events-none absolute -top-4 right-3 font-display text-[6.5rem] leading-none',
+										accent || c.kind === 'intro' ? 'text-void/25' : 'text-bone/12',
+									]}
+									aria-hidden="true"
+								>
 									{String(i + 1).padStart(2, '0')}
 								</span>
+								<div class="flex items-center justify-between">
+									<span class:list={['t-mono', accent || c.kind === 'intro' ? 'text-void/70' : 'text-ash']}>
+										{c.label}
+									</span>
+									<svg
+										class:list={[
+											'skill-mark h-6 w-6 transition-transform duration-700 group-hover:rotate-180',
+											accent || c.kind === 'intro' ? 'text-void' : 'text-flame',
+										]}
+										viewBox="0 0 24 24"
+										fill="none"
+										stroke="currentColor"
+										stroke-width="1.5"
+										aria-hidden="true"
+									>
+										<path d={marks[c.kind]} />
+									</svg>
+								</div>
+								<p
+									class:list={[
+										'font-display tracking-tight uppercase',
+										accent || c.kind === 'intro' ? 'text-void' : 'text-bone',
+										c.kind === 'intro' && 't-sub',
+										c.kind === 'xl' && 'text-5xl md:text-7xl',
+										c.kind === 'md' && 'text-3xl md:text-5xl',
+										c.kind === 'sm' && 'text-2xl md:text-3xl',
+									]}
+								>
+									{c.body}
+								</p>
+								<div class="h-px w-full bg-current opacity-15 transition-all duration-700 group-hover:opacity-60"></div>
 							</div>
-							<p
-								class:list={[
-									'font-display tracking-tight uppercase',
-									c.kind === 'intro' ? 't-sub text-void' : 'text-bone',
-									c.kind === 'xl' && 'text-5xl md:text-7xl',
-									c.kind === 'md' && 'text-3xl md:text-5xl',
-									c.kind === 'sm' && 'text-2xl md:text-3xl',
-								]}
-							>
-								{c.body}
-							</p>
-							<div class="h-px w-full bg-current opacity-15 transition-all duration-700 group-hover:opacity-60"></div>
-						</div>
-					))
+						);
+					})
 				}
 				<div class="flex w-full shrink-0 items-center md:w-[16rem]">
 					<p class="t-mono text-dim">End of stack → back to work</p>
@@ -65,6 +106,17 @@ const cards = [
 <style>
 	.skill-card {
 		min-height: 16rem;
+		transform-style: preserve-3d;
+		will-change: transform;
+	}
+
+	.stack-bg-word {
+		left: 0;
+		font-family: var(--font-display);
+		font-size: 26vw;
+		line-height: 1;
+		letter-spacing: 0.04em;
+		white-space: nowrap;
 	}
 </style>
 
@@ -74,10 +126,16 @@ const cards = [
 	const pin = document.querySelector('[data-stack-pin]')!;
 	const track = document.querySelector('[data-track]') as HTMLElement;
 	const progress = document.querySelector('[data-stack-progress]') as HTMLElement;
+	const countEl = document.querySelector('[data-stack-count]') as HTMLElement;
+	const bgWord = document.querySelector('.stack-bg-word') as HTMLElement;
+	const cardEls = Array.from(document.querySelectorAll('[data-card]')) as HTMLElement[];
 
 	const mm = gsap.matchMedia();
 	mm.add('(min-width: 768px) and (prefers-reduced-motion: no-preference)', () => {
 		const distance = () => track.scrollWidth - window.innerWidth;
+		const skewTo = gsap.quickTo(track, 'skewX', { duration: 0.5, ease: 'power2.out' });
+		cardEls.forEach((card) => gsap.set(card, { transformPerspective: 900 }));
+
 		const tween = gsap.to(track, {
 			x: () => -distance(),
 			ease: 'none',
@@ -91,21 +149,53 @@ const cards = [
 				onToggle: (self) => document.body.classList.toggle('rail-off', self.isActive),
 				onUpdate: (self) => {
 					progress.style.width = `${self.progress * 100}%`;
+					countEl.textContent = String(
+						Math.min(cardEls.length, Math.round(self.progress * cardEls.length) + 1),
+					).padStart(2, '0');
+					skewTo(gsap.utils.clamp(-4, 4, self.getVelocity() * -0.004));
+					for (const card of cardEls) {
+						const r = card.getBoundingClientRect();
+						const off = (r.left + r.width / 2 - window.innerWidth / 2) / window.innerWidth;
+						gsap.set(card, {
+							rotateY: gsap.utils.clamp(-10, 10, off * -16),
+							scale: 1 - Math.min(Math.abs(off), 1) * 0.12,
+						});
+					}
 				},
 			},
 		});
-		gsap.utils.toArray('[data-card]').forEach((card, i) => {
+
+		gsap.fromTo(
+			bgWord,
+			{ xPercent: -6 },
+			{
+				xPercent: 6,
+				ease: 'none',
+				scrollTrigger: { trigger: pin, start: 'top top', end: () => `+=${distance()}`, scrub: 0.7 },
+			},
+		);
+
+		cardEls.forEach((card, i) => {
 			gsap.fromTo(
 				card,
-				{ y: i % 2 ? 40 : -40, opacity: 0.4 },
+				{ y: i % 2 ? 40 : -40, opacity: 0.35 },
 				{
 					y: 0,
 					opacity: 1,
 					ease: 'none',
-					scrollTrigger: { trigger: pin, start: 'top top', end: () => `+=${distance() * 0.4}`, scrub: 0.7 },
+					scrollTrigger: {
+						trigger: pin,
+						start: 'top top',
+						end: () => `+=${distance() * 0.4}`,
+						scrub: 0.7,
+					},
 				},
 			);
 		});
 		return () => tween.scrollTrigger?.kill();
 	});
+
+	if (reduced) {
+		countEl.textContent = '01';
+	}
 </script>

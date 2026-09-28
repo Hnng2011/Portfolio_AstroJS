@@ -2,9 +2,16 @@
 import { contactLinks, profile } from '../data/portfolio';
 
 const heading = "LET'S MAKE MOTION";
+const credits = [
+	['Direction & Code', 'Phi Hung'],
+	['Motion System', 'GSAP · Lenis · ScrollTrigger'],
+	['Typefaces', 'Anton · Instrument Sans · IBM Plex Mono'],
+	['Status', 'Open to frontend roles — Remote / Vietnam'],
+];
 ---
 
 <footer id="contact" class="relative overflow-hidden border-t border-bone/10">
+	<div class="pointer-events-none absolute inset-0" data-spot aria-hidden="true"></div>
 	<div class="overflow-hidden border-b border-bone/10 bg-flame py-4" aria-hidden="true">
 		<div class="marquee-track is-reverse">
 			<span class="flex shrink-0 items-center gap-6 pr-6">
@@ -28,11 +35,11 @@ const heading = "LET'S MAKE MOTION";
 
 	<div class="reel-container flex min-h-[80svh] flex-col justify-between py-20">
 		<div>
-			<p class="t-mono text-flame" data-contact-reveal>06 — Contact</p>
+			<p class="t-mono text-flame" data-contact-reveal>05 — Contact</p>
 			<h2 class="char-hover t-mega mt-8 text-bone" data-contact-title aria-label={heading}>
 				{heading.split(' ').map((word) => (
 					<>
-						<span class="inline-block whitespace-nowrap">
+						<span class="word-mask">
 							{word.split('').map((c) => (
 								<span data-char>{c}</span>
 							))}
@@ -56,7 +63,7 @@ const heading = "LET'S MAKE MOTION";
 							href={l.url}
 							target="_blank"
 							rel="noopener noreferrer"
-							class="t-mono border border-bone/20 px-5 py-4 text-bone transition-colors duration-300 hover:border-flame hover:text-flame"
+							class="t-mono glass-dark px-5 py-4 text-bone transition-colors duration-300 hover:text-flame"
 						>
 							{l.label} ↗
 						</a>
@@ -64,7 +71,23 @@ const heading = "LET'S MAKE MOTION";
 			</div>
 		</div>
 
-		<div class="mt-20 flex flex-wrap items-end justify-between gap-6 border-t border-bone/10 pt-8">
+		<div class="mt-24 border-t border-bone/10" data-credits>
+			{
+				credits.map(([k, v]) => (
+					<div
+						class="credit-row grid gap-2 border-b border-bone/10 py-6 md:grid-cols-12 md:items-baseline"
+						data-credit-row
+					>
+						<span class="t-mono text-dim md:col-span-3">{k}</span>
+						<span class="credit-val font-display text-xl text-bone uppercase md:col-span-9 md:text-3xl">
+							{v}
+						</span>
+					</div>
+				))
+			}
+		</div>
+
+		<div class="mt-16 flex flex-wrap items-end justify-between gap-6 border-t border-bone/10 pt-8">
 			<div>
 				<p class="t-mono text-dim">
 					{profile.location} — <span data-clock>--:--:--</span> ICT
@@ -80,7 +103,7 @@ const heading = "LET'S MAKE MOTION";
 </footer>
 
 <script>
-	import { gsap, ScrollTrigger, magnetic, reduced } from '../lib/motion';
+	import { gsap, ScrollTrigger, magnetic, reduced, revealWipe } from '../lib/motion';
 
 	const clock = document.querySelector('[data-clock]')!;
 	const tick = () => {
@@ -99,22 +122,50 @@ const heading = "LET'S MAKE MOTION";
 
 	if (!reduced) {
 		gsap.from('[data-contact-title] [data-char]', {
-			yPercent: 60,
+			yPercent: 100,
 			opacity: 0,
-			duration: 0.8,
+			duration: 0.9,
 			stagger: 0.02,
 			ease: 'power4.out',
 			clearProps: 'all',
-			scrollTrigger: { trigger: '[data-contact-title]', start: 'top 92%' },
+			scrollTrigger: { trigger: '[data-contact-title]', start: 'top 92%', once: true },
 		});
-		gsap.utils.toArray('[data-contact-reveal]').forEach((el) => {
-			gsap.from(el, {
-				y: 26,
-				opacity: 0,
-				duration: 0.9,
-				ease: 'power3.out',
-				scrollTrigger: { trigger: el, start: 'top 92%' },
-			});
+		gsap.utils.toArray('[data-contact-reveal]').forEach((el) => revealWipe(el));
+		gsap.utils.toArray('[data-credit-row]').forEach((el, i) =>
+			revealWipe(el, { delay: i * 0.08, start: 'top 94%' }),
+		);
+	}
+
+	const foot = document.querySelector('#contact') as HTMLElement;
+	const spot = document.querySelector('[data-spot]') as HTMLElement;
+	if (!reduced && foot && spot) {
+		const sx = gsap.quickTo(spot, '--sx', { duration: 0.7, ease: 'power3' });
+		const sy = gsap.quickTo(spot, '--sy', { duration: 0.7, ease: 'power3' });
+		foot.addEventListener('pointermove', (e) => {
+			const r = foot.getBoundingClientRect();
+			sx(`${((e.clientX - r.left) / r.width) * 100}%`);
+			sy(`${((e.clientY - r.top) / r.height) * 100}%`);
 		});
 	}
 </script>
+
+<style>
+	.credit-val {
+		transition:
+			transform 0.5s var(--ease-reel),
+			color 0.3s;
+	}
+
+	.credit-row:hover .credit-val {
+		transform: translateX(1.5rem);
+		color: var(--color-flame);
+	}
+
+	[data-spot] {
+		background: radial-gradient(
+			42rem 30rem at var(--sx, 70%) var(--sy, 30%),
+			rgb(255 59 31 / 0.09),
+			transparent 70%
+		);
+	}
+</style>

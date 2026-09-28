@@ -1,14 +1,24 @@
 ---
 import { projects } from '../data/portfolio';
-import art01 from '../assets/work-01.svg';
-import art02 from '../assets/work-02.svg';
-import art03 from '../assets/work-03.svg';
-import art04 from '../assets/work-04.svg';
-import art05 from '../assets/work-05.svg';
-import art06 from '../assets/work-06.svg';
-import art07 from '../assets/work-07.svg';
+import zeus from '../assets/gods/zeus.svg';
+import athena from '../assets/gods/athena.svg';
+import poseidon from '../assets/gods/poseidon.svg';
+import apollo from '../assets/gods/apollo.svg';
+import aphrodite from '../assets/gods/aphrodite.svg';
+import hermes from '../assets/gods/hermes.svg';
+import artemis from '../assets/gods/artemis.svg';
+import dionysus from '../assets/gods/dionysus.svg';
 
-const art = [art01, art02, art03, art04, art05, art06, art07];
+const gods = [
+	{ src: zeus.src, name: 'ZEUS — OLYMPUS MARBLE' },
+	{ src: athena.src, name: 'ATHENA — PARTHENON GREY' },
+	{ src: poseidon.src, name: 'POSEIDON — AEGEAN BRONZE' },
+	{ src: apollo.src, name: 'APOLLO — DELPHI GOLD' },
+	{ src: aphrodite.src, name: 'APHRODITE — MILO ROSE' },
+	{ src: hermes.src, name: 'HERMES — ARCADIA SWIFT' },
+	{ src: artemis.src, name: 'ARTEMIS — EPHESUS SILVER' },
+	{ src: dionysus.src, name: 'DIONYSUS — NAXOS VINE' },
+];
 ---
 
 <section id="work" class="relative py-28 lg:py-40">
@@ -33,7 +43,7 @@ const art = [art01, art02, art03, art04, art05, art06, art07];
 		<div class="mt-20 lg:mt-28">
 			{
 				projects.map((p, i) => (
-					<article class="work-row hairline group relative" data-row data-art={art[i].src}>
+					<article class="work-row hairline group relative" data-row data-god={i % gods.length}>
 						<div class="grid gap-4 px-2 py-8 md:grid-cols-12 md:items-center md:gap-6 md:py-10">
 							<div class="md:col-span-1">
 								<span class="font-display text-2xl text-dim transition-colors duration-500 group-hover:text-flame">
@@ -68,7 +78,7 @@ const art = [art01, art02, art03, art04, art05, art06, art07];
 						</div>
 
 						<div id={`case-${p.index}`} data-case class="overflow-hidden" hidden>
-							<div class="grid gap-8 border-t border-bone/10 bg-coal/60 px-2 py-10 md:grid-cols-12 md:px-6">
+							<div class="glass-dark grid gap-8 border-t border-bone/10 px-2 py-10 md:grid-cols-12 md:px-6">
 								<div class="md:col-span-4">
 									<p class="t-mono mb-4 text-flame">Challenge</p>
 									<p class="text-sm leading-relaxed text-ash">{p.caseStudy.challenge}</p>
@@ -117,12 +127,34 @@ const art = [art01, art02, art03, art04, art05, art06, art07];
 	</div>
 
 	<div class="preview-float" data-preview aria-hidden="true">
-		<img data-preview-img src={art[0].src} alt="" />
+		<img data-preview-img src={gods[0].src} alt="" />
+		<span class="t-mono absolute bottom-3 left-4 text-dim" data-preview-cap>{gods[0].name}</span>
+		<span class="t-mono absolute top-3 right-4 text-flame" data-preview-idx>01/08</span>
+		<span class="t-mono absolute top-3 left-4 text-dim">scroll ↕ pantheon</span>
 	</div>
 </section>
 
 <script>
-	import { gsap, ScrollTrigger, reduced } from '../lib/motion';
+	import { gsap, ScrollTrigger, reduced, revealWipe } from '../lib/motion';
+	import gZeus from '../assets/gods/zeus.svg';
+	import gAthena from '../assets/gods/athena.svg';
+	import gPoseidon from '../assets/gods/poseidon.svg';
+	import gApollo from '../assets/gods/apollo.svg';
+	import gAphrodite from '../assets/gods/aphrodite.svg';
+	import gHermes from '../assets/gods/hermes.svg';
+	import gArtemis from '../assets/gods/artemis.svg';
+	import gDionysus from '../assets/gods/dionysus.svg';
+
+	const gods = [
+		{ src: gZeus.src, name: 'ZEUS — OLYMPUS MARBLE' },
+		{ src: gAthena.src, name: 'ATHENA — PARTHENON GREY' },
+		{ src: gPoseidon.src, name: 'POSEIDON — AEGEAN BRONZE' },
+		{ src: gApollo.src, name: 'APOLLO — DELPHI GOLD' },
+		{ src: gAphrodite.src, name: 'APHRODITE — MILO ROSE' },
+		{ src: gHermes.src, name: 'HERMES — ARCADIA SWIFT' },
+		{ src: gArtemis.src, name: 'ARTEMIS — EPHESUS SILVER' },
+		{ src: gDionysus.src, name: 'DIONYSUS — NAXOS VINE' },
+	];
 
 	const rows = document.querySelectorAll('[data-row]');
 
@@ -135,28 +167,33 @@ const art = [art01, art02, art03, art04, art05, art06, art07];
 				scrollTrigger: { trigger: line, start: 'top 88%' },
 			});
 		});
-		gsap.utils.toArray('[data-reveal]').forEach((el) => {
-			gsap.from(el, {
-				y: 28,
-				opacity: 0,
-				duration: 0.9,
-				ease: 'power3.out',
-				scrollTrigger: { trigger: el, start: 'top 90%' },
-			});
-		});
-		rows.forEach((row) => {
-			gsap.from(row, {
-				opacity: 0,
-				y: 40,
-				duration: 0.9,
-				ease: 'power3.out',
-				scrollTrigger: { trigger: row, start: 'top 92%' },
-			});
-		});
+		gsap.utils.toArray('[data-reveal]').forEach((el) => revealWipe(el));
+		rows.forEach((row) => revealWipe(row, { start: 'top 92%' }));
 	}
 
 	const preview = document.querySelector('[data-preview]') as HTMLElement;
 	const previewImg = document.querySelector('[data-preview-img]') as HTMLImageElement;
+	const previewCap = document.querySelector('[data-preview-cap]') as HTMLElement;
+	const previewIdx = document.querySelector('[data-preview-idx]') as HTMLElement;
+	const workSection = document.querySelector('#work') as HTMLElement;
+
+	const godCount = 8;
+	let gi = 0;
+	let insideWork = false;
+
+	const setGod = (n: number, animate = true) => {
+		gi = ((n % godCount) + godCount) % godCount;
+		previewImg.src = gods[gi].src;
+		previewCap.textContent = gods[gi].name;
+		previewIdx.textContent = `${String(gi + 1).padStart(2, '0')}/${String(godCount).padStart(2, '0')}`;
+		if (animate && !reduced) {
+			gsap.fromTo(
+				previewImg,
+				{ opacity: 0.15, scale: 1.06 },
+				{ opacity: 1, scale: 1, duration: 0.5, ease: 'power3.out' },
+			);
+		}
+	};
 
 	if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced) {
 		const xTo = gsap.quickTo(preview, 'x', { duration: 0.6, ease: 'power3' });
@@ -171,9 +208,24 @@ const art = [art01, art02, art03, art04, art05, art06, art07];
 			lastX = e.clientX;
 		});
 
+		workSection.addEventListener('pointerenter', () => {
+			insideWork = true;
+		});
+		workSection.addEventListener('pointerleave', () => {
+			insideWork = false;
+		});
+		window.addEventListener(
+			'wheel',
+			(e) => {
+				if (!insideWork) return;
+				setGod(gi + (e.deltaY > 0 ? 1 : -1));
+			},
+			{ passive: true },
+		);
+
 		rows.forEach((row) => {
 			row.addEventListener('pointerenter', () => {
-				previewImg.src = (row as HTMLElement).dataset.art!;
+				setGod(Number((row as HTMLElement).dataset.god));
 				gsap.to(preview, { opacity: 1, scale: 1, duration: 0.45, ease: 'power3.out' });
 			});
 			row.addEventListener('pointerleave', () => {

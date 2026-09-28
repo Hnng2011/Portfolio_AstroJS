@@ -80,6 +80,44 @@ body {
 	background: var(--color-flame);
 }
 
+@utility glass-dark {
+	background: linear-gradient(
+		135deg,
+		rgb(236 232 223 / 0.09),
+		rgb(236 232 223 / 0.025) 55%,
+		rgb(255 59 31 / 0.06)
+	);
+	backdrop-filter: blur(20px) saturate(140%);
+	-webkit-backdrop-filter: blur(20px) saturate(140%);
+	border: 1px solid rgb(236 232 223 / 0.14);
+	box-shadow:
+		0 24px 60px -24px rgb(0 0 0 / 0.55),
+		inset 0 1px 0 rgb(236 232 223 / 0.12);
+}
+
+@utility glass-edge {
+	position: relative;
+
+	&::before {
+		content: "";
+		position: absolute;
+		inset: 0;
+		border-radius: inherit;
+		padding: 1px;
+		background: linear-gradient(
+			135deg,
+			rgb(236 232 223 / 0.45),
+			transparent 42%,
+			rgb(255 59 31 / 0.35)
+		);
+		mask:
+			linear-gradient(#000 0 0) content-box,
+			linear-gradient(#000 0 0);
+		mask-composite: exclude;
+		pointer-events: none;
+	}
+}
+
 @utility reel-container {
 	width: 100%;
 	max-width: 1680px;
@@ -239,6 +277,15 @@ body {
 	}
 }
 
+.word-mask {
+	display: inline-block;
+	overflow: hidden;
+	white-space: nowrap;
+	padding-block: 0.16em;
+	margin-block: -0.16em;
+	vertical-align: bottom;
+}
+
 .scene-divider {
 	height: 1px;
 	width: 100%;
@@ -360,8 +407,11 @@ body.rail-off .chapter-rail {
 	opacity: 0;
 	overflow: hidden;
 	border-radius: var(--radius-card);
-	border: 1px solid rgb(236 232 223 / 0.12);
-	background: var(--color-coal);
+	border: 1px solid rgb(236 232 223 / 0.16);
+	background: color-mix(in srgb, var(--color-coal) 72%, transparent);
+	backdrop-filter: blur(16px) saturate(130%);
+	-webkit-backdrop-filter: blur(16px) saturate(130%);
+	box-shadow: 0 32px 80px -32px rgb(0 0 0 / 0.7);
 }
 
 .preview-float img {
