@@ -1,0 +1,236 @@
+---
+---
+
+<section id="lab" class="relative overflow-hidden py-28 lg:py-40">
+	<div class="layer-grid pointer-events-none absolute inset-0"></div>
+	<div class="reel-container relative grid gap-14 lg:grid-cols-12">
+		<div class="lg:col-span-4">
+			<p class="t-mono text-flame" data-lab-reveal>04 — Glass lab</p>
+			<h2 class="t-title mt-6 text-bone">
+				<span class="mask-line"><span data-lab-line>Tune the</span></span>
+				<span class="mask-line"><span class="stroke-text" data-lab-line>frosted</span></span>
+				<span class="mask-line"><span data-lab-line>glass.</span></span>
+			</h2>
+			<p class="mt-6 max-w-sm text-base leading-relaxed text-ash" data-lab-reveal>
+				Drag the panels across the stage, push the tokens with the sliders, then let go —
+				everything settles back with spring physics. This is the design system, playable.
+			</p>
+			<div class="mt-10 space-y-6" data-lab-reveal>
+				<label class="block">
+					<span class="t-mono flex justify-between text-ash"><span>Blur</span><span data-val-blur>24px</span></span>
+					<input type="range" min="0" max="48" value="24" data-slider="blur" class="lab-range mt-2 w-full" />
+				</label>
+				<label class="block">
+					<span class="t-mono flex justify-between text-ash"><span>Opacity</span><span data-val-op>8%</span></span>
+					<input type="range" min="0" max="40" value="8" data-slider="op" class="lab-range mt-2 w-full" />
+				</label>
+				<label class="block">
+					<span class="t-mono flex justify-between text-ash"><span>Tint</span><span data-val-tint>12%</span></span>
+					<input type="range" min="0" max="60" value="12" data-slider="tint" class="lab-range mt-2 w-full" />
+				</label>
+			</div>
+		</div>
+
+		<div class="lg:col-span-8">
+			<div data-stage class="relative aspect-[4/3] w-full overflow-hidden rounded-card border border-bone/12 bg-void">
+				<div class="lab-blob blob-a" aria-hidden="true"></div>
+				<div class="lab-blob blob-b" aria-hidden="true"></div>
+				<div class="lab-blob blob-c" aria-hidden="true"></div>
+				<p class="t-mono absolute top-4 left-4 text-dim" aria-hidden="true">Stage — drag me</p>
+
+				<div data-slab class="lab-slab absolute top-[10%] left-[6%] h-40 w-28 sm:h-52 sm:w-36">
+					<span class="slab-num" aria-hidden="true">01</span>
+					<p class="t-mono text-bone">Layer 01</p>
+					<p class="mt-1 font-mono text-[10px] tracking-wider whitespace-nowrap text-ash" data-slab-meta>BLUR 24 / OP 8%</p>
+				</div>
+				<div data-slab class="lab-slab absolute top-[34%] left-[38%] h-44 w-32 sm:h-60 sm:w-44">
+					<span class="slab-num" aria-hidden="true">02</span>
+					<p class="t-mono text-bone">Layer 02</p>
+					<p class="mt-1 font-mono text-[10px] tracking-wider whitespace-nowrap text-ash" data-slab-meta>BLUR 24 / OP 8%</p>
+				</div>
+				<div data-slab class="lab-slab absolute top-[16%] left-[68%] h-36 w-24 sm:h-48 sm:w-32">
+					<span class="slab-num" aria-hidden="true">03</span>
+					<p class="t-mono text-bone">Layer 03</p>
+					<p class="mt-1 font-mono text-[10px] tracking-wider whitespace-nowrap text-ash" data-slab-meta>BLUR 24 / OP 8%</p>
+				</div>
+			</div>
+		</div>
+	</div>
+</section>
+
+<style>
+	.lab-blob {
+		position: absolute;
+		border-radius: 999px;
+		filter: blur(10px);
+		animation: blob-drift 14s ease-in-out infinite alternate;
+	}
+
+	.blob-a {
+		width: 46%;
+		aspect-ratio: 1;
+		left: -8%;
+		top: -18%;
+		background: radial-gradient(circle at 40% 40%, rgb(255 59 31 / 0.55), transparent 68%);
+	}
+
+	.blob-b {
+		width: 40%;
+		aspect-ratio: 1;
+		right: -6%;
+		top: 24%;
+		background: radial-gradient(circle at 50% 50%, rgb(91 140 255 / 0.4), transparent 66%);
+		animation-delay: -5s;
+	}
+
+	.blob-c {
+		width: 36%;
+		aspect-ratio: 1;
+		left: 28%;
+		bottom: -22%;
+		background: radial-gradient(circle at 50% 50%, rgb(55 214 168 / 0.32), transparent 66%);
+		animation-delay: -9s;
+	}
+
+	@keyframes blob-drift {
+		from {
+			transform: translate3d(0, 0, 0) scale(1);
+		}
+		to {
+			transform: translate3d(12%, 10%, 0) scale(1.18);
+		}
+	}
+
+	.lab-slab {
+		display: flex;
+		flex-direction: column;
+		justify-content: flex-end;
+		padding: 1rem;
+		border-radius: var(--radius-card);
+		border: 1px solid rgb(236 232 223 / 0.16);
+		background: linear-gradient(
+			135deg,
+			rgb(236 232 223 / var(--lab-op, 0.08)),
+			rgb(236 232 223 / calc(var(--lab-op, 0.08) * 0.4)) 60%,
+			rgb(255 59 31 / var(--lab-tint, 0.12))
+		);
+		backdrop-filter: blur(var(--lab-blur, 24px)) saturate(140%);
+		-webkit-backdrop-filter: blur(var(--lab-blur, 24px)) saturate(140%);
+		box-shadow: 0 24px 60px -24px rgb(0 0 0 / 0.6);
+		touch-action: none;
+	}
+
+	.slab-num {
+		position: absolute;
+		top: 0.75rem;
+		left: 1rem;
+		font-family: var(--font-display);
+		font-size: 1.6rem;
+		font-weight: 400;
+		color: rgb(236 232 223 / 0.25);
+	}
+
+	.lab-range {
+		appearance: none;
+		height: 2px;
+		background: rgb(236 232 223 / 0.15);
+		outline: none;
+	}
+
+	.lab-range::-webkit-slider-thumb {
+		appearance: none;
+		width: 14px;
+		height: 14px;
+		border-radius: 999px;
+		background: var(--color-flame);
+		border: 2px solid var(--color-void);
+		transition: transform 0.2s var(--ease-spring);
+	}
+
+	.lab-range::-webkit-slider-thumb:hover {
+		transform: scale(1.3);
+	}
+
+	.lab-range::-moz-range-thumb {
+		width: 14px;
+		height: 14px;
+		border-radius: 999px;
+		background: var(--color-flame);
+		border: 2px solid var(--color-void);
+	}
+</style>
+
+<script>
+	import { gsap, ScrollTrigger, Draggable, reduced } from '../lib/motion';
+
+	gsap.registerPlugin(Draggable);
+
+	const stage = document.querySelector('[data-stage]') as HTMLElement;
+
+	const applyTokens = () => {
+		const blur = Number((document.querySelector('[data-slider="blur"]') as HTMLInputElement).value);
+		const op = Number((document.querySelector('[data-slider="op"]') as HTMLInputElement).value);
+		const tint = Number((document.querySelector('[data-slider="tint"]') as HTMLInputElement).value);
+		stage.style.setProperty('--lab-blur', `${blur}px`);
+		stage.style.setProperty('--lab-op', String(op / 100));
+		stage.style.setProperty('--lab-tint', String(tint / 100));
+		(document.querySelector('[data-val-blur]') as HTMLElement).textContent = `${blur}px`;
+		(document.querySelector('[data-val-op]') as HTMLElement).textContent = `${op}%`;
+		(document.querySelector('[data-val-tint]') as HTMLElement).textContent = `${tint}%`;
+		document.querySelectorAll('[data-slab-meta]').forEach((m) => {
+			m.textContent = `BLUR ${blur} / OP ${op}%`;
+		});
+	};
+
+	document.querySelectorAll('[data-slider]').forEach((s) => s.addEventListener('input', applyTokens));
+	applyTokens();
+
+	if (!reduced) {
+		gsap.utils.toArray('[data-lab-line]').forEach((line) => {
+			gsap.from(line, {
+				yPercent: 110,
+				duration: 1,
+				ease: 'power4.out',
+				scrollTrigger: { trigger: line, start: 'top 90%' },
+			});
+		});
+		gsap.utils.toArray('[data-lab-reveal]').forEach((el) => {
+			gsap.from(el, {
+				y: 26,
+				opacity: 0,
+				duration: 0.9,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: el, start: 'top 92%' },
+			});
+		});
+
+		document.querySelectorAll('[data-slab]').forEach((slab, i) => {
+			const home = { x: 0, y: 0 };
+			Draggable.create(slab, {
+				type: 'x,y',
+				bounds: stage,
+				cursor: 'grab',
+				activeCursor: 'grabbing',
+				onDragStart: () => gsap.to(slab, { scale: 1.06, duration: 0.3, ease: 'power3.out' }),
+				onRelease: () => {
+					gsap.to(slab, {
+						x: home.x,
+						y: home.y,
+						scale: 1,
+						duration: 1.4,
+						ease: 'elastic.out(1, 0.42)',
+						delay: 0.15,
+					});
+				},
+			});
+			gsap.from(slab, {
+				opacity: 0,
+				y: 60,
+				duration: 1,
+				delay: i * 0.12,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: stage, start: 'top 80%' },
+			});
+		});
+	}
+</script>

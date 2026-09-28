@@ -1,0 +1,24 @@
+---
+import { skills } from '../data/portfolio';
+---
+
+<div class="relative overflow-hidden border-y border-bone/10 bg-coal py-5" aria-hidden="true">
+	<div class="marquee-track">
+		<span class="t-mono flex shrink-0 items-center gap-8 pr-8 text-ash">
+			{skills.marquee.split(' / ').map((s) => (
+				<>
+					<span class="whitespace-nowrap text-base tracking-[0.32em] uppercase">{s}</span>
+					<span class="text-flame">✦</span>
+				</>
+			))}
+		</span>
+		<span class="marquee-clone t-mono flex shrink-0 items-center gap-8 pr-8 text-ash">
+			{skills.marquee.split(' / ').map((s) => (
+				<>
+					<span class="whitespace-nowrap text-base tracking-[0.32em] uppercase">{s}</span>
+					<span class="text-flame">✦</span>
+				</>
+			))}
+		</span>
+	</div>
+</div>

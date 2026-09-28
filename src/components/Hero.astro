@@ -1,237 +1,202 @@
 ---
 import { profile } from '../data/portfolio';
-import portrait from '../assets/portrait.svg';
-
-const stats = [
-	{ value: '07', label: 'Projects shipped' },
-	{ value: '05', label: 'Teams' },
-	{ value: '03', label: 'Years' },
-];
 ---
 
-<section id="top" data-hero class="tone-dark min-h-screen">
-	<div class="swiss-container flex min-h-screen items-center pb-24 pt-28 lg:pt-36">
-		<div class="grid w-full grid-cols-1 gap-12 lg:grid-cols-12 lg:gap-6">
-			<div class="flex flex-col justify-center gap-8 lg:col-span-7 lg:gap-10">
-				<div data-fade class="flex items-center gap-4">
-					<span class="t-label whitespace-nowrap text-frost-dim">01 — Frontend Engineer / Vietnam</span>
-					<span class="h-px flex-1 bg-frost/15" aria-hidden="true"></span>
-					<span class="h-1.5 w-1.5 shrink-0 bg-accent" aria-hidden="true"></span>
+<section id="top" class="relative min-h-svh overflow-hidden">
+	<canvas data-flow class="absolute inset-0 h-full w-full" aria-hidden="true"></canvas>
+	<div class="layer-grid pointer-events-none absolute inset-0"></div>
+	<div
+		class="pointer-events-none absolute inset-x-0 bottom-0 h-40 bg-gradient-to-t from-void to-transparent"
+		aria-hidden="true"
+	></div>
+
+	<div class="reel-container relative flex min-h-svh flex-col justify-between pt-28 pb-10">
+		<div data-hero-meta class="flex items-center gap-5">
+			<span class="t-mono text-ash">01 — {profile.role}</span>
+			<span class="h-px flex-1 bg-bone/15" aria-hidden="true"></span>
+			<span class="t-mono text-ash">{profile.location}</span>
+		</div>
+
+		<h1 class="t-mega py-10 text-bone" data-hero-title aria-label="Phi Hung">
+			<span class="mask-line"><span class="title-line block" data-chars="PHI">PHI</span></span>
+			<span class="mask-line"
+				><span class="title-line stroke-text block" data-chars="HUNG">HUNG</span></span
+			>
+		</h1>
+
+		<div class="grid gap-10 pb-6 lg:grid-cols-12 lg:items-end">
+			<div class="lg:col-span-6">
+				<p class="t-mono mb-4 text-flame" data-scramble={profile.focus}>
+					{profile.focus}
+				</p>
+				<p class="max-w-xl text-base leading-relaxed text-ash md:text-lg" data-hero-copy>
+					{profile.tagline}
+				</p>
+			</div>
+			<div class="flex gap-10 lg:col-span-4 lg:justify-end" data-hero-stats>
+				<div>
+					<p class="font-display text-4xl text-bone md:text-5xl" data-count="7">00</p>
+					<p class="t-mono mt-2 text-dim">Projects</p>
 				</div>
-
-				<h1 data-title data-word-reveal class="t-display t-expanded text-frost">PHI<br /><span class="stroke-title">HUNG</span></h1>
-
-				<p data-fade class="max-w-xl text-lg leading-relaxed text-frost-dim">{profile.tagline}</p>
-
-				<div data-fade class="flex flex-wrap items-center gap-4">
-					<a
-						href="#work"
-						class="rounded-full bg-accent px-7 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-white transition duration-300 ease-spring hover:scale-105 hover:bg-accent-soft hover:shadow-lift focus-visible:ring-2 focus-visible:ring-accent"
-					>
-						View work
-					</a>
-					<a
-						href="#contact"
-						class="glass-dark rounded-full px-7 py-3.5 text-sm font-bold uppercase tracking-[0.1em] text-frost transition duration-300 ease-spring hover:-translate-y-0.5 hover:text-white focus-visible:ring-2 focus-visible:ring-accent"
-					>
-						Get in touch
-					</a>
+				<div>
+					<p class="font-display text-4xl text-bone md:text-5xl" data-count="5">00</p>
+					<p class="t-mono mt-2 text-dim">Teams</p>
 				</div>
-
-				<div data-fade class="grid max-w-xl grid-cols-3 gap-3 sm:gap-4">
-					{
-						stats.map((stat) => (
-							<div class="glass-dark rounded-panel px-4 py-4 sm:px-5">
-								<div class="text-3xl font-black leading-none text-frost sm:text-4xl">{stat.value}</div>
-								<div class="t-label mt-2 text-frost-dim">{stat.label}</div>
-							</div>
-						))
-					}
+				<div>
+					<p class="font-display text-4xl text-bone md:text-5xl" data-count="3">00</p>
+					<p class="t-mono mt-2 text-dim">Years</p>
 				</div>
 			</div>
-
-			<div data-fade class="flex items-center lg:col-span-5">
-				<div data-panel class="glass-dark glass-edge relative min-h-[70vh] w-full overflow-hidden rounded-glass">
-					<img
-						src={portrait.src}
-						alt=""
-						aria-hidden="true"
-						class="absolute inset-0 h-full w-full scale-110 object-cover grayscale opacity-15 blur-sm"
-					/>
-					<img
-						src={portrait.src}
-						alt="Portrait of Phi Hung, thoughtful young man sitting, hand-drawn cartoon style"
-						class="absolute inset-0 m-auto h-[82%] w-auto max-w-none object-contain grayscale contrast-125"
-					/>
-
-					<span class="pointer-events-none absolute inset-x-0 top-[36%] h-px bg-frost/10" aria-hidden="true"></span>
-					<span class="pointer-events-none absolute inset-y-0 left-[58%] w-px bg-frost/10" aria-hidden="true"></span>
-
-					<div class="absolute left-5 top-5 flex gap-1.5" aria-hidden="true">
-						<span class="h-1.5 w-1.5 rounded-full bg-accent"></span>
-						<span class="h-1.5 w-1.5 rounded-full bg-frost/25"></span>
-						<span class="h-1.5 w-1.5 rounded-full bg-frost/25"></span>
-					</div>
-
-					<span class="vertical-label t-label absolute right-4 top-1/2 -translate-y-1/2 text-frost-dim">
-						React + Web3 Product UI
-					</span>
-
-					<div data-spec class="spec-glow pointer-events-none absolute left-1/2 top-1/2 h-96 w-96 rounded-full" aria-hidden="true"></div>
-
-					<div data-fade class="glass-dark absolute bottom-5 left-5 inline-flex items-center gap-2.5 rounded-full px-4 py-2">
-						<span class="badge-dot h-2 w-2 rounded-full bg-mint" aria-hidden="true"></span>
-						<span class="t-label text-frost">Open to frontend roles</span>
-					</div>
-				</div>
+			<div class="hidden flex-col items-end gap-3 lg:col-span-2 lg:flex" aria-hidden="true">
+				<span class="t-mono text-dim">Scroll</span>
+				<span class="block h-14 w-px bg-gradient-to-b from-flame to-transparent" data-scroll-cue></span>
 			</div>
 		</div>
 	</div>
-
-	<div class="pointer-events-none absolute bottom-6 left-1/2 hidden -translate-x-1/2 flex-col items-center gap-3 md:flex">
-		<span class="t-label text-frost-dim">Scroll</span>
-		<span class="scroll-line block h-12 w-px bg-frost/15" aria-hidden="true"></span>
-	</div>
 </section>
 
-<style>
-	.spec-glow {
-		background: radial-gradient(circle, rgb(255 255 255 / 0.2) 0%, rgb(255 255 255 / 0.06) 40%, transparent 65%);
-		opacity: 0;
-	}
-
-	.badge-dot {
-		animation: badge-pulse 2s var(--ease-glass) infinite;
-	}
-
-	@keyframes badge-pulse {
-		0%,
-		100% {
-			opacity: 1;
-			transform: scale(1);
-		}
-
-		50% {
-			opacity: 0.5;
-			transform: scale(0.8);
-		}
-	}
-
-	.scroll-line {
-		position: relative;
-		overflow: hidden;
-	}
-
-	.scroll-line::after {
-		content: "";
-		position: absolute;
-		inset-inline: 0;
-		top: 0;
-		height: 45%;
-		background: var(--color-accent);
-		animation: scroll-drift 1.9s var(--ease-glass) infinite alternate;
-	}
-
-	@keyframes scroll-drift {
-		from {
-			transform: translateY(-110%);
-		}
-
-		to {
-			transform: translateY(220%);
-		}
-	}
-</style>
-
 <script>
-	import gsap from 'gsap';
-	import { ScrollTrigger } from 'gsap/ScrollTrigger';
+	import { gsap, ScrollTrigger, SplitText, scramble, reduced } from '../lib/motion';
 
-	gsap.registerPlugin(ScrollTrigger);
+	gsap.registerPlugin(SplitText);
 
-	const section = document.querySelector('[data-hero]');
+	const canvas = document.querySelector('[data-flow]') as HTMLCanvasElement;
+	const ctx = canvas.getContext('2d')!;
+	let w = 0;
+	let h = 0;
+	let raf = 0;
 
-	if (section) {
-		const title = section.querySelector('[data-title]');
-		const panel = section.querySelector('[data-panel]');
-		const spec = section.querySelector('[data-spec]');
-		const fades = gsap.utils.toArray('[data-fade]', section);
+	const resize = () => {
+		const dpr = Math.min(devicePixelRatio, 2);
+		w = canvas.clientWidth;
+		h = canvas.clientHeight;
+		canvas.width = w * dpr;
+		canvas.height = h * dpr;
+		ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+	};
 
-		const splitWords = (el: Element): HTMLElement[] => {
-			const cores: HTMLElement[] = [];
-			Array.from(el.childNodes).forEach((node) => {
-				if (node.nodeType === Node.TEXT_NODE) {
-					const words = node.textContent.split(/\s+/).filter(Boolean);
-					const frag = document.createDocumentFragment();
-					words.forEach((word, i) => {
-						const clip = document.createElement('span');
-						clip.className = 'word-clip';
-						const core = document.createElement('span');
-						core.className = 'word-core';
-						core.textContent = word;
-						clip.appendChild(core);
-						frag.appendChild(clip);
-						if (i < words.length - 1) frag.appendChild(document.createTextNode(' '));
-						cores.push(core);
-					});
-					node.replaceWith(frag);
-				} else if (node.nodeType === Node.ELEMENT_NODE && node.nodeName !== 'BR') {
-					cores.push(...splitWords(node as Element));
-				}
-			});
-			return cores;
-		};
+	type P = { x: number; y: number; px: number; py: number; s: number; hue: number };
+	let parts: P[] = [];
 
-		const cores = title ? splitWords(title) : [];
-		const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+	const seed = () => {
+		const n = Math.min(150, Math.floor((w * h) / 14000));
+		parts = Array.from({ length: n }, () => {
+			const x = Math.random() * w;
+			const y = Math.random() * h;
+			return { x, y, px: x, py: y, s: 0.4 + Math.random() * 1.1, hue: Math.random() };
+		});
+	};
 
-		if (reduceMotion) {
-			gsap.set([...cores, ...fades, title, panel, spec].filter(Boolean), { clearProps: 'all', opacity: 1 });
-		} else {
-			gsap.set(spec, { xPercent: -50, yPercent: -50 });
+	let t = 0;
+	const field = (x: number, y: number) =>
+		Math.sin(x * 0.0016 + t * 0.35) * Math.cos(y * 0.0013 - t * 0.22) * Math.PI * 2 +
+		Math.sin((x + y) * 0.0007 + t * 0.12) * 1.6;
 
-			gsap
-				.timeline({ defaults: { ease: 'power4.out' } })
-				.from(cores, { yPercent: 130, rotate: -6, opacity: 0, duration: 1.1, ease: 'expo.out', stagger: 0.08 }, 0.15)
-				.from(fades, { y: 40, opacity: 0, duration: 0.85, stagger: 0.09 }, 0.25);
-
-			gsap.to(panel, {
-				y: -60,
-				ease: 'none',
-				scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
-			});
-
-			gsap.to(title, {
-				y: 80,
-				opacity: 0.6,
-				ease: 'none',
-				scrollTrigger: { trigger: section, start: 'top top', end: 'bottom top', scrub: true },
-			});
-
-			panel.addEventListener('mousemove', (e: MouseEvent) => {
-				const rect = panel.getBoundingClientRect();
-				const px = (e.clientX - rect.left) / rect.width - 0.5;
-				const py = (e.clientY - rect.top) / rect.height - 0.5;
-				gsap.to(panel, {
-					rotateY: px * 10,
-					rotateX: -py * 10,
-					duration: 0.6,
-					ease: 'power3.out',
-					transformPerspective: 800,
-				});
-				gsap.to(spec, {
-					x: px * rect.width * 0.7,
-					y: py * rect.height * 0.7,
-					opacity: 1,
-					duration: 0.6,
-					ease: 'power3.out',
-				});
-			});
-
-			panel.addEventListener('mouseleave', () => {
-				gsap.to(panel, { rotateX: 0, rotateY: 0, duration: 1.4, ease: 'elastic.out(1, 0.5)' });
-				gsap.to(spec, { x: 0, y: 0, opacity: 0, duration: 0.8, ease: 'power3.out' });
-			});
+	const draw = () => {
+		t += 0.006;
+		ctx.globalCompositeOperation = 'destination-out';
+		ctx.fillStyle = 'rgba(10,10,12,0.08)';
+		ctx.fillRect(0, 0, w, h);
+		ctx.globalCompositeOperation = 'lighter';
+		for (const p of parts) {
+			const a = field(p.x, p.y);
+			p.px = p.x;
+			p.py = p.y;
+			p.x += Math.cos(a) * p.s;
+			p.y += Math.sin(a) * p.s;
+			if (p.x < -20 || p.x > w + 20 || p.y < -20 || p.y > h + 20) {
+				p.x = Math.random() * w;
+				p.y = Math.random() * h;
+				p.px = p.x;
+				p.py = p.y;
+			}
+			ctx.strokeStyle = p.hue > 0.86 ? 'rgba(255,59,31,0.5)' : 'rgba(236,232,223,0.16)';
+			ctx.lineWidth = p.s * 0.7;
+			ctx.beginPath();
+			ctx.moveTo(p.px, p.py);
+			ctx.lineTo(p.x, p.y);
+			ctx.stroke();
 		}
+		raf = requestAnimationFrame(draw);
+	};
+
+	if (!reduced) {
+		resize();
+		seed();
+		draw();
+		addEventListener('resize', () => {
+			resize();
+			seed();
+		});
+		document.addEventListener('visibilitychange', () => {
+			if (document.hidden) cancelAnimationFrame(raf);
+			else draw();
+		});
+	}
+
+	const title = document.querySelector('[data-hero-title]')!;
+	const lines = title.querySelectorAll('.title-line');
+	const splits = Array.from(lines).map(
+		(l) => new SplitText(l as HTMLElement, { type: 'chars' }),
+	);
+
+	if (!reduced) {
+		const intro = () => {
+			const tl = gsap.timeline({ defaults: { ease: 'power4.out' } });
+			tl.from('[data-hero-meta]', { y: 24, opacity: 0, duration: 0.9 }, 0.1)
+				.from(
+					splits.flatMap((s) => s.chars),
+					{ yPercent: 110, rotate: 6, duration: 1.2, stagger: 0.05 },
+					0.2,
+				)
+				.from('[data-hero-copy]', { y: 30, opacity: 0, duration: 0.9 }, 0.8)
+				.from('[data-hero-stats] > div', { y: 30, opacity: 0, stagger: 0.1, duration: 0.8 }, 0.9);
+		};
+		if (document.querySelector('#preloader')) {
+			document.addEventListener('reel:ready', intro, { once: true });
+		} else {
+			intro();
+		}
+
+		document.querySelectorAll('[data-scramble]').forEach((el) => {
+			const text = (el as HTMLElement).dataset.scramble!;
+			document.addEventListener(
+				'reel:ready',
+				() => setTimeout(() => scramble(el as HTMLElement, text, 1.4), 700),
+				{ once: true },
+			);
+		});
+
+		document.querySelectorAll('[data-count]').forEach((el) => {
+			const target = Number((el as HTMLElement).dataset.count);
+			const obj = { n: 0 };
+			document.addEventListener(
+				'reel:ready',
+				() =>
+					gsap.to(obj, {
+						n: target,
+						duration: 1.6,
+						delay: 1,
+						ease: 'power2.out',
+						onUpdate: () => {
+							el.textContent = String(Math.round(obj.n)).padStart(2, '0');
+						},
+					}),
+				{ once: true },
+			);
+		});
+
+		gsap.to(title, {
+			yPercent: -18,
+			ease: 'none',
+			scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom top', scrub: 0.6 },
+		});
+		gsap.to(canvas, {
+			scale: 1.15,
+			opacity: 0.4,
+			ease: 'none',
+			scrollTrigger: { trigger: '#top', start: 'top top', end: 'bottom top', scrub: 0.6 },
+		});
+		gsap.to('[data-scroll-cue]', { scaleY: 0.3, transformOrigin: 'top', repeat: -1, yoyo: true, duration: 1, ease: 'power2.inOut' });
 	}
 </script>

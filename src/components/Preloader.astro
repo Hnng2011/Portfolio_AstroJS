@@ -1,0 +1,111 @@
+<div id="preloader" aria-hidden="true">
+	<div class="pre-inner">
+		<p class="t-mono pre-tag">Reel 2026 — Frontend Motion</p>
+		<p class="pre-count t-mega">000</p>
+		<div class="pre-bar"><i></i></div>
+	</div>
+	<div class="pre-curtain"></div>
+</div>
+
+<style>
+	#preloader {
+		position: fixed;
+		inset: 0;
+		z-index: 200;
+		background: var(--color-void);
+		display: grid;
+		place-items: center;
+	}
+
+	.pre-inner {
+		position: relative;
+		z-index: 2;
+		width: min(86vw, 720px);
+		display: flex;
+		flex-direction: column;
+		gap: 1.5rem;
+	}
+
+	.pre-tag {
+		color: var(--color-ash);
+	}
+
+	.pre-count {
+		color: var(--color-bone);
+		font-variant-numeric: tabular-nums;
+	}
+
+	.pre-bar {
+		height: 2px;
+		background: rgb(236 232 223 / 0.12);
+		overflow: hidden;
+	}
+
+	.pre-bar i {
+		display: block;
+		height: 100%;
+		width: 100%;
+		background: var(--color-flame);
+		transform: scaleX(0);
+		transform-origin: 0 50%;
+	}
+
+	.pre-curtain {
+		position: absolute;
+		inset: 0;
+		z-index: 3;
+		background: var(--color-flame);
+		transform: scaleY(0);
+		transform-origin: 50% 100%;
+	}
+</style>
+
+<script>
+	import { gsap, reduced } from '../lib/motion';
+
+	const root = document.querySelector('#preloader')!;
+	const count = root.querySelector('.pre-count')!;
+	const bar = root.querySelector('.pre-bar i')!;
+	const curtain = root.querySelector('.pre-curtain')!;
+
+	const finish = () => {
+		document.dispatchEvent(new CustomEvent('reel:ready'));
+		root.remove();
+	};
+
+	if (reduced) {
+		finish();
+	} else {
+		const state = { n: 0 };
+		const tl = gsap.timeline({
+			onComplete: () => {
+				gsap.to(curtain, {
+					scaleY: 1,
+					duration: 0.45,
+					ease: 'power3.inOut',
+					onComplete: () => {
+						gsap.set(root, { background: 'transparent' });
+						gsap.set(root.querySelector('.pre-inner'), { opacity: 0 });
+						gsap.to(curtain, {
+							scaleY: 0,
+							transformOrigin: '50% 0%',
+							duration: 0.7,
+							ease: 'power4.inOut',
+							delay: 0.1,
+							onComplete: finish,
+						});
+					},
+				});
+			},
+		});
+		tl.to(state, {
+			n: 100,
+			duration: 1.6,
+			ease: 'power2.inOut',
+			onUpdate: () => {
+				count.textContent = String(Math.round(state.n)).padStart(3, '0');
+			},
+		});
+		tl.to(bar, { scaleX: 1, duration: 1.6, ease: 'power2.inOut' }, 0);
+	}
+</script>

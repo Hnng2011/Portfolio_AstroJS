@@ -1,0 +1,120 @@
+---
+import { contactLinks, profile } from '../data/portfolio';
+
+const heading = "LET'S MAKE MOTION";
+---
+
+<footer id="contact" class="relative overflow-hidden border-t border-bone/10">
+	<div class="overflow-hidden border-b border-bone/10 bg-flame py-4" aria-hidden="true">
+		<div class="marquee-track is-reverse">
+			<span class="flex shrink-0 items-center gap-6 pr-6">
+				{Array.from({ length: 6 }).map(() => (
+					<>
+						<span class="t-mono whitespace-nowrap text-void">Open to frontend roles</span>
+						<span class="font-display text-lg text-void">✦</span>
+					</>
+				))}
+			</span>
+			<span class="flex shrink-0 items-center gap-6 pr-6">
+				{Array.from({ length: 6 }).map(() => (
+					<>
+						<span class="t-mono whitespace-nowrap text-void">Open to frontend roles</span>
+						<span class="font-display text-lg text-void">✦</span>
+					</>
+				))}
+			</span>
+		</div>
+	</div>
+
+	<div class="reel-container flex min-h-[80svh] flex-col justify-between py-20">
+		<div>
+			<p class="t-mono text-flame" data-contact-reveal>06 — Contact</p>
+			<h2 class="char-hover t-mega mt-8 text-bone" data-contact-title aria-label={heading}>
+				{heading.split(' ').map((word) => (
+					<>
+						<span class="inline-block whitespace-nowrap">
+							{word.split('').map((c) => (
+								<span data-char>{c}</span>
+							))}
+						</span>{' '}
+					</>
+				))}
+			</h2>
+			<div class="mt-12 flex flex-wrap items-center gap-6" data-contact-reveal>
+				<a
+					href="mailto:luphihung111@gmail.com"
+					data-magnetic
+					data-cursor="Mail"
+					class="inline-block bg-bone px-8 py-4 font-display text-lg tracking-tight text-void uppercase transition-colors duration-300 hover:bg-flame"
+				>
+					luphihung111@gmail.com
+				</a>
+				{contactLinks
+					.filter((l) => l.label !== 'Email')
+					.map((l) => (
+						<a
+							href={l.url}
+							target="_blank"
+							rel="noopener noreferrer"
+							class="t-mono border border-bone/20 px-5 py-4 text-bone transition-colors duration-300 hover:border-flame hover:text-flame"
+						>
+							{l.label} ↗
+						</a>
+					))}
+			</div>
+		</div>
+
+		<div class="mt-20 flex flex-wrap items-end justify-between gap-6 border-t border-bone/10 pt-8">
+			<div>
+				<p class="t-mono text-dim">
+					{profile.location} — <span data-clock>--:--:--</span> ICT
+				</p>
+				<p class="t-mono mt-2 text-dim">© 2026 Phi Hung — Reel cut with Astro + GSAP</p>
+			</div>
+			<a href="#top" data-magnetic class="t-mono group flex items-center gap-3 text-ash transition-colors hover:text-flame">
+				Back to top
+				<span class="inline-block transition-transform duration-300 group-hover:-translate-y-1">↑</span>
+			</a>
+		</div>
+	</div>
+</footer>
+
+<script>
+	import { gsap, ScrollTrigger, magnetic, reduced } from '../lib/motion';
+
+	const clock = document.querySelector('[data-clock]')!;
+	const tick = () => {
+		clock.textContent = new Intl.DateTimeFormat('en-GB', {
+			timeZone: 'Asia/Ho_Chi_Minh',
+			hour: '2-digit',
+			minute: '2-digit',
+			second: '2-digit',
+			hour12: false,
+		}).format(new Date());
+	};
+	tick();
+	setInterval(tick, 1000);
+
+	document.querySelectorAll('[data-magnetic]').forEach((el) => magnetic(el as HTMLElement));
+
+	if (!reduced) {
+		gsap.from('[data-contact-title] [data-char]', {
+			yPercent: 60,
+			opacity: 0,
+			duration: 0.8,
+			stagger: 0.02,
+			ease: 'power4.out',
+			clearProps: 'all',
+			scrollTrigger: { trigger: '[data-contact-title]', start: 'top 92%' },
+		});
+		gsap.utils.toArray('[data-contact-reveal]').forEach((el) => {
+			gsap.from(el, {
+				y: 26,
+				opacity: 0,
+				duration: 0.9,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: el, start: 'top 92%' },
+			});
+		});
+	}
+</script>

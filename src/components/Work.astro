@@ -1,0 +1,220 @@
+---
+import { projects } from '../data/portfolio';
+import art01 from '../assets/work-01.svg';
+import art02 from '../assets/work-02.svg';
+import art03 from '../assets/work-03.svg';
+import art04 from '../assets/work-04.svg';
+import art05 from '../assets/work-05.svg';
+import art06 from '../assets/work-06.svg';
+import art07 from '../assets/work-07.svg';
+
+const art = [art01, art02, art03, art04, art05, art06, art07];
+---
+
+<section id="work" class="relative py-28 lg:py-40">
+	<div class="reel-container">
+		<div class="grid gap-8 lg:grid-cols-12">
+			<div class="lg:col-span-4">
+				<p class="t-mono text-flame" data-reveal>02 — Selected work</p>
+			</div>
+			<div class="lg:col-span-8">
+				<h2 class="t-title text-bone">
+					<span class="mask-line"><span data-head-line>Real project</span></span>
+					<span class="mask-line"><span class="stroke-text text-bone" data-head-line>work, in</span></span>
+					<span class="mask-line"><span data-head-line>motion.</span></span>
+				</h2>
+				<p class="mt-6 max-w-md text-base leading-relaxed text-ash" data-reveal>
+					Seven productions, three years, one obsession: interfaces that feel alive under real
+					data. Hover a row to preview the frame — open the case for the full cut.
+				</p>
+			</div>
+		</div>
+
+		<div class="mt-20 lg:mt-28">
+			{
+				projects.map((p, i) => (
+					<article class="work-row hairline group relative" data-row data-art={art[i].src}>
+						<div class="grid gap-4 px-2 py-8 md:grid-cols-12 md:items-center md:gap-6 md:py-10">
+							<div class="md:col-span-1">
+								<span class="font-display text-2xl text-dim transition-colors duration-500 group-hover:text-flame">
+									{p.index}
+								</span>
+							</div>
+							<div class="md:col-span-4">
+								<h3 class="row-title font-display text-3xl tracking-tight text-bone uppercase lg:text-4xl">
+									{p.title}
+								</h3>
+								<p class="t-mono mt-3 text-ash">{p.type}</p>
+							</div>
+							<div class="md:col-span-3">
+								<p class="text-sm leading-relaxed text-ash line-clamp-2">{p.summary}</p>
+							</div>
+							<div class="flex flex-wrap gap-2 md:col-span-2">
+								{p.tags.map((t) => <span class="t-mono border border-bone/15 px-2 py-1 text-ash">{t}</span>)}
+							</div>
+							<div class="flex items-center justify-between gap-4 md:col-span-2 md:justify-end">
+								<span class="t-mono text-dim">{p.year.split(' - ')[0]}</span>
+								<button
+									type="button"
+									data-case-toggle
+									aria-expanded="false"
+									aria-controls={`case-${p.index}`}
+									data-cursor="Case"
+									class="t-mono border border-bone/20 px-4 py-2.5 text-bone transition-colors duration-300 hover:border-flame hover:text-flame"
+								>
+									+ Case
+								</button>
+							</div>
+						</div>
+
+						<div id={`case-${p.index}`} data-case class="overflow-hidden" hidden>
+							<div class="grid gap-8 border-t border-bone/10 bg-coal/60 px-2 py-10 md:grid-cols-12 md:px-6">
+								<div class="md:col-span-4">
+									<p class="t-mono mb-4 text-flame">Challenge</p>
+									<p class="text-sm leading-relaxed text-ash">{p.caseStudy.challenge}</p>
+								</div>
+								<div class="md:col-span-5">
+									<p class="t-mono mb-4 text-dim">Approach</p>
+									<ol class="space-y-4">
+										{p.caseStudy.approach.map((a, ai) => (
+											<li class="flex gap-4 border-l border-flame/40 pl-4">
+												<span class="t-mono text-flame">0{ai + 1}</span>
+												<p class="text-sm leading-relaxed text-ash">{a}</p>
+											</li>
+										))}
+									</ol>
+								</div>
+								<div class="md:col-span-3">
+									<p class="t-mono mb-4 text-dim">Outcome</p>
+									<p class="text-sm leading-relaxed text-ash">{p.caseStudy.outcome}</p>
+									<div class="mt-6 space-y-3">
+										{p.caseStudy.metrics.map((m) => (
+											<div class="flex items-baseline justify-between gap-3 border-b border-bone/10 pb-2">
+												<span class="t-mono text-dim">{m.label}</span>
+												<span class="font-display text-sm text-bone">{m.value}</span>
+											</div>
+										))}
+									</div>
+									{p.url && (
+										<a
+											href={p.url}
+											target="_blank"
+											rel="noopener noreferrer"
+											data-cursor="Live"
+											class="t-mono mt-6 inline-block bg-flame px-5 py-3 text-void transition-colors hover:bg-bone"
+										>
+											Visit ↗
+										</a>
+									)}
+								</div>
+							</div>
+						</div>
+					</article>
+				))
+			}
+			<div class="hairline"></div>
+		</div>
+	</div>
+
+	<div class="preview-float" data-preview aria-hidden="true">
+		<img data-preview-img src={art[0].src} alt="" />
+	</div>
+</section>
+
+<script>
+	import { gsap, ScrollTrigger, reduced } from '../lib/motion';
+
+	const rows = document.querySelectorAll('[data-row]');
+
+	if (!reduced) {
+		gsap.utils.toArray('[data-head-line]').forEach((line) => {
+			gsap.from(line, {
+				yPercent: 110,
+				duration: 1.1,
+				ease: 'power4.out',
+				scrollTrigger: { trigger: line, start: 'top 88%' },
+			});
+		});
+		gsap.utils.toArray('[data-reveal]').forEach((el) => {
+			gsap.from(el, {
+				y: 28,
+				opacity: 0,
+				duration: 0.9,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: el, start: 'top 90%' },
+			});
+		});
+		rows.forEach((row) => {
+			gsap.from(row, {
+				opacity: 0,
+				y: 40,
+				duration: 0.9,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: row, start: 'top 92%' },
+			});
+		});
+	}
+
+	const preview = document.querySelector('[data-preview]') as HTMLElement;
+	const previewImg = document.querySelector('[data-preview-img]') as HTMLImageElement;
+
+	if (matchMedia('(hover: hover) and (pointer: fine)').matches && !reduced) {
+		const xTo = gsap.quickTo(preview, 'x', { duration: 0.6, ease: 'power3' });
+		const yTo = gsap.quickTo(preview, 'y', { duration: 0.6, ease: 'power3' });
+		const rTo = gsap.quickTo(preview, 'rotation', { duration: 0.6, ease: 'power3' });
+		let lastX = 0;
+
+		window.addEventListener('pointermove', (e) => {
+			xTo(e.clientX + 40);
+			yTo(e.clientY - 120);
+			rTo(gsap.utils.clamp(-8, 8, (e.clientX - lastX) * 0.4));
+			lastX = e.clientX;
+		});
+
+		rows.forEach((row) => {
+			row.addEventListener('pointerenter', () => {
+				previewImg.src = (row as HTMLElement).dataset.art!;
+				gsap.to(preview, { opacity: 1, scale: 1, duration: 0.45, ease: 'power3.out' });
+			});
+			row.addEventListener('pointerleave', () => {
+				gsap.to(preview, { opacity: 0, scale: 0.92, duration: 0.35, ease: 'power3.in' });
+			});
+		});
+	}
+
+	rows.forEach((row) => {
+		const toggle = row.querySelector('[data-case-toggle]') as HTMLButtonElement;
+		const panel = row.querySelector('[data-case]') as HTMLElement;
+		toggle.addEventListener('click', () => {
+			const open = toggle.getAttribute('aria-expanded') === 'true';
+			toggle.setAttribute('aria-expanded', String(!open));
+			toggle.textContent = open ? '+ Case' : '− Close';
+			if (open) {
+				gsap.to(panel, {
+					height: 0,
+					duration: 0.6,
+					ease: 'power3.inOut',
+					onComplete: () => {
+						panel.hidden = true;
+						panel.style.height = '';
+					},
+				});
+			} else {
+				panel.hidden = false;
+				gsap.fromTo(
+					panel,
+					{ height: 0 },
+					{
+						height: 'auto',
+						duration: 0.7,
+						ease: 'power3.inOut',
+						onComplete: () => {
+							panel.style.height = '';
+							ScrollTrigger.refresh();
+						},
+					},
+				);
+			}
+		});
+	});
+</script>

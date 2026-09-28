@@ -1,185 +1,206 @@
 ---
-import { navLinks } from '../data/portfolio';
+import { navLinks, contactLinks, profile } from '../data/portfolio';
 ---
 
-<header data-nav class="fixed left-1/2 top-4 z-80 w-[calc(100%-1.5rem)] max-w-3xl -translate-x-1/2">
-	<div
-		data-nav-pill
-		class="nav-pill glass-dark glass-edge flex items-center justify-between gap-3 rounded-full px-4 py-2.5 sm:px-5"
-	>
-		<a
-			href="#top"
-			class="flex items-center gap-2 rounded-full focus-visible:ring-2 focus-visible:ring-accent"
-			aria-label="Phi Hung — back to top"
-		>
-			<span class="text-sm font-black uppercase tracking-[0.14em] text-frost">Phi Hung</span>
-			<span class="nav-dot" aria-hidden="true"></span>
+<header id="nav" class="fixed inset-x-0 top-0 z-80">
+	<div class="reel-container flex items-center justify-between py-5">
+		<a href="#top" class="group flex items-baseline gap-2" aria-label="Back to top">
+			<span class="font-display text-lg tracking-tight text-bone uppercase">Phi Hung</span>
+			<span class="h-1.5 w-1.5 bg-flame transition-transform duration-500 group-hover:scale-150"></span>
 		</a>
-
-		<nav class="hidden items-center gap-6 lg:flex xl:gap-8" aria-label="Primary">
-			{
-				navLinks.map((link) => (
-					<a
-						href={link.href}
-						class="group relative rounded-panel px-1 py-1.5 t-label text-frost-dim transition-colors duration-300 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent"
-					>
-						{link.label}
-						<span
-							class="absolute inset-x-1 -bottom-0.5 h-px origin-left scale-x-0 bg-accent transition-transform duration-300 ease-spring group-hover:scale-x-100"
-							aria-hidden="true"
-						/>
-					</a>
-				))
-			}
-		</nav>
-
-		<div class="flex items-center gap-2">
-			<a
-				href="#contact"
-				class="rounded-full bg-accent px-4 py-2 text-xs font-bold uppercase tracking-[0.12em] text-white transition duration-300 ease-spring hover:scale-105 hover:bg-accent-soft focus-visible:ring-2 focus-visible:ring-accent"
-			>
-				Hire me
-			</a>
+		<div class="flex items-center gap-6">
+			<span class="t-mono hidden text-ash md:block" data-timecode>00:00:00:00</span>
 			<button
 				type="button"
 				data-menu-toggle
-				class="glass-dark flex h-9 w-9 items-center justify-center rounded-full text-frost transition-colors duration-300 hover:text-accent focus-visible:ring-2 focus-visible:ring-accent lg:hidden"
-				aria-label="Open menu"
+				class="t-mono flex items-center gap-3 border border-bone/20 px-4 py-2.5 text-bone transition-colors duration-300 hover:border-flame hover:text-flame"
 				aria-expanded="false"
-				aria-controls="mobile-menu"
+				aria-controls="overlay-menu"
 			>
-				<svg class="icon-open h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-					<path d="M1.5 4.5h13M1.5 11.5h13" />
-				</svg>
-				<svg class="icon-close h-4 w-4" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" aria-hidden="true">
-					<path d="M3.5 3.5l9 9M12.5 3.5l-9 9" />
-				</svg>
+				<span data-menu-label>Menu</span>
+				<span class="relative block h-2.5 w-4" aria-hidden="true">
+					<i class="menu-line absolute inset-x-0 top-0 h-px bg-current"></i>
+					<i class="menu-line absolute inset-x-0 bottom-0 h-px bg-current"></i>
+				</span>
 			</button>
 		</div>
 	</div>
 </header>
 
-<div id="mobile-menu" data-menu class="menu-overlay fixed inset-0 z-70 lg:hidden" aria-hidden="true">
-	<div class="glass-dark absolute inset-0 backdrop-blur-2xl"></div>
-	<nav class="relative flex h-full flex-col items-center justify-center gap-7 px-6" aria-label="Mobile">
-		{
-			navLinks.map((link, i) => (
-				<a href={link.href} class="menu-link flex items-baseline gap-3" style={`transition-delay:${0.08 + i * 0.06}s`}>
-					<span class="t-label text-accent">0{i + 1}</span>
-					<span class="text-4xl font-black uppercase text-frost transition-colors duration-300 hover:text-accent sm:text-5xl">
-						{link.label}
-					</span>
+<div id="overlay-menu" class="fixed inset-0 z-70 hidden" aria-hidden="true">
+	<div class="absolute inset-0 bg-void/95 backdrop-blur-xl" data-menu-bg></div>
+	<div class="layer-grid absolute inset-0"></div>
+	<nav class="reel-container relative flex h-full flex-col justify-center gap-2 py-24" aria-label="Overlay">
+		{navLinks.map((l, i) => (
+			<a href={l.href} data-menu-link class="group flex items-baseline gap-5 py-1" style={`--i:${i}`}>
+				<span class="t-mono text-flame">0{i + 1}</span>
+				<span class="t-title text-bone transition-colors duration-300 group-hover:text-flame">
+					{l.label}
+				</span>
+				<span class="ml-auto h-px w-0 bg-flame transition-all duration-500 group-hover:w-16"></span>
+			</a>
+		))}
+		<div class="mt-10 flex flex-wrap gap-6 border-t border-bone/10 pt-8" data-menu-foot>
+			{contactLinks.map((c) => (
+				<a href={c.url} target={c.url.startsWith('http') ? '_blank' : undefined} rel="noopener noreferrer" class="t-mono text-ash transition-colors hover:text-flame">
+					{c.label} ↗
 				</a>
-			))
-		}
-		<a
-			href="#contact"
-			class="menu-link mt-4 rounded-full bg-accent px-7 py-3 text-sm font-bold uppercase tracking-[0.12em] text-white"
-			style="transition-delay:0.42s">Hire me</a
-		>
+			))}
+			<span class="t-mono ml-auto text-dim">{profile.location} — {profile.stack}</span>
+		</div>
 	</nav>
 </div>
 
+<div class="pointer-events-none fixed bottom-5 left-5 z-60 hidden md:block" aria-hidden="true">
+	<p class="t-mono text-dim"><span data-progress>000</span>% — scroll</p>
+</div>
+<div class="pointer-events-none fixed right-5 bottom-5 z-60 hidden md:block" aria-hidden="true">
+	<p class="t-mono text-dim">Reel 2026 / 10.8°N 106.7°E</p>
+</div>
+
+<nav class="chapter-rail" aria-label="Chapters">
+	<a href="#top" data-chapter="top"><span>01 Intro</span><i></i></a>
+	<a href="#work" data-chapter="work"><span>02 Work</span><i></i></a>
+	<a href="#stack" data-chapter="stack"><span>03 Stack</span><i></i></a>
+	<a href="#lab" data-chapter="lab"><span>04 Lab</span><i></i></a>
+	<a href="#path" data-chapter="path"><span>05 Path</span><i></i></a>
+	<a href="#contact" data-chapter="contact"><span>06 Contact</span><i></i></a>
+</nav>
+
 <style>
-	.nav-pill {
-		transition:
-			padding 0.45s var(--ease-glass),
-			background-color 0.45s var(--ease-glass);
+	#nav {
+		transition: transform 0.6s var(--ease-reel), background-color 0.4s;
 	}
 
-	.nav-pill.is-scrolled {
-		padding-block: 0.28rem;
-		background-color: color-mix(in srgb, var(--color-night) 72%, transparent);
+	#nav.is-hidden {
+		transform: translateY(-110%);
 	}
 
-	.nav-dot {
-		width: 0.45rem;
-		height: 0.45rem;
-		border-radius: 9999px;
-		background: var(--color-accent);
-		animation: nav-pulse 2.4s var(--ease-glass) infinite;
+	#nav.is-solid {
+		background: color-mix(in srgb, var(--color-void) 78%, transparent);
+		backdrop-filter: blur(14px);
+		-webkit-backdrop-filter: blur(14px);
+		border-bottom: 1px solid rgb(236 232 223 / 0.06);
 	}
 
-	@keyframes nav-pulse {
-		0%,
-		100% {
+	#nav.nav-intro {
+		animation: nav-in 1s var(--ease-reel) 2.2s backwards;
+	}
+
+	@keyframes nav-in {
+		from {
+			transform: translateY(-60px);
+			opacity: 0;
+		}
+
+		to {
+			transform: none;
 			opacity: 1;
-			transform: scale(1);
-		}
-
-		50% {
-			opacity: 0.4;
-			transform: scale(0.75);
 		}
 	}
 
-	.icon-close {
-		display: none;
+	.menu-line {
+		transition: transform 0.4s var(--ease-reel);
 	}
 
-	header.is-open .icon-open {
-		display: none;
+	[data-menu-toggle][aria-expanded='true'] .menu-line:first-child {
+		transform: translateY(4.5px) rotate(45deg);
 	}
 
-	header.is-open .icon-close {
-		display: block;
-	}
-
-	.menu-overlay {
-		opacity: 0;
-		visibility: hidden;
-		transition:
-			opacity 0.4s var(--ease-glass),
-			visibility 0s linear 0.4s;
-	}
-
-	.menu-overlay.is-open {
-		opacity: 1;
-		visibility: visible;
-		transition:
-			opacity 0.4s var(--ease-glass),
-			visibility 0s;
-	}
-
-	.menu-link {
-		opacity: 0;
-		transform: translateY(1.25rem);
-		transition:
-			opacity 0.5s var(--ease-glass),
-			transform 0.5s var(--ease-spring);
-	}
-
-	.menu-overlay.is-open .menu-link {
-		opacity: 1;
-		transform: translateY(0);
+	[data-menu-toggle][aria-expanded='true'] .menu-line:last-child {
+		transform: translateY(-4.5px) rotate(-45deg);
 	}
 </style>
 
 <script>
-	const header = document.querySelector('[data-nav]');
-	const pill = document.querySelector('[data-nav-pill]');
-	const toggle = document.querySelector('[data-menu-toggle]');
-	const menu = document.querySelector('[data-menu]');
+	import { gsap, ScrollTrigger, initLenis, timecode, reduced } from '../lib/motion';
 
-	const applyScroll = () => {
-		pill.classList.toggle('is-scrolled', window.scrollY > 40);
-	};
+	initLenis();
 
-	window.addEventListener('scroll', applyScroll, { passive: true });
-	applyScroll();
+	const nav = document.querySelector('#nav')!;
+	const toggle = document.querySelector('[data-menu-toggle]') as HTMLButtonElement;
+	const overlay = document.querySelector('#overlay-menu') as HTMLElement;
+	const links = overlay.querySelectorAll('[data-menu-link]');
+	const foot = overlay.querySelector('[data-menu-foot]')!;
+	const label = document.querySelector('[data-menu-label]')!;
 
-	const setMenu = (open: boolean) => {
-		menu.classList.toggle('is-open', open);
-		header.classList.toggle('is-open', open);
+	let open = false;
+	const setOpen = (next: boolean) => {
+		open = next;
 		toggle.setAttribute('aria-expanded', String(open));
-		toggle.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
-		menu.setAttribute('aria-hidden', String(!open));
-		document.body.style.overflow = open ? 'hidden' : '';
+		label.textContent = open ? 'Close' : 'Menu';
+		overlay.setAttribute('aria-hidden', String(!open));
+		if (open) {
+			overlay.classList.remove('hidden');
+			gsap.timeline()
+				.fromTo(overlay, { opacity: 0 }, { opacity: 1, duration: 0.4 })
+				.fromTo(
+					links,
+					{ y: 60, opacity: 0 },
+					{ y: 0, opacity: 1, duration: 0.7, stagger: 0.07, ease: 'power3.out' },
+					0.1,
+				)
+				.fromTo(foot, { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.6 }, 0.35);
+		} else {
+			gsap.to(overlay, {
+				opacity: 0,
+				duration: 0.35,
+				onComplete: () => overlay.classList.add('hidden'),
+			});
+		}
 	};
 
-	toggle.addEventListener('click', () => setMenu(!menu.classList.contains('is-open')));
-	menu.querySelectorAll('a').forEach((link) => link.addEventListener('click', () => setMenu(false)));
-	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape') setMenu(false);
+	toggle.addEventListener('click', () => setOpen(!open));
+	links.forEach((l) => l.addEventListener('click', () => setOpen(false)));
+	document.addEventListener('keydown', (e) => e.key === 'Escape' && open && setOpen(false));
+
+	let lastY = 0;
+	ScrollTrigger.create({
+		start: 0,
+		end: 'max',
+		onUpdate: (self) => {
+			const y = self.scroll();
+			nav.classList.toggle('is-solid', y > 40);
+			if (!open) nav.classList.toggle('is-hidden', y > lastY && y > 400);
+			lastY = y;
+			const tc = document.querySelector('[data-timecode]');
+			const pr = document.querySelector('[data-progress]');
+			if (tc) tc.textContent = timecode(self.progress);
+			if (pr) pr.textContent = String(Math.round(self.progress * 100)).padStart(3, '0');
+			syncChapter(y);
+		},
+	});
+
+	if (!reduced) {
+		nav.classList.add('nav-intro');
+	}
+
+	const chapters = document.querySelectorAll('[data-chapter]');
+	const chapterIds = ['top', 'work', 'stack', 'lab', 'path', 'contact'];
+	const chapterEls = chapterIds
+		.map((id) => document.getElementById(id))
+		.filter(Boolean) as HTMLElement[];
+	let activeChapter = '';
+	const setActive = (id: string) => {
+		if (id === activeChapter) return;
+		activeChapter = id;
+		chapters.forEach((c) => c.classList.toggle('is-active', c.getAttribute('data-chapter') === id));
+	};
+	const syncChapter = (scrollY: number) => {
+		const mid = scrollY + innerHeight * 0.5;
+		let cur = chapterIds[0];
+		for (const el of chapterEls) {
+			if (el.offsetTop <= mid) cur = el.id;
+		}
+		setActive(cur);
+	};
+	syncChapter(0);
+
+	document.querySelectorAll('[data-divider]').forEach((d) => {
+		gsap.to(d.querySelector('i'), {
+			scaleX: 1,
+			ease: 'none',
+			scrollTrigger: { trigger: d, start: 'top 92%', end: 'top 45%', scrub: 0.5 },
+		});
 	});
 </script>

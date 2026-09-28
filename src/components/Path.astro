@@ -1,0 +1,92 @@
+---
+import { experiences, profile } from '../data/portfolio';
+---
+
+<section id="path" class="relative bg-coal py-28 lg:py-40">
+	<div class="reel-container grid gap-14 lg:grid-cols-12">
+		<div class="lg:col-span-4">
+			<p class="t-mono text-flame" data-path-reveal>05 — Path</p>
+			<h2 class="t-title mt-6 text-bone">
+				<span class="mask-line"><span data-path-line>Three years,</span></span>
+				<span class="mask-line"><span class="stroke-text" data-path-line>five teams,</span></span>
+				<span class="mask-line"><span data-path-line>one craft.</span></span>
+			</h2>
+			<p class="mt-6 max-w-sm text-base leading-relaxed text-ash" data-path-reveal>
+				{profile.education}. {profile.language}. Every stop added a layer: component systems,
+				realtime data, SSR, localization, release discipline.
+			</p>
+		</div>
+
+		<div class="relative lg:col-span-8">
+			<div class="absolute top-0 bottom-0 left-[7px] w-px bg-bone/10 md:left-[9px]" aria-hidden="true">
+				<div class="w-px bg-flame" data-path-line-progress style="height:0%"></div>
+			</div>
+			<ol class="space-y-14">
+				{
+					experiences.map((e, i) => (
+						<li class="relative pl-10 md:pl-14" data-path-item>
+							<span
+								class="absolute top-2 left-0 h-[15px] w-[15px] rounded-full border border-flame bg-void md:h-[19px] md:w-[19px]"
+								aria-hidden="true"
+							></span>
+							<div class="flex flex-wrap items-baseline gap-x-6 gap-y-2">
+								<h3 class="font-display text-2xl tracking-tight text-bone uppercase md:text-3xl">
+									{e.role}
+								</h3>
+								<span class="t-mono text-flame">{e.company}</span>
+								<span class="t-mono ml-auto text-dim">{e.period}</span>
+							</div>
+							<p class="mt-4 max-w-2xl text-sm leading-relaxed text-ash md:text-base">{e.detail}</p>
+						</li>
+					))
+				}
+			</ol>
+		</div>
+	</div>
+</section>
+
+<script>
+	import { gsap, ScrollTrigger, reduced } from '../lib/motion';
+
+	if (!reduced) {
+		gsap.utils.toArray('[data-path-line]').forEach((line) => {
+			gsap.from(line, {
+				yPercent: 110,
+				duration: 1,
+				ease: 'power4.out',
+				scrollTrigger: { trigger: line, start: 'top 90%' },
+			});
+		});
+		gsap.utils.toArray('[data-path-reveal]').forEach((el) => {
+			gsap.from(el, {
+				y: 26,
+				opacity: 0,
+				duration: 0.9,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: el, start: 'top 92%' },
+			});
+		});
+
+		const list = document.querySelector('[data-path-item]')!.parentElement!;
+		gsap.to('[data-path-line-progress]', {
+			height: '100%',
+			ease: 'none',
+			scrollTrigger: { trigger: list, start: 'top 75%', end: 'bottom 60%', scrub: 0.6 },
+		});
+		gsap.utils.toArray('[data-path-item]').forEach((item, i) => {
+			gsap.from(item, {
+				x: 40,
+				opacity: 0,
+				duration: 0.9,
+				ease: 'power3.out',
+				scrollTrigger: { trigger: item, start: 'top 88%' },
+			});
+			gsap.from(item.querySelector('span'), {
+				scale: 0,
+				duration: 0.6,
+				ease: 'back.out(2.5)',
+				scrollTrigger: { trigger: item, start: 'top 88%' },
+			});
+		});
+	}
+</script>
