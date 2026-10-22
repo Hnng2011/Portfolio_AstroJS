@@ -175,6 +175,8 @@ function showSheet(dialog: HTMLDialogElement) {
 	openedAt = performance.now();
 	dialog.showModal();
 	state.sheetOpen = true;
+	state.hover = -1;
+	setCursorMode('plain');
 	if (finePointer) dialog.append(cursor);
 }
 
