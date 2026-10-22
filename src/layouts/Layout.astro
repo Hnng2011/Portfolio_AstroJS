@@ -1,23 +1,66 @@
+---
+import '../styles/global.css';
+
+interface Props {
+	title?: string;
+	page?: 'stage' | 'info' | 'contact';
+}
+
+const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = Astro.props;
+---
+
 <!doctype html>
-<html lang="en">
+<html lang="en" class={`page-${page}`}>
 	<head>
 		<meta charset="UTF-8" />
-		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+		<meta name="theme-color" content="#f0e9dc" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
 		<meta
 			name="description"
-			content="Phi Hung — frontend engineer crafting motion-driven product interfaces with React, Next.js, TypeScript and Web3."
+			content="Phi Hung — frontend engineer in Vietnam building product UI for dashboards, research tooling and Web3 with React, Next.js and TypeScript."
 		/>
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=Anton&family=Instrument+Sans:ital,wght@0,400;0,500;1,400&family=IBM+Plex+Mono:wght@400;500&display=swap"
+			href="https://fonts.googleapis.com/css2?family=Shantell+Sans:ital,wght,INFM@0,300..800,0..100;1,300..800,0..100&display=swap"
 			rel="stylesheet"
 		/>
-		<title>Phi Hung — Motion Reel / Frontend Engineer</title>
+		{['/', '/info', '/contact'].filter((href) => href !== { stage: '/', info: '/info', contact: '/contact' }[page]).map((href) => <link rel="prefetch" href={href} />)}
+		<title>{title}</title>
+		<script is:inline>
+			document.documentElement.classList.add('js');
+			try {
+				const ink = sessionStorage.getItem('ink');
+				if (ink) {
+					document.documentElement.style.setProperty('--ink-arrive', ink);
+					document.documentElement.classList.add('ink-arrive');
+				}
+			} catch {}
+			setTimeout(() => document.documentElement.classList.add('is-ready'), 4500);
+		</script>
 	</head>
 	<body>
+		<svg width="0" height="0" style="position: absolute" aria-hidden="true" focusable="false">
+			<filter id="doodle-ink" x="-10%" y="-10%" width="120%" height="120%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" seed="4" result="noise"></feTurbulence>
+				<feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"
+				></feDisplacementMap>
+			</filter>
+			<filter id="doodle-boil" x="-5%" y="-5%" width="110%" height="110%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="1" result="noise">
+					<animate
+						attributeName="seed"
+						values="1;2;3;4;5"
+						dur="0.62s"
+						calcMode="discrete"
+						repeatCount="indefinite"></animate>
+				</feTurbulence>
+				<feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G"
+				></feDisplacementMap>
+			</filter>
+		</svg>
 		<slot />
 	</body>
 </html>

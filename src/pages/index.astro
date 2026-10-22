@@ -1,31 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
-import '../styles/global.css';
-import Preloader from '../components/Preloader.astro';
-import Cursor from '../components/Cursor.astro';
-import Nav from '../components/Nav.astro';
-import Hero from '../components/Hero.astro';
-import Ticker from '../components/Ticker.astro';
-import Work from '../components/Work.astro';
-import Stack from '../components/Stack.astro';
-import Path from '../components/Path.astro';
-import Contact from '../components/Contact.astro';
+import Stage from '../components/Stage.astro';
+import Sheets from '../components/Sheets.astro';
 ---
 
 <Layout>
-	<Preloader />
-	<Cursor />
-	<div class="grain" aria-hidden="true"></div>
-	<Nav />
-	<main>
-		<Hero />
-		<Ticker />
-		<div class="scene-divider" data-divider aria-hidden="true"><i></i></div>
-		<Work />
-		<div class="scene-divider" data-divider aria-hidden="true"><i></i></div>
-		<Stack />
-		<div class="scene-divider" data-divider aria-hidden="true"><i></i></div>
-		<Path />
-	</main>
-	<Contact />
+	<Stage />
+	<Sheets />
 </Layout>
+
+<script>
+	import '../scripts/app';
+</script>

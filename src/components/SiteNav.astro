@@ -1,0 +1,83 @@
+---
+import { profile } from '../data/portfolio';
+
+interface Props {
+	current: 'home' | 'info' | 'contact';
+	brand?: boolean;
+}
+
+const { current, brand = true } = Astro.props;
+const links = [
+	{ id: 'home', label: 'Home', href: '/' },
+	{ id: 'info', label: 'Info', href: '/info' },
+	{ id: 'contact', label: 'Contact', href: '/contact' },
+];
+---
+
+<header class:list={['site-nav', !brand && 'no-brand']}>
+	{
+		brand && (
+			<a href="/" data-ink class="brand">
+				<span class="t-name">{profile.name}</span>
+				<span class="brand-role">{profile.role}</span>
+			</a>
+		)
+	}
+	<nav aria-label="Site">
+		{
+			links.map((l) => (
+				<a
+					href={l.href}
+					data-ink
+					class:list={['pill t-label', l.id === current && 'pill-solid']}
+					aria-current={l.id === current ? 'page' : undefined}
+				>
+					{l.label}
+				</a>
+			))
+		}
+	</nav>
+</header>
+
+<style>
+	.site-nav {
+		position: relative;
+		z-index: 10;
+		display: flex;
+		align-items: flex-start;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: max(1.5rem, env(safe-area-inset-top)) clamp(1rem, 3vw, 2.5rem) 0;
+	}
+
+	.no-brand {
+		justify-content: flex-end;
+	}
+
+	.brand {
+		display: grid;
+		gap: 0.5rem;
+		text-decoration: none;
+	}
+
+	.brand-role {
+		font-size: var(--text-small);
+	}
+
+	nav {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: 0.5rem;
+	}
+
+	@media (max-width: 767px) {
+		.site-nav {
+			flex-direction: column;
+		}
+
+		nav {
+			justify-content: flex-start;
+		}
+	}
+</style>

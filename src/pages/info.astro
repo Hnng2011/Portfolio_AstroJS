@@ -1,0 +1,370 @@
+---
+import Cursor from '../components/Cursor.astro';
+import DoodleIcon from '../components/DoodleIcon.astro';
+import Meadow from '../components/Meadow.astro';
+import MeWave from '../components/MeWave.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Layout from '../layouts/Layout.astro';
+import { experiences, profile, skills } from '../data/portfolio';
+
+const stack = [...skills.primary, ...skills.secondary, ...skills.tertiary];
+const period = (p: string) => p.replace(' - ', ' – ');
+---
+
+<Layout title="Info — Phi Hung" page="info">
+	<main class="scene">
+		<SiteNav current="info" brand={false} />
+		<div class="info">
+			<section class="about" aria-labelledby="about-title">
+				<h1 class="t-sheet" id="about-title">About me</h1>
+				<p class="lead">{profile.tagline}</p>
+				<p class="body">{profile.education}. {profile.language}.</p>
+				<h2>Stack</h2>
+				<ul class="chips" aria-label="Stack">
+					{
+						stack.map((s) => (
+							<li>
+								<DoodleIcon name={s} />
+								{s}
+							</li>
+						))
+					}
+				</ul>
+			</section>
+
+			<div class="hero">
+				<p class="bubble">Hi, nice to meet you!</p>
+				<div class="wave">
+					<MeWave />
+				</div>
+				<Meadow />
+			</div>
+
+			<section class="work" aria-labelledby="work-title">
+				<h2 id="work-title">Experience</h2>
+				<ol class="roles">
+					{
+						experiences.map((e) => (
+							<li>
+								<p class="role-head">
+									<span class="role-name">{e.role}</span>
+									<span class="role-co">{e.company}</span>
+								</p>
+								<p class="role-when">{period(e.period)}</p>
+								<p class="body">{e.detail}</p>
+							</li>
+						))
+					}
+				</ol>
+			</section>
+		</div>
+		<Cursor />
+	</main>
+</Layout>
+
+<script>
+	import '../scripts/page';
+</script>
+
+<style>
+	.scene {
+		position: relative;
+		min-height: 100svh;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.info {
+		position: relative;
+		z-index: 7;
+		flex: 1;
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) min(30vw, 26rem) minmax(0, 1fr);
+		gap: clamp(1.5rem, 3vw, 3rem);
+		padding: clamp(1.5rem, 4vh, 3rem) clamp(1rem, 3vw, 2.5rem) 0;
+	}
+
+	.about,
+	.work {
+		position: relative;
+		z-index: 8;
+		align-self: start;
+		max-width: 34rem;
+	}
+
+	.about {
+		padding: 1.5rem 1.6rem 1.75rem;
+		border: 2.5px solid var(--color-ink);
+		border-radius: 8px 12px 6px 14px / 14px 8px 12px 6px;
+		background: #fbf7ef;
+		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
+		rotate: -0.8deg;
+	}
+
+	.about::before {
+		content: '';
+		position: absolute;
+		top: -0.8rem;
+		left: 2rem;
+		width: 4.5rem;
+		height: 1.5rem;
+		rotate: -8deg;
+		background: rgb(122 166 217 / 0.75);
+	}
+
+	.work {
+		justify-self: end;
+		padding: 1.5rem 1.6rem 1.75rem;
+		border: 2.5px solid var(--color-ink);
+		border-radius: 6px 14px 8px 12px / 12px 6px 14px 8px;
+		background: #fbf7ef;
+		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
+		rotate: 1deg;
+	}
+
+	.work::before {
+		content: '';
+		position: absolute;
+		top: -0.8rem;
+		left: 50%;
+		width: 5rem;
+		height: 1.5rem;
+		translate: -50% 0;
+		rotate: -4deg;
+		background: rgb(242 165 65 / 0.8);
+	}
+
+	h2 {
+		margin-top: 2rem;
+		margin-bottom: 0.75rem;
+		font-size: var(--text-label);
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.work h2 {
+		margin-top: 0;
+	}
+
+	.lead {
+		margin-top: 1rem;
+		font-size: var(--text-lead);
+		line-height: 1.55;
+	}
+
+	.body {
+		margin-top: 0.5rem;
+		font-size: var(--text-small);
+		line-height: 1.55;
+		color: var(--color-ash);
+	}
+
+	.chips {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.chips li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		padding: 0.3rem 0.7rem;
+		border: 1.5px solid var(--color-ink);
+		border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+		background: #fff;
+		font-size: var(--text-small);
+	}
+
+	.roles {
+		display: grid;
+		gap: 1.1rem;
+	}
+
+	.role-head {
+		display: flex;
+		flex-wrap: wrap;
+		align-items: baseline;
+		gap: 0.2rem 0.6rem;
+	}
+
+	.role-name {
+		font-size: 1.125rem;
+		font-weight: 800;
+	}
+
+	.role-co {
+		font-size: var(--text-small);
+		color: var(--color-amber-deep);
+		font-weight: 600;
+	}
+
+	.role-when {
+		font-size: var(--text-label);
+		color: var(--color-dim);
+	}
+
+	.hero {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		justify-content: flex-end;
+	}
+
+	.wave {
+		position: relative;
+		z-index: 9;
+		width: min(100%, calc(62vh * 400 / 520));
+		aspect-ratio: 400 / 520;
+		margin-bottom: 3vh;
+	}
+
+	.wave :global(.me-art) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		filter: url(#doodle-boil);
+	}
+
+	@media (pointer: coarse) {
+		.wave :global(.me-art) {
+			filter: none;
+		}
+	}
+
+	.bubble {
+		position: relative;
+		z-index: 10;
+		margin-bottom: -1rem;
+		padding: 0.75rem 1.1rem 0.85rem;
+		border: 2.5px solid var(--color-ink);
+		border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+		background: #fbf7ef;
+		font-weight: 700;
+		animation: bubble-pop 0.6s cubic-bezier(0.22, 1.4, 0.36, 1) 0.6s backwards;
+	}
+
+	.bubble::after {
+		content: '';
+		position: absolute;
+		left: 46%;
+		bottom: -0.65rem;
+		width: 1.1rem;
+		height: 1.1rem;
+		background: #fbf7ef;
+		border-right: 2.5px solid var(--color-ink);
+		border-bottom: 2.5px solid var(--color-ink);
+		transform: skewY(28deg) rotate(30deg);
+	}
+
+	@keyframes bubble-pop {
+		from {
+			scale: 0.4;
+			opacity: 0;
+		}
+	}
+
+	@media (min-width: 1024px) {
+		.scene {
+			height: 100svh;
+		}
+
+		.info {
+			min-height: 0;
+			padding-top: 2.5vh;
+			padding-bottom: 3vh;
+		}
+
+		.about {
+			padding: 2vh 1.5rem 2.2vh;
+		}
+
+		.about .t-sheet {
+			font-size: clamp(2rem, 6vh, 3.5rem);
+		}
+
+		.lead {
+			margin-top: 1.2vh;
+			font-size: clamp(0.9375rem, 2.1vh, 1.1875rem);
+		}
+
+		.body {
+			font-size: clamp(0.75rem, 1.6vh, 0.875rem);
+		}
+
+		h2 {
+			margin-top: 2.6vh;
+			margin-bottom: 1vh;
+		}
+
+		.chips li {
+			padding: 0.4vh 0.65rem;
+			font-size: clamp(0.75rem, 1.6vh, 0.875rem);
+		}
+
+		.work {
+			max-height: 100%;
+			padding: 2vh 1.5rem 2.2vh;
+		}
+
+		.roles {
+			gap: 1.4vh;
+		}
+
+		.role-name {
+			font-size: clamp(0.9375rem, 2vh, 1.125rem);
+		}
+
+		.role-when {
+			font-size: clamp(0.6875rem, 1.4vh, 0.75rem);
+		}
+
+		.work .body {
+			margin-top: 0.3vh;
+			line-height: 1.45;
+		}
+
+		.hero {
+			min-height: 0;
+		}
+
+		.wave {
+			width: min(100%, calc(56vh * 400 / 520));
+			margin-bottom: 2vh;
+		}
+
+		.bubble {
+			font-size: clamp(0.8125rem, 1.8vh, 1rem);
+		}
+	}
+
+	@media (max-width: 1023px) {
+		.info {
+			grid-template-columns: 1fr;
+		}
+
+		.hero {
+			position: relative;
+			order: -1;
+			min-height: 64svh;
+			margin-inline: calc(clamp(1rem, 3vw, 2.5rem) * -1);
+		}
+
+		.wave {
+			width: min(80vw, calc(52svh * 400 / 520));
+		}
+
+		.work {
+			justify-self: stretch;
+			margin-bottom: 3rem;
+			rotate: 0deg;
+		}
+
+		.about {
+			rotate: 0deg;
+		}
+	}
+</style>

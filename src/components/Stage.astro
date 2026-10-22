@@ -1,0 +1,659 @@
+---
+import { profile, projects } from '../data/portfolio';
+import Cursor from './Cursor.astro';
+import Me from './Me.astro';
+import Meadow from './Meadow.astro';
+import Sketch from './Sketch.astro';
+
+const period = (year: string) => year.replace(' - ', ' – ');
+---
+
+<main id="stage" class="stage" data-stage>
+	<Meadow />
+	<div class="me-wrap me-wrap-back" data-me="back" aria-hidden="true">
+		<Me layer="back" />
+	</div>
+	<canvas class="layer solar" data-solar aria-hidden="true"></canvas>
+	<div class="me-wrap me-wrap-front" data-me="front">
+		<Me layer="front" />
+		<button type="button" class="me-cube" data-cube aria-label="Open my work"></button>
+		<button type="button" class="me-talk" data-talk aria-label="Say hi to Phi Hung"></button>
+		<p class="me-bubble" data-bubble role="status" aria-live="polite"></p>
+	</div>
+	<div class="layer labels" aria-hidden="true">
+		{projects.map((p) => <span class="planet-label t-label" data-label>{p.title}</span>)}
+	</div>
+
+	<canvas class="layer splat" data-splat aria-hidden="true"></canvas>
+	<div class="holo" data-holo aria-hidden="true" inert>
+		{
+			projects.map((p, i) => (
+				<button type="button" class="holo-screen" data-holo-screen={i} hidden>
+					<span class="holo-frame">
+						<Sketch kind={i} title={p.title} image={p.image} />
+					</span>
+					<span class="holo-caption">
+						<span class="holo-title">{p.title}</span>
+						<span class="holo-meta">
+							{p.type} · {period(p.year)}
+						</span>
+					</span>
+					<span class="holo-cta t-label">Open the case</span>
+				</button>
+			))
+		}
+	</div>
+	<button type="button" class="pill t-label back-me" data-back-me aria-hidden="true" tabindex="-1">
+		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+			<path d="M13 8H3m4-4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+		</svg>
+		Me
+	</button>
+	<button type="button" class="pill t-label holo-back" data-holo-back aria-hidden="true" tabindex="-1">
+		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+			<path d="M13 8H3m4-4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+		</svg>
+		All projects
+	</button>
+
+	<header class="corner corner-top" data-hud style="--d: 0s">
+		<h1 class="t-name">{profile.name}</h1>
+		<ul class="role">
+			<li>{profile.role}</li>
+			<li>{profile.stack}</li>
+			<li>{profile.location}</li>
+		</ul>
+	</header>
+
+	<ul class="picks" aria-label="Projects">
+		{
+			projects.map((p, i) => (
+				<li>
+					<button type="button" class="pill t-label" data-pick={i}>
+						{p.title}
+					</button>
+				</li>
+			))
+		}
+	</ul>
+
+	<footer class="corner corner-bottom" data-hud style="--d: 0.4s">
+		<p class="clock">Ho Chi Minh City <span data-clock>--:--</span></p>
+		<nav class="flex items-center gap-2" aria-label="Site">
+			<a href="/info" data-ink class="pill t-label">Info</a>
+			<a href="/contact" data-ink class="pill pill-solid t-label">Contact</a>
+		</nav>
+	</footer>
+
+	<Cursor />
+</main>
+
+<style>
+	.stage {
+		position: fixed;
+		inset: 0;
+		overflow: hidden;
+		touch-action: none;
+		user-select: none;
+		-webkit-user-select: none;
+	}
+
+	.layer {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 100%;
+		display: block;
+	}
+
+	.labels {
+		z-index: 5;
+		pointer-events: none;
+		overflow: hidden;
+	}
+
+	.solar {
+		z-index: 3;
+	}
+
+	.me-wrap {
+		position: absolute;
+		left: 50%;
+		bottom: 3vh;
+		width: min(92vw, calc(86vh * 400 / 520));
+		aspect-ratio: 400 / 520;
+		margin-left: calc(min(92vw, calc(86vh * 400 / 520)) / -2);
+		will-change: transform, opacity;
+	}
+
+	.me-wrap-back {
+		z-index: 2;
+	}
+
+	.me-wrap-front {
+		z-index: 4;
+		pointer-events: none;
+	}
+
+	.me-wrap :global(.me-art) {
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		filter: url(#doodle-boil);
+	}
+
+	.me-wrap :global(.me-head) {
+		transform-box: fill-box;
+		transform-origin: 50% 100%;
+		animation: me-bob 3.2s ease-in-out infinite alternate;
+	}
+
+	.me-wrap :global(.me-happy) {
+		opacity: 0;
+		transition: opacity 0.2s var(--ease-out);
+	}
+
+	:global(.is-zooming) .me-wrap :global(.me-happy) {
+		opacity: 1;
+	}
+
+	:global(.is-zooming) .me-wrap :global(.me-eyes) {
+		opacity: 0;
+	}
+
+	.me-wrap :global(.me-spark) {
+		transform-box: fill-box;
+		transform-origin: center;
+		scale: clamp(0, calc(var(--pop, 0) * 1.6 - var(--i) * 0.12), 1);
+		rotate: calc(var(--pop, 0) * 120deg);
+	}
+
+	.me-wrap :global(.me-leg) {
+		transform-box: fill-box;
+		transform-origin: 50% 0;
+	}
+
+	.me-wrap:global(.is-walking) :global(.me-leg-l) {
+		animation: me-step 0.42s ease-in-out infinite alternate;
+	}
+
+	.me-wrap:global(.is-walking) :global(.me-leg-r) {
+		animation: me-step 0.42s ease-in-out -0.42s infinite alternate;
+	}
+
+	.me-wrap :global(.me-eyes) {
+		transition: translate 0.35s var(--ease-out);
+	}
+
+	.me-wrap :global(.pose) {
+		transform-box: view-box;
+		transform-origin: 200px 300px;
+		transition:
+			scale 0.16s var(--ease-out) 0.12s,
+			opacity 0s linear 0.12s;
+	}
+
+	.me-wrap :global(.pose-side),
+	.me-wrap:global(.is-side) :global(.pose-front) {
+		opacity: 0;
+		scale: 0.02 1;
+		transition:
+			scale 0.12s var(--ease-in),
+			opacity 0s linear 0.12s;
+	}
+
+	.me-wrap:global(.is-side) :global(.pose-side) {
+		opacity: 1;
+		scale: 1 1;
+		transition:
+			scale 0.16s var(--ease-out) 0.12s,
+			opacity 0s linear 0.12s;
+	}
+
+	.me-wrap :global(.pose-mirror) {
+		transform-box: view-box;
+		transform-origin: 200px 0;
+	}
+
+	.me-wrap:global(.face-left) :global(.pose-mirror),
+	.me-wrap:global(.face-left) :global(.cube-glare) {
+		scale: -1 1;
+	}
+
+	.me-wrap :global(.cube-glare) {
+		transform-box: view-box;
+		transform-origin: 200px 0;
+	}
+
+	.me-wrap :global(.cube-label) {
+		transform-box: view-box;
+		transform-origin: 290px 288px;
+		transition:
+			scale 0.12s var(--ease-in),
+			opacity 0s linear 0.12s;
+	}
+
+	.me-wrap:global(.is-side) :global(.cube-label) {
+		scale: 0.05 1;
+		opacity: 0;
+	}
+
+	.me-wrap:not(:global(.is-side)) :global(.cube-label) {
+		transition:
+			scale 0.16s var(--ease-out) 0.12s,
+			opacity 0s linear 0.12s;
+	}
+
+	.me-wrap :global(.side-leg) {
+		transform-box: view-box;
+		transform-origin: 92px 398px;
+		transition: rotate 0.3s var(--ease-out);
+	}
+
+	.me-wrap:global(.is-walking) :global(.side-leg-front) {
+		animation: side-stride 0.5s ease-in-out infinite alternate;
+	}
+
+	.me-wrap:global(.is-walking) :global(.side-leg-back) {
+		animation: side-stride 0.5s ease-in-out -0.5s infinite alternate;
+	}
+
+	@keyframes side-stride {
+		from {
+			rotate: -30deg;
+		}
+		to {
+			rotate: 30deg;
+		}
+	}
+
+	@media (pointer: coarse) {
+		.me-wrap :global(.me-art) {
+			filter: none;
+		}
+	}
+
+	@keyframes me-step {
+		from {
+			translate: 0 0;
+			rotate: -5deg;
+		}
+		to {
+			translate: 0 -12px;
+			rotate: 5deg;
+		}
+	}
+
+	.me-wrap :global(.me-eyes) {
+		transform-box: fill-box;
+		transform-origin: center;
+		animation: me-blink 4.6s linear infinite;
+	}
+
+	@keyframes me-bob {
+		from {
+			transform: translateY(0) rotate(-1.2deg);
+		}
+		to {
+			transform: translateY(-4px) rotate(1.2deg);
+		}
+	}
+
+	@keyframes me-blink {
+		0%,
+		94%,
+		100% {
+			transform: scaleY(1);
+		}
+		96% {
+			transform: scaleY(0.1);
+		}
+	}
+
+	.me-cube {
+		position: absolute;
+		left: 26%;
+		top: 44%;
+		width: 54%;
+		height: 42%;
+		border-radius: 6px;
+		pointer-events: auto;
+	}
+
+	.me-talk {
+		position: absolute;
+		left: 27%;
+		top: 6%;
+		width: 46%;
+		height: 38%;
+		border-radius: 50%;
+		pointer-events: auto;
+	}
+
+	.me-bubble {
+		position: absolute;
+		left: 72%;
+		top: 2%;
+		width: max-content;
+		max-width: min(17rem, 34vw);
+		padding: 0.75rem 1rem 0.85rem;
+		border: 2.5px solid var(--color-ink);
+		border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+		background: #fbf7ef;
+		color: var(--color-ink);
+		font-size: var(--text-body);
+		font-weight: 600;
+		line-height: 1.35;
+		transform-origin: 0% 100%;
+		scale: 0.4;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			scale 0.25s var(--ease-in),
+			opacity 0.2s var(--ease-in);
+	}
+
+	.me-bubble::after {
+		content: '';
+		position: absolute;
+		left: 0.9rem;
+		bottom: -0.65rem;
+		width: 1.1rem;
+		height: 1.1rem;
+		background: #fbf7ef;
+		border-right: 2.5px solid var(--color-ink);
+		border-bottom: 2.5px solid var(--color-ink);
+		transform: skewY(28deg) rotate(30deg);
+	}
+
+	.me-bubble:global(.is-on) {
+		scale: 1;
+		opacity: 1;
+		transition:
+			scale 0.45s cubic-bezier(0.22, 1.4, 0.36, 1),
+			opacity 0.2s var(--ease-out);
+	}
+
+	.me-wrap :global(.me-mouth) {
+		transform-box: fill-box;
+		transform-origin: 50% 0;
+	}
+
+	.me-wrap:global(.is-talking) :global(.me-mouth) {
+		animation: me-talk 0.16s ease-in-out infinite alternate;
+	}
+
+	@keyframes me-talk {
+		from {
+			scale: 1 1;
+		}
+		to {
+			scale: 1.1 0.35;
+		}
+	}
+
+	.me-cube:focus-visible {
+		outline-offset: 8px;
+	}
+
+	.back-me {
+		position: absolute;
+		left: clamp(1rem, 3vw, 2.5rem);
+		bottom: max(1.5rem, env(safe-area-inset-bottom));
+		z-index: 9;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.4s var(--ease-out);
+	}
+
+	.back-me[aria-hidden='false'] {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.planet-label {
+		position: absolute;
+		top: 0;
+		left: 0;
+		font-size: 0.8125rem;
+		white-space: nowrap;
+		color: var(--color-ink);
+		opacity: 0;
+		transition: color 0.4s var(--ease-out);
+	}
+
+	.planet-label:global(.is-hover) {
+		color: var(--color-amber-deep);
+	}
+
+	.corner {
+		position: absolute;
+		z-index: 10;
+	}
+
+	.corner-top {
+		top: max(1.5rem, env(safe-area-inset-top));
+		left: clamp(1rem, 3vw, 2.5rem);
+	}
+
+	.corner-bottom {
+		right: clamp(1rem, 3vw, 2.5rem);
+		top: max(1.5rem, env(safe-area-inset-top));
+		display: flex;
+		flex-direction: column-reverse;
+		align-items: flex-end;
+		gap: 0.75rem;
+		text-align: right;
+	}
+
+	.role {
+		margin-top: 0.75rem;
+		display: grid;
+		gap: 0.2rem;
+		font-size: var(--text-small);
+		line-height: 1.45;
+		color: var(--color-ash);
+	}
+
+	.role li:first-child {
+		color: var(--color-ink);
+	}
+
+	.clock {
+		font-size: var(--text-small);
+		line-height: 1.5;
+		color: var(--color-dim);
+	}
+
+	.clock span {
+		color: var(--color-ash);
+	}
+
+	.picks button {
+		position: absolute;
+		left: 50%;
+		top: max(1.5rem, env(safe-area-inset-top));
+		z-index: 20;
+		translate: -50% 0;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.picks button:focus-visible {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	.splat {
+		z-index: 7;
+		pointer-events: none;
+	}
+
+	.holo {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 8;
+		width: var(--holo-w, 26rem);
+		pointer-events: none;
+		color: var(--color-ink);
+	}
+
+	.holo[aria-hidden='false'] {
+		pointer-events: auto;
+	}
+
+	.holo-screen {
+		position: relative;
+		width: 100%;
+		display: grid;
+		gap: 0.7rem;
+		justify-items: center;
+		padding: 0;
+		text-align: center;
+		color: inherit;
+		background: none;
+		opacity: 0;
+		transform: translateY(0.5rem) rotate(-1deg);
+		transition:
+			opacity 0.2s var(--ease-in),
+			transform 0.2s var(--ease-in);
+	}
+
+	.holo:global(.is-painted) .holo-screen {
+		opacity: 1;
+		transform: none;
+		transition:
+			opacity 0.45s var(--ease-out),
+			transform 0.6s var(--ease-out);
+	}
+
+	.holo-frame {
+		display: block;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		border: 2px solid var(--color-ink);
+		background: rgb(240 233 220 / 0.55);
+		overflow: hidden;
+		transition: transform 0.4s var(--ease-out);
+	}
+
+	.holo-screen:hover .holo-frame,
+	.holo-screen:focus-visible .holo-frame {
+		transform: rotate(-1.2deg) scale(1.02);
+	}
+
+	.holo-caption {
+		display: grid;
+		justify-items: center;
+		gap: 0.3rem;
+	}
+
+	.holo-title {
+		font-size: 1.75rem;
+		font-weight: 800;
+		line-height: 1.05;
+	}
+
+	.holo-meta {
+		font-size: var(--text-small);
+		color: rgb(23 19 15 / 0.8);
+	}
+
+	.holo-cta {
+		justify-self: center;
+		text-decoration: underline;
+		text-decoration-thickness: 2px;
+		text-underline-offset: 0.3em;
+	}
+
+	.holo-back {
+		position: absolute;
+		left: 50%;
+		bottom: max(1.5rem, env(safe-area-inset-bottom));
+		z-index: 9;
+		translate: -50% 0;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			opacity 0.4s var(--ease-out),
+			border-color 0.4s var(--ease-out),
+			color 0.4s var(--ease-out);
+	}
+
+	.holo-back[aria-hidden='false'] {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
+	:global(.js) [data-hud] {
+		opacity: 0;
+		transform: translateY(0.75rem);
+		transition:
+			opacity 1.1s var(--ease-out) var(--d, 0s),
+			transform 1.1s var(--ease-out) var(--d, 0s);
+	}
+
+	:global(.js.is-ready) [data-hud] {
+		opacity: 1;
+		transform: none;
+	}
+
+	@media (max-width: 767px) {
+		.corner-top {
+			top: max(1rem, env(safe-area-inset-top));
+			left: 1rem;
+		}
+
+		.corner-bottom {
+			right: 1rem;
+			top: auto;
+			flex-direction: column;
+			bottom: max(1rem, env(safe-area-inset-bottom));
+			gap: 0.5rem;
+		}
+
+		.role {
+			font-size: var(--text-label);
+		}
+
+		.clock {
+			display: none;
+		}
+
+		.holo-title {
+			font-size: 1.375rem;
+		}
+
+		.me-bubble {
+			left: 50%;
+			top: -15%;
+			translate: -50% 0;
+			max-width: 78vw;
+			transform-origin: 50% 100%;
+			text-align: center;
+		}
+
+		.me-bubble::after {
+			left: calc(50% - 0.55rem);
+		}
+
+		.me-wrap {
+			bottom: 11vh;
+			width: min(100vw, calc(70vh * 400 / 520));
+			margin-left: calc(min(100vw, calc(70vh * 400 / 520)) / -2);
+		}
+
+		.back-me {
+			left: 1rem;
+			bottom: max(1rem, env(safe-area-inset-bottom));
+		}
+
+		.holo-back {
+			left: 1rem;
+			translate: none;
+			bottom: max(1rem, env(safe-area-inset-bottom));
+		}
+	}
+</style>
