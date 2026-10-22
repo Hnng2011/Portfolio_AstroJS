@@ -1,0 +1,154 @@
+---
+import Cursor from '../components/Cursor.astro';
+import DoodleIcon from '../components/DoodleIcon.astro';
+import Meadow from '../components/Meadow.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Layout from '../layouts/Layout.astro';
+import { contactLinks } from '../data/portfolio';
+
+const email = contactLinks.find((l) => l.label === 'Email')!.url;
+const others = contactLinks.filter((l) => l.label !== 'Email');
+---
+
+<Layout title="Contact — Phi Hung" page="contact">
+	<main class="scene">
+		<SiteNav current="contact" />
+		<section class="contact" aria-labelledby="contact-title">
+			<div class="note">
+				<span class="tape tape-l" aria-hidden="true"></span>
+				<span class="tape tape-r" aria-hidden="true"></span>
+				<h1 class="t-sheet" id="contact-title">Say hello</h1>
+				<p class="lead">Open to frontend roles, remote or in Vietnam.</p>
+				<a class="pill pill-solid mail" href={email}>
+					<DoodleIcon name="email" />
+					{email.replace('mailto:', '')}
+				</a>
+				<ul class="links">
+					{
+						others.map((l) => (
+							<li>
+								<a class="pill" href={l.url} target="_blank" rel="noopener noreferrer">
+									<DoodleIcon name={l.label} />
+									{l.label}
+								</a>
+							</li>
+						))
+					}
+				</ul>
+			</div>
+			<svg class="plane" viewBox="0 0 600 320" fill="none" stroke="#17130f" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+				<path
+					id="plane-route"
+					d="M20 260C120 120 220 300 320 180S520 40 580 120"
+					stroke-width="2"
+					stroke-dasharray="6 9"
+					opacity="0.45"
+				/>
+				<g>
+					<path d="M-18-10 20 0-18 10-10 0z" fill="#fbf7ef" stroke-width="2.4" />
+					<path d="M-10 0 20 0" stroke-width="1.8" />
+					<animateMotion dur="7s" repeatCount="indefinite" rotate="auto">
+						<mpath href="#plane-route"></mpath>
+					</animateMotion>
+				</g>
+			</svg>
+		</section>
+		<Meadow />
+		<Cursor />
+	</main>
+</Layout>
+
+<script>
+	import '../scripts/page';
+</script>
+
+<style>
+	.scene {
+		position: relative;
+		min-height: 100svh;
+		display: flex;
+		flex-direction: column;
+		overflow: hidden;
+	}
+
+	.contact {
+		position: relative;
+		z-index: 7;
+		flex: 1;
+		display: grid;
+		place-items: center;
+		padding: 2rem clamp(1rem, 3vw, 2.5rem) 22vh;
+	}
+
+	.note {
+		position: relative;
+		z-index: 2;
+		width: min(100%, 34rem);
+		padding: clamp(1.75rem, 4vw, 2.75rem);
+		border: 2.5px solid var(--color-ink);
+		border-radius: 6px 14px 8px 12px / 12px 6px 14px 8px;
+		background: #fbf7ef;
+		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
+		rotate: -1.5deg;
+		text-align: center;
+	}
+
+	.tape {
+		position: absolute;
+		top: -0.8rem;
+		width: 4.5rem;
+		height: 1.5rem;
+		background: rgb(242 165 65 / 0.8);
+	}
+
+	.tape-l {
+		left: 1.5rem;
+		rotate: -10deg;
+	}
+
+	.tape-r {
+		right: 1.5rem;
+		rotate: 8deg;
+	}
+
+	.lead {
+		margin-top: 0.75rem;
+		font-size: var(--text-lead);
+		color: var(--color-ash);
+	}
+
+	.mail {
+		margin-top: 1.75rem;
+		font-size: var(--text-body);
+		font-weight: 700;
+		padding: 0.9em 1.5em;
+	}
+
+	.links {
+		margin-top: 1rem;
+		display: flex;
+		justify-content: center;
+		flex-wrap: wrap;
+		gap: 0.5rem;
+	}
+
+	.links .pill {
+		font-weight: 700;
+	}
+
+	.plane {
+		position: absolute;
+		inset: 8% 4% auto;
+		width: 92%;
+		height: auto;
+		z-index: 1;
+		pointer-events: none;
+	}
+
+	@media (max-width: 767px) {
+		.plane {
+			inset: 2% 0 auto;
+			width: 100%;
+		}
+	}
+</style>

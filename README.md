@@ -2,38 +2,41 @@
 
 Portfolio cá nhân của Phi Hung, Frontend Engineer tập trung vào React, Next.js, TypeScript, Tailwind CSS, Web3 product UI và các giao diện sản phẩm responsive.
 
-Website được xây dựng bằng Astro, dùng Tailwind CSS cho styling và GSAP ScrollTrigger cho hiệu ứng chữ khi cuộn trang.
+Website là một màn hình duy nhất (không cuộn trang) theo phong cách Doodle, vẽ mực tay trên giấy: một hệ mặt trời, mỗi project là một hành tinh vẽ tay riêng. Cuộn hoặc kéo để xoay hệ, bấm hành tinh để đưa nó ra trước và "ném mực" mở khung xem trước, bấm khung để đọc case study.
 
 ## Tech Stack
 
 - Astro 5
 - Tailwind CSS 4
-- GSAP
-- TypeScript
+- GSAP (sheet và intro)
+- Canvas 2D (hệ mặt trời vẽ tay, vệt mực văng, hiệu ứng đổ mực chuyển trang)
 - Cloudflare Pages
-
-## Tính Năng
-
-- Trang portfolio một trang với hero, selected work, skill collection, work experience và contact.
-- Nội dung dự án và kinh nghiệm được quản lý trực tiếp trong `src/pages/index.astro`.
-- Hiệu ứng word reveal sử dụng GSAP và tôn trọng thiết lập `prefers-reduced-motion`.
-- Giao diện responsive cho desktop và mobile.
-- Cấu hình build sẵn cho Cloudflare Pages qua `wrangler.toml`.
 
 ## Cấu Trúc Dự Án
 
 ```text
 /
-├── public/                 Static assets và texture
 ├── src/
-│   ├── layouts/            Layout HTML chung
-│   ├── pages/              Astro pages
-│   ├── styles/             Global CSS và Tailwind import
-│   └── assets/             Assets dùng trong source
-├── astro.config.mjs        Cấu hình Astro và Tailwind Vite plugin
-├── wrangler.toml           Cấu hình Cloudflare Pages
-└── package.json            Scripts và dependencies
+│   ├── components/         Stage (màn hình chính), Me / MeWave / FrontHead (nhân vật), Meadow (bãi cỏ, bướm ong),
+│   │                       Sheets (case study), Sketch (hình sơ project), SiteNav, Cursor, DoodleIcon
+│   ├── data/portfolio.ts   Nội dung: project, kinh nghiệm, kỹ năng, liên hệ
+│   ├── lib/                solar (hệ mặt trời), splat (mực văng), ink (đổ mực chuyển trang), flyers (bướm ong), cursor
+│   ├── scripts/            app.ts (trang chủ: đi bộ, zoom, hệ mặt trời, FPS), page.ts (info, contact)
+│   ├── pages/              index (màn hình chính), info, contact
+│   └── styles/global.css   Design tokens (Tailwind v4 @theme)
+├── PRODUCT.md              Định vị sản phẩm
+└── wrangler.toml           Cấu hình Cloudflare Pages
 ```
+
+## Tinh chỉnh hiệu ứng
+
+- `TUNING` đầu file `src/lib/solar.ts`: màu, độ rung nét vẽ tay (line boil), khoảng cách nét tô bóng, tốc độ quay, góc nghiêng camera.
+- `SPLAT` đầu file `src/lib/splat.ts`: màu mực, thời gian ném và văng, số tia và giọt mực.
+- Hình dáng từng hành tinh: mảng `LOOKS` trong `solar.ts` (một dòng cho mỗi project, theo thứ tự trong `portfolio.ts`).
+
+## Thêm ảnh cho project
+
+Mỗi project trong `src/data/portfolio.ts` có trường `image` (tuỳ chọn). Đặt ảnh vào `public/work/` rồi khai báo, ví dụ `image: '/work/formo.jpg'`. Ảnh tỉ lệ 16:10 đẹp nhất; khi chưa có ảnh thì khung hiện hình sơ vẽ tay.
 
 ## Yêu Cầu
 

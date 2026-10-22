@@ -1,0 +1,500 @@
+---
+import { projects } from '../data/portfolio';
+import DoodleIcon from './DoodleIcon.astro';
+import Sketch from './Sketch.astro';
+
+const period = (year: string) => year.replace(' - ', ' – ');
+---
+
+<dialog class="sheet sheet-case" data-sheet="case" aria-labelledby="case-title-0">
+	<div class="panel" data-panel>
+		<button type="button" class="close" data-close aria-label="Close case">
+			<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+				<path d="m3 3 10 10M13 3 3 13" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+			</svg>
+		</button>
+		{
+			projects.map((p, i) => (
+				<article class="case" data-case={i} hidden={i !== 0}>
+					<header class="case-head">
+						<div class="case-intro" style="--i: 0">
+							<h2 class="t-sheet" id={`case-title-${i}`}>
+								{p.title}
+							</h2>
+							<p class="meta">
+								{p.type}
+								<span class="dot" aria-hidden="true" />
+								{period(p.year)}
+								{p.status && (
+									<>
+										<span class="dot" aria-hidden="true" />
+										{p.status}
+									</>
+								)}
+							</p>
+							<p class="lead">{p.summary}</p>
+							<div class="case-tools">
+								<ul class="chips" aria-label="Tools">
+									{p.tags.map((t) => (
+										<li>
+											<DoodleIcon name={t} />
+											{t}
+										</li>
+									))}
+								</ul>
+							{p.url && (
+									<a href={p.url} target="_blank" rel="noopener noreferrer" class="pill pill-solid t-label visit">
+										Visit {p.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+										<svg viewBox="0 0 12 12" width="10" height="10" aria-hidden="true">
+											<path d="M3 9 9 3M4 3h5v5" fill="none" stroke="currentColor" stroke-width="1.3" />
+										</svg>
+									</a>
+								)}
+							</div>
+						</div>
+						<div class="case-shot" style="--i: 1">
+							<Sketch kind={i} title={p.title} image={p.image} />
+						</div>
+					</header>
+
+					<div class="case-body">
+						<section style="--i: 2">
+							<h3>Challenge</h3>
+							<p class="body">{p.caseStudy.challenge}</p>
+						</section>
+						<section style="--i: 3">
+							<h3>Approach</h3>
+							<ol class="steps">
+								{p.caseStudy.approach.map((a) => (
+									<li>{a}</li>
+								))}
+							</ol>
+						</section>
+						<section style="--i: 4">
+							<h3>Outcome</h3>
+							<p class="body">{p.caseStudy.outcome}</p>
+							<dl class="facts">
+								{p.caseStudy.metrics.map((m) => (
+									<div>
+										<dt>{m.label}</dt>
+										<dd>{m.value}</dd>
+									</div>
+								))}
+							</dl>
+						</section>
+					</div>
+				</article>
+			))
+		}
+	</div>
+</dialog>
+
+
+<style>
+	.sheet {
+		position: fixed;
+		inset: 0;
+		width: 100%;
+		max-width: none;
+		height: 100%;
+		max-height: none;
+		margin: 0;
+		padding: 0;
+		border: 0;
+		background: transparent;
+		color: var(--color-ink);
+		overflow: hidden;
+	}
+
+	.sheet::backdrop {
+		background: rgb(23 19 15 / 0.35);
+	}
+
+	.panel {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		width: min(36rem, 100%);
+		overflow-y: auto;
+		overscroll-behavior: contain;
+		padding: clamp(4.5rem, 9vh, 6rem) clamp(1.25rem, 4vw, 3rem) 3rem;
+		background: var(--color-paper-2);
+		box-shadow: 0 0 80px -10px rgb(0 0 0 / 0.6);
+	}
+
+	.sheet-case .panel {
+		right: 0;
+		border-left: 1px solid var(--color-line);
+	}
+
+
+	.close {
+		position: absolute;
+		top: 1.25rem;
+		right: 1.25rem;
+		display: grid;
+		place-items: center;
+		width: 2.75rem;
+		height: 2.75rem;
+		border-radius: 999px;
+		border: 1px solid var(--color-line-strong);
+		transition:
+			border-color 0.4s var(--ease-out),
+			color 0.4s var(--ease-out);
+	}
+
+	.meta {
+		margin-top: 1rem;
+		font-size: var(--text-small);
+		line-height: 1.5;
+		color: var(--color-amber-deep);
+	}
+
+	.dot {
+		display: inline-block;
+		width: 0.28em;
+		height: 0.28em;
+		margin: 0 0.55em 0.18em;
+		border-radius: 999px;
+		background: currentColor;
+		vertical-align: middle;
+	}
+
+	.shot {
+		margin-top: 1.75rem;
+		width: 100%;
+		aspect-ratio: 16 / 10;
+		object-fit: cover;
+		border: 1px solid var(--color-line);
+	}
+
+	.lead {
+		margin-top: 1.75rem;
+		font-size: var(--text-lead);
+		line-height: 1.55;
+		max-width: 52ch;
+	}
+
+	h3 {
+		margin-top: 2.5rem;
+		margin-bottom: 0.75rem;
+		padding-top: 1rem;
+		border-top: 1px solid var(--color-line);
+		font-size: var(--text-label);
+		font-weight: 560;
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-ash);
+	}
+
+	.body {
+		margin-top: 0.5rem;
+		font-size: var(--text-body);
+		line-height: 1.6;
+		color: var(--color-ash);
+		max-width: 60ch;
+	}
+
+	.steps {
+		counter-reset: step;
+		display: grid;
+		gap: 0.75rem;
+	}
+
+	.steps li {
+		counter-increment: step;
+		display: grid;
+		grid-template-columns: 1.75rem 1fr;
+		font-size: var(--text-body);
+		line-height: 1.55;
+		color: var(--color-ash);
+	}
+
+	.steps li::before {
+		content: counter(step);
+		color: var(--color-amber-deep);
+		font-weight: 600;
+		font-size: var(--text-small);
+		padding-top: 0.1em;
+	}
+
+	.facts {
+		margin-top: 2rem;
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		border-top: 1px solid var(--color-line);
+	}
+
+	.facts div {
+		padding: 0.9rem 0.75rem 0 0;
+	}
+
+	.facts dt {
+		font-size: var(--text-label);
+		letter-spacing: 0.08em;
+		text-transform: uppercase;
+		color: var(--color-dim);
+	}
+
+	.facts dd {
+		margin-top: 0.35rem;
+		font-size: var(--text-body);
+		font-weight: 600;
+		line-height: 1.3;
+	}
+
+	.chips {
+		margin-top: 1.75rem;
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+	}
+
+	.chips li {
+		display: inline-flex;
+		align-items: center;
+		gap: 0.4rem;
+		border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+		border: 1px solid var(--color-line-strong);
+		padding: 0.35rem 0.8rem;
+		font-size: var(--text-small);
+		color: var(--color-ink);
+	}
+
+	.visit {
+		margin-top: 2rem;
+	}
+
+
+
+
+
+
+
+
+	.sheet-case::backdrop {
+		background: transparent;
+	}
+
+	.sheet-case .panel {
+		inset: 0;
+		width: 100%;
+		border: 0;
+		box-shadow: none;
+		background: var(--case-bg, var(--color-amber));
+		padding: clamp(4.5rem, 10vh, 7rem) clamp(1.25rem, 6vw, 6rem) 4rem;
+	}
+
+	.sheet-case .close {
+		position: fixed;
+		top: clamp(1rem, 3vh, 1.75rem);
+		right: clamp(1rem, 3vw, 2.5rem);
+		width: 3rem;
+		height: 3rem;
+		border: 2px solid var(--color-ink);
+		color: var(--color-ink);
+		z-index: 2;
+	}
+
+	.case {
+		max-width: 76rem;
+		margin: 0 auto;
+	}
+
+	.case-head {
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr);
+		gap: clamp(1.5rem, 4vw, 4rem);
+		align-items: center;
+	}
+
+	.case-shot {
+		aspect-ratio: 16 / 10;
+		border: 2.5px solid var(--color-ink);
+		background: rgb(240 233 220 / 0.6);
+		transform: rotate(1.5deg);
+		overflow: hidden;
+	}
+
+	.sheet-case .t-sheet {
+		font-size: clamp(2.75rem, 6vw, 5rem);
+	}
+
+	.sheet-case :is(.meta, .lead, .body, .steps li, h3, .facts dt, .facts dd) {
+		color: var(--color-ink);
+	}
+
+	.sheet-case .steps li::before {
+		color: var(--color-ink);
+	}
+
+	.sheet-case .meta {
+		font-weight: 600;
+	}
+
+	.sheet-case .lead {
+		max-width: 46ch;
+	}
+
+	.sheet-case .chips li {
+		border-color: var(--color-ink);
+		background: rgb(240 233 220 / 0.45);
+	}
+
+	.case-tools {
+		margin-top: 1.5rem;
+		display: flex;
+		flex-wrap: wrap;
+		align-items: center;
+		gap: 0.75rem 1rem;
+	}
+
+	.case-tools .chips {
+		margin-top: 0;
+	}
+
+	.case-tools .visit {
+		margin-top: 0;
+	}
+
+	.case-body {
+		margin-top: clamp(2.5rem, 6vh, 4rem);
+		display: grid;
+		grid-template-columns: repeat(3, minmax(0, 1fr));
+		gap: clamp(1.5rem, 3vw, 3rem);
+	}
+
+	.sheet-case h3 {
+		margin-top: 0;
+		border-top: 2px solid var(--color-ink);
+	}
+
+	.sheet-case .facts {
+		grid-template-columns: 1fr;
+		border-top: 0;
+	}
+
+	.sheet-case .facts div {
+		display: flex;
+		justify-content: space-between;
+		gap: 1rem;
+		padding: 0.6rem 0;
+		border-bottom: 1.5px dashed rgb(23 19 15 / 0.45);
+	}
+
+	.sheet-case .facts dd {
+		margin-top: 0;
+		text-align: right;
+	}
+
+	.sheet-case :is(.case-intro, .case-shot, .case-body section) {
+		opacity: 0;
+		translate: 0 1.25rem;
+		transition:
+			opacity 0.5s var(--ease-out) calc(var(--i) * 70ms + 80ms),
+			translate 0.7s var(--ease-out) calc(var(--i) * 70ms + 80ms);
+	}
+
+	.sheet-case:global(.is-open) :is(.case-intro, .case-shot, .case-body section) {
+		opacity: 1;
+		translate: 0 0;
+	}
+
+	@media (min-width: 1024px) {
+		.sheet-case .panel {
+			display: flex;
+			overflow: hidden;
+			padding: 6vh 6vw 5vh;
+		}
+
+		.sheet-case .case:not([hidden]) {
+			display: grid;
+			grid-template-rows: minmax(0, 1fr) auto;
+			gap: 4.5vh;
+			width: 100%;
+			height: 100%;
+		}
+
+		.case-head {
+			min-height: 0;
+		}
+
+		.case-shot {
+			justify-self: end;
+			width: min(100%, 48vh * 1.6);
+		}
+
+		.sheet-case .t-sheet {
+			font-size: clamp(2.25rem, 8vh, 4.5rem);
+		}
+
+		.sheet-case .meta {
+			margin-top: 1.5vh;
+		}
+
+		.sheet-case .lead {
+			margin-top: 2.5vh;
+			font-size: clamp(0.9375rem, 2.1vh, 1.1875rem);
+		}
+
+		.case-tools {
+			margin-top: 2.5vh;
+		}
+
+		.case-body {
+			margin-top: 0;
+		}
+
+		.sheet-case :is(.body, .steps li) {
+			font-size: clamp(0.8125rem, 1.8vh, 1rem);
+			line-height: 1.5;
+		}
+
+		.sheet-case .steps {
+			gap: 1vh;
+		}
+
+		.sheet-case h3 {
+			margin-bottom: 1vh;
+			padding-top: 1.2vh;
+		}
+
+		.sheet-case .facts {
+			margin-top: 1.5vh;
+		}
+
+		.sheet-case .facts div {
+			padding: 0.8vh 0;
+		}
+	}
+
+	@media (max-width: 767px) {
+		.case-head,
+		.case-body {
+			grid-template-columns: 1fr;
+		}
+
+		.case-shot {
+			order: -1;
+		}
+
+		.sheet-case .panel {
+			top: 0;
+			height: 100%;
+			border-top: 0;
+		}
+
+		.panel {
+			top: auto;
+			height: 88%;
+			width: 100%;
+			border-left: 0;
+			border-right: 0;
+			border-top: 1px solid var(--color-line);
+		}
+
+		.facts {
+			grid-template-columns: repeat(2, minmax(0, 1fr));
+		}
+	}
+</style>

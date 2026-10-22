@@ -13,13 +13,14 @@ export interface Project {
 	summary: string;
 	tags: string[];
 	url?: string;
+	image?: string;
 	status?: string;
 	caseStudy: CaseStudy;
 }
 
 export const profile = {
 	name: 'Phi Hung',
-	role: 'Frontend Engineer',
+	role: 'Creative Frontend Engineer',
 	focus: 'Product UI for Dashboards & DApps',
 	location: 'Vietnam',
 	stack: 'React / Next.js / TypeScript',
@@ -30,6 +31,33 @@ export const profile = {
 };
 
 export const projects: Project[] = [
+	{
+		index: '08',
+		title: 'UBIW Studio',
+		type: 'Frontend Engineer / Team site',
+		year: 'Sep 2026 - Present',
+		summary:
+			'The site of UBIW Studio, seven friends from HCMUS who build their own products. I build it end to end: a Next.js site whose interactive WebGL room lets the team, their seats and their things tell the story.',
+		tags: ['Next.js', 'WebGL'],
+		url: 'https://ubiw.space/',
+		image: '/work/ubiw-studio.webp',
+		status: 'Live Project',
+		caseStudy: {
+			challenge:
+				'Show a seven-person product team through its craft rather than a sales pitch, at a high frame rate on desktop and phones.',
+			approach: [
+				'Built a statically exported Next.js 16 site on Cloudflare with build-time share images',
+				'Wrote an interactive WebGL room where the team, their seats, machines and photos carry the story',
+				'Kept motion on transform and opacity with Lenis scrolling, and paused loops off-screen for 60 fps',
+			],
+			outcome: 'A live team site at ubiw.space that is itself the showcase of the team’s craft.',
+			metrics: [
+				{ label: 'Stack', value: 'Next.js 16' },
+				{ label: 'Language', value: 'English' },
+				{ label: 'Link', value: 'ubiw.space' },
+			],
+		},
+	},
 	{
 		index: '01',
 		title: 'Offer Module',
@@ -65,6 +93,7 @@ export const projects: Project[] = [
 			'Web3 analytics and form-building platform tracking growth, user behavior, and token-gated engagement. I built the product UI, a Tailwind + Radix component layer, Supabase data flows, and Paddle access control.',
 		tags: ['Next.js', 'Supabase', 'Tinybird'],
 		url: 'https://formo.so/',
+		image: '/work/formo.webp',
 		caseStudy: {
 			challenge:
 				'The product needed one reusable UI layer and real-time pipelines serving both Web2 forms and token-gated Web3 campaigns.',
@@ -91,6 +120,7 @@ export const projects: Project[] = [
 			'Live service website for an F&B consulting business. I structured the offer, built the responsive Astro interface, and shaped catalogue and project pages so consulting, training, and cafe setup read instantly.',
 		tags: ['Astro', 'Responsive UI', 'Service UX'],
 		url: 'https://jiggermixology.com/',
+		image: '/work/jigger-mixology.webp',
 		caseStudy: {
 			challenge:
 				'An F&B consultancy needed a fast website that made consulting, training, and cafe-setup services legible in seconds.',
@@ -116,6 +146,7 @@ export const projects: Project[] = [
 			'Music commerce web app for albums, fan clubs, and events. I delivered SSR-focused Remix UI, localization for multi-market releases, production hotfixes, and legacy migration support.',
 		tags: ['Remix', 'SSR', 'Headless UI'],
 		url: 'https://nymusickr.com/',
+		image: '/work/nymusickr.webp',
 		caseStudy: {
 			challenge:
 				'A music commerce app had to stay fast under SSR while absorbing localization and a legacy migration.',
@@ -259,11 +290,4 @@ export const contactLinks = [
 	{ label: 'GitHub', url: 'https://github.com/Hnng2011' },
 	{ label: 'LinkedIn', url: 'https://www.linkedin.com/in/lu-h%C3%B9ng-081320214' },
 	{ label: 'Email', url: 'mailto:luphihung111@gmail.com' },
-];
-
-export const navLinks = [
-	{ label: 'Work', href: '#work' },
-	{ label: 'Stack', href: '#stack' },
-	{ label: 'Path', href: '#path' },
-	{ label: 'Contact', href: '#contact' },
 ];
