@@ -615,7 +615,10 @@ function frame(now: number) {
 	const dt = Math.min(0.05, interval / 1000);
 	last = now;
 	raf = requestAnimationFrame(frame);
-	if (sheets.case.open) return;
+	if (sheets.case.open) {
+		doodle.tick(now);
+		return;
+	}
 
 	if (state.zoomInput && now - state.zoomInput > 420 && state.zoomTarget > 0 && state.zoomTarget < 1) {
 		state.zoomTarget = state.zoomTarget > 0.3 ? 1 : 0;
