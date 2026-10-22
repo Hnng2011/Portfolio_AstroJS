@@ -162,12 +162,15 @@ const birds = [
 	{
 		birds.map((b) => (
 			<svg class="sky-bird" data-sky-bird viewBox="-24 -30 48 40" fill="none" stroke="#17130f" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-				<path d="M-9-9l-11-5 3 9z" fill={b.color} stroke-width="1.8" />
-				<ellipse cx="0" cy="-9" rx="10" ry="7" fill={b.color} />
-				<path class="sky-wing" d="M-4-12q4-16 14-12-2 8-10 12z" fill={b.color} />
-				<circle cx="8" cy="-15" r="6" fill={b.color} />
-				<circle cx="10" cy="-16" r="1.4" fill="#17130f" stroke="none" />
-				<path d="M13-15l6 1.5-6 1.6z" fill="#f2a541" stroke-width="1.4" />
+				<g class="sky-body">
+					<path class="sky-legs" d="M-3-1v4M3-1v4" stroke-width="1.8" />
+					<path d="M-9-9l-11-5 3 9z" fill={b.color} stroke-width="1.8" />
+					<ellipse cx="0" cy="-9" rx="10" ry="8" fill={b.color} />
+					<path class="sky-wing" d="M-4-12q4-16 14-12-2 8-10 12z" fill={b.color} />
+					<circle cx="7" cy="-17" r="6.5" fill={b.color} />
+					<circle cx="9" cy="-18" r="1.4" fill="#17130f" stroke="none" />
+					<path d="M13-17l6 1.5-6 1.6z" fill="#f2a541" stroke-width="1.4" />
+				</g>
 			</svg>
 		))
 	}
@@ -298,6 +301,55 @@ const birds = [
 		transform-box: fill-box;
 		transform-origin: 20% 100%;
 		animation: sky-flap 0.18s ease-in-out infinite alternate;
+	}
+
+	.sky-bird :global(.sky-body) {
+		transform-box: fill-box;
+		transform-origin: 50% 90%;
+		transition: rotate 0.35s ease-out;
+	}
+
+	.sky-bird :global(.sky-legs) {
+		opacity: 0;
+		transition: opacity 0.2s linear;
+	}
+
+	.sky-bird:global(.is-landing) :global(.sky-body) {
+		rotate: -16deg;
+	}
+
+	.sky-bird:global(.is-landing) :global(.sky-legs) {
+		opacity: 1;
+	}
+
+	.sky-bird:global(.is-landing) :global(.sky-wing) {
+		animation-duration: 0.09s;
+	}
+
+	.bird:global(.is-crouching) {
+		animation: bird-crouch 0.22s ease-in forwards;
+	}
+
+	.bird:global(.is-landed) {
+		animation: bird-land 0.5s ease-out;
+	}
+
+	@keyframes bird-crouch {
+		to {
+			scale: 1.12 0.78;
+		}
+	}
+
+	@keyframes bird-land {
+		0% {
+			scale: 1.14 0.76;
+		}
+		45% {
+			scale: 0.94 1.08;
+		}
+		100% {
+			scale: 1 1;
+		}
 	}
 
 	@keyframes sky-flap {

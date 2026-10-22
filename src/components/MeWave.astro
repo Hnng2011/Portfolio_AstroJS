@@ -29,8 +29,16 @@ const PACK_DARK = '#4b9a8b';
 	<ellipse cx="226" cy="486" rx="27" ry="13" fill="#fbf7ef" />
 	<path d="M220 480l8-3" stroke-width="2.2" />
 
+	<g class="wave-arm">
+		<path d="M284 252q34-12 46-58" stroke-width="22" />
+		<path d="M284 252q34-12 46-58" stroke={SKIN} stroke-width="16" />
+		<path d="M314 186q2-14 4-22M326 182q0-16 2-26M338 184q2-14 6-22M346 194q6-6 12-8" stroke-width="7" />
+		<path d="M314 186q2-14 4-22M326 182q0-16 2-26M338 184q2-14 6-22M346 194q6-6 12-8" stroke={SKIN} stroke-width="3" />
+		<ellipse cx="330" cy="194" rx="18" ry="16" fill={SKIN} />
+	</g>
+
 	<path d="M184 196h32v44h-32z" fill={SKIN} />
-	<path d="M138 236q62-22 124 0l16 66-16 6-2 112H140l-2-112-18-6z" fill={TEE} />
+	<path d="M138 236q62-22 124 0l26-10 16 28-30 14-8-4-2 152H140l-2-112-18-6z" fill={TEE} />
 	<path d="M176 230q24 12 48 0" stroke-width="2.6" />
 	<path d="M156 228q6 40 4 90M244 228q-6 40-4 90" stroke-width="16" />
 	<path d="M156 228q6 40 4 90M244 228q-6 40-4 90" stroke={PACK} stroke-width="10" />
@@ -39,14 +47,6 @@ const PACK_DARK = '#4b9a8b';
 	<path d="M128 302q-14 52-10 106" stroke={SKIN} stroke-width="16" />
 	<ellipse cx="118" cy="414" rx="14" ry="13" fill={SKIN} />
 
-	<g class="wave-arm">
-		<path d="M262 290q44-30 66-102" stroke-width="22" />
-		<path d="M262 290q44-30 66-102" stroke={SKIN} stroke-width="16" />
-		<path d="M314 186q2-14 4-22M326 182q0-16 2-26M338 184q2-14 6-22M346 194q6-6 12-8" stroke-width="7" />
-		<path d="M314 186q2-14 4-22M326 182q0-16 2-26M338 184q2-14 6-22M346 194q6-6 12-8" stroke={SKIN} stroke-width="3" />
-		<ellipse cx="330" cy="194" rx="18" ry="16" fill={SKIN} />
-	</g>
-	<path d="M252 240q34-8 46 22l-20 20q-16-10-26-42z" fill={TEE} />
 
 	<FrontHead />
 </svg>
@@ -54,7 +54,7 @@ const PACK_DARK = '#4b9a8b';
 <style>
 	.me-wave :global(.wave-arm) {
 		transform-box: view-box;
-		transform-origin: 266px 290px;
+		transform-origin: 286px 250px;
 		animation: wave 0.55s ease-in-out infinite alternate;
 	}
 
