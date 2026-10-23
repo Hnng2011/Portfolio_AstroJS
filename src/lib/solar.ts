@@ -13,6 +13,8 @@ export interface SolarFrame {
 	labels: number;
 	// Seconds since the camera stepped into the system (the pen pass re-inks it); below 0 when off.
 	ink: number;
+	// 0..1 while the pointer is over the sun, which opens the Archive.
+	sunHover: number;
 }
 
 export interface SolarView {
@@ -127,6 +129,7 @@ export class Solar {
 	private bodies: Body[] = [];
 	private labelW: number[] = [];
 	private labelA: number[] = [];
+	private sunLabelA = 0;
 	private doodles: { x: number; y: number; r: number; kind: number; phase: number }[] = [];
 	private flings: Fling[] = [];
 	private held = -1;
@@ -145,6 +148,7 @@ export class Solar {
 		private canvas: HTMLCanvasElement,
 		count: number,
 		private labels: HTMLElement[],
+		private sunLabel?: HTMLElement,
 	) {
 		this.count = count;
 		this.ctx = canvas.getContext('2d')!;
@@ -709,7 +713,7 @@ export class Solar {
 		const fa = f.focusAmt;
 
 		const sunP = this.place(0, 0, f.leanX, f.leanY);
-		const sunR = this.sunR * (1 - Math.pow(1 - Math.min(1, e * 1.6), 3));
+		const sunR = this.sunR * (1 - Math.pow(1 - Math.min(1, e * 1.6), 3)) * (1 + 0.1 * f.sunHover);
 		this.sunDisc = { x: sunP.x, y: sunP.y, r: sunR * sunP.s };
 
 		this.drawDoodles(f.time, e * (1 - 0.6 * fa));
@@ -818,6 +822,15 @@ export class Solar {
 		const taken: number[][] = [];
 		const hits = (box: number[], other: number[]) =>
 			box[0] < other[2] && box[2] > other[0] && box[1] < other[3] && box[3] > other[1];
+		if (this.sunLabel) {
+			const lw = this.sunLabel.offsetWidth || 120;
+			const top = sun.y + sun.r * 1.55 + 4;
+			taken.push([sun.x - lw / 2 - 4, top + 3, sun.x + lw / 2 + 4, top + 33]);
+			const show = (1 - fa) * on;
+			this.sunLabelA += (show - this.sunLabelA) * 0.12;
+			this.sunLabel.style.transform = `translate3d(${sun.x}px, ${top}px, 0) translateX(-50%)`;
+			this.sunLabel.style.opacity = String(this.sunLabelA);
+		}
 		for (const b of order) {
 			const label = this.labels[b.i];
 			if (!label) continue;
@@ -903,6 +916,11 @@ export class Solar {
 
 	colorOf(i: number) {
 		return TUNING.markers[LOOKS[i % LOOKS.length].color % TUNING.markers.length];
+	}
+
+	overSun(x: number, y: number) {
+		const sun = this.sunDisc;
+		return sun.r > 1 && Math.hypot(x - sun.x, y - sun.y) < sun.r * 1.2;
 	}
 
 	pick(x: number, y: number, skip = -1): number {
