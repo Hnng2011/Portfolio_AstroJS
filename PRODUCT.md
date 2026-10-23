@@ -30,6 +30,7 @@ Recruiters and hiring managers filling frontend roles (confirmed by the owner, 2
 
 - Doodle cartoon style, flat 2D (no attempt at 3D), playful. Paper ground, ink lines, marker colours; Shantell Sans.
 - Home is one locked screen: a chibi doodle of the owner with a backpack, carrying a glass cube labelled "my work" with the solar system inside, walking side-on across a doodle meadow with butterflies and bees. Clicking him gives a short random line (name, one-line intro, or a nudge to see the work).
-- Scrolling (or clicking the cube) stops him where he is, turns him to the camera, and zooms into the cube until it becomes the full solar system: one unique planet per project. Clicking a planet throws ink to preview it; clicking the preview floods the screen into the full case, which fits one desktop screen.
+- Scrolling (or clicking the cube) stops him where he is, turns him to the camera, and zooms into the cube until it becomes the full solar system: one unique planet per project, re-inked by a pen pass as you arrive. Planets can be grabbed and flung; they spring back to their orbits. Clicking a planet throws ink to preview it; clicking the preview floods the screen and the preview flies into the full case.
+- A case is a scrapbook spread on the planet's colour and pattern, fitting one desktop screen: a taped photo or screen recording with handwritten notes and arrows, the approach as three sticky notes, the problem on a taped scrap and the outcome on an index card. Earlier, shut-down projects live in an Archive.
 - Info and Contact are separate pages in the same style, reached through a two-pour ink transition. Info shows the owner waving in the middle with about and experience on either side.
 - Title: Creative Frontend Engineer. English only.

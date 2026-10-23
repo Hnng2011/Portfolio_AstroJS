@@ -11,6 +11,8 @@ export interface SolarFrame {
 	turn: number;
 	view: SolarView | null;
 	labels: number;
+	// Seconds since the camera stepped into the system (the pen pass re-inks it); below 0 when off.
+	ink: number;
 }
 
 export interface SolarView {
@@ -51,6 +53,8 @@ export const TUNING = {
 	// Camera: how far the orbit plane tips toward the viewer, and how much it leans to the right.
 	tip: { desktop: 0.56, mobile: 0.62 },
 	lean: { desktop: 0.08, mobile: 1.25 },
+	// A planet let go after a drag springs back to its orbit: stiffness and damping of that spring.
+	fling: { stiffness: 140, damping: 8 },
 };
 
 // One look per project, in the order of `projects` in src/data/portfolio.ts.
@@ -89,7 +93,19 @@ interface Body extends ScreenDisc {
 	alpha: number;
 	hover: number;
 	focused: number;
+	vx: number;
+	vy: number;
 }
+
+interface Fling {
+	x: number;
+	y: number;
+	vx: number;
+	vy: number;
+}
+
+const clamp01 = (v: number) => Math.min(1, Math.max(0, v));
+const easeOut = (t: number) => 1 - Math.pow(1 - t, 3);
 
 export class Solar {
 	readonly count: number;
@@ -112,6 +128,16 @@ export class Solar {
 	private labelW: number[] = [];
 	private labelA: number[] = [];
 	private doodles: { x: number; y: number; r: number; kind: number; phase: number }[] = [];
+	private flings: Fling[] = [];
+	private held = -1;
+	private grabX = 0;
+	private grabY = 0;
+	private handX = 0;
+	private handY = 0;
+	private lastNow = 0;
+	private ink = -1;
+	// No overshoot on the spring when the visitor prefers reduced motion.
+	calm = false;
 	sunDisc: ScreenDisc = { x: 0, y: 0, r: 0 };
 	focusDisc: ScreenDisc = { x: 0, y: 0, r: 0 };
 
@@ -271,9 +297,9 @@ export class Solar {
 		const { ctx } = this;
 		ctx.globalAlpha = alpha * 0.7;
 		ctx.lineWidth = 1.5;
-		for (const d of this.doodles) {
+		this.doodles.forEach((d, k) => {
 			const tw = 1 + 0.18 * Math.sin(time * 1.6 + d.phase);
-			const r = d.r * tw;
+			const r = d.r * tw * (this.ink < 0 ? 1 : easeOut(clamp01((this.ink - 0.25 - k * 0.05) / 0.35)));
 			const j = noise(d.phase, this.seed) * 0.8;
 			ctx.strokeStyle = d.kind === 0 ? TUNING.sunDeep : TUNING.ink;
 			ctx.beginPath();
@@ -292,7 +318,7 @@ export class Solar {
 				ctx.arc(d.x + j, d.y, r * 0.35, 0, TAU);
 			}
 			ctx.stroke();
-		}
+		});
 		ctx.strokeStyle = TUNING.ink;
 		ctx.globalAlpha = 1;
 	}
@@ -489,6 +515,53 @@ export class Solar {
 		ctx.stroke(this.wobblePath(x, y, mid, mid * flat, rot, this.seed + 7, from, to));
 	}
 
+	// Pen pass: how far a stroke starting `delay` seconds in has been traced, and how much it has faded since.
+	private pen(delay: number, dur: number) {
+		if (this.ink < 0) return null;
+		const t = clamp01((this.ink - delay) / dur);
+		const fade = clamp01((this.ink - delay - dur) / 0.5);
+		return t > 0 && fade < 1 ? { t: easeOut(t), fade } : null;
+	}
+
+	private retrace(x: number, y: number, r: number, seed: number, delay: number, dur: number, width: number) {
+		const p = this.pen(delay, dur);
+		if (!p) return;
+		const { ctx } = this;
+		const start = (seed * 2.3) % TAU;
+		const end = start + TAU * p.t;
+		ctx.save();
+		ctx.globalAlpha = 1 - p.fade;
+		ctx.lineWidth = width;
+		ctx.stroke(this.wobblePath(x, y, r * 1.04, r * 1.04, 0, seed + 5, start, end));
+		if (p.t < 1) {
+			ctx.beginPath();
+			ctx.arc(x + Math.cos(end) * r * 1.04, y + Math.sin(end) * r * 1.04, Math.max(2.2, width * 0.75), 0, TAU);
+			ctx.fill();
+		}
+		ctx.restore();
+	}
+
+	private speedLines(b: Body) {
+		const speed = Math.hypot(b.vx, b.vy);
+		if (speed < 500 || b.focused > 0) return;
+		const { ctx } = this;
+		const ux = -b.vx / speed;
+		const uy = -b.vy / speed;
+		const len = Math.min(b.r * 2.4, speed * 0.04);
+		ctx.globalAlpha = b.alpha * clamp01((speed - 500) / 1400);
+		ctx.lineWidth = 2;
+		for (const off of [-0.6, 0, 0.6]) {
+			const px = b.x + ux * b.r * 1.3 - uy * off * b.r;
+			const py = b.y + uy * b.r * 1.3 + ux * off * b.r;
+			const l = len * (off ? 0.7 : 1);
+			ctx.beginPath();
+			ctx.moveTo(px, py);
+			ctx.lineTo(px + ux * l, py + uy * l);
+			ctx.stroke();
+		}
+		ctx.globalAlpha = 1;
+	}
+
 	private drawPlanet(b: Body, time: number) {
 		if (b.r < 1) return;
 		const { ctx } = this;
@@ -496,6 +569,19 @@ export class Solar {
 		const sx = this.sunDisc.x - b.x;
 		const sy = this.sunDisc.y - b.y;
 		const sl = Math.hypot(sx, sy) || 1;
+		this.speedLines(b);
+		// Squash and stretch along the direction it is flying.
+		const stretch = Math.min(0.3, Math.hypot(b.vx, b.vy) / 3000);
+		const squash = stretch > 0.01;
+		if (squash) {
+			const ang = Math.atan2(b.vy, b.vx);
+			ctx.save();
+			ctx.translate(b.x, b.y);
+			ctx.rotate(ang);
+			ctx.scale(1 + stretch, 1 / (1 + stretch));
+			ctx.rotate(-ang);
+			ctx.translate(-b.x, -b.y);
+		}
 		ctx.globalAlpha = b.alpha;
 		this.ring(b, look, false);
 
@@ -537,6 +623,8 @@ export class Solar {
 		}
 		ctx.fillStyle = TUNING.ink;
 		ctx.globalAlpha = 1;
+		if (squash) ctx.restore();
+		this.retrace(b.x, b.y, b.r, this.seed + b.i * 1.7, 0.4 + b.i * 0.13, 0.55, TUNING.outline * 2.2);
 	}
 
 	private drawSun(time: number, alpha: number) {
@@ -588,6 +676,7 @@ export class Solar {
 		this.sketch(x, y, r, this.seed + 11, TUNING.outline * 1.2);
 		ctx.fillStyle = TUNING.ink;
 		ctx.globalAlpha = 1;
+		this.retrace(x, y, r, this.seed + 11, 0, 0.6, TUNING.outline * 2.4);
 	}
 
 	render(f: SolarFrame, now: number) {
@@ -597,6 +686,9 @@ export class Solar {
 			this.seed = (this.seed + 1.618) % 100;
 		}
 		ctx.clearRect(0, 0, w, h);
+		const dt = this.lastNow ? Math.min(0.05, Math.max(0, (now - this.lastNow) / 1000)) : 0;
+		this.lastNow = now;
+		this.ink = f.ink;
 		this.carry = f.turn;
 		const view = f.view;
 		if (view) {
@@ -624,18 +716,41 @@ export class Solar {
 		const orbitAlpha = 0.34 * e * (1 - 0.75 * fa);
 		ctx.lineWidth = 1.2;
 		ctx.setLineDash([12, 7, 3, 7]);
+		const traces: { pts: { x: number; y: number }[]; t: number; fade: number }[] = [];
 		for (let i = 0; i < this.count; i++) {
 			const r = this.orbitRadius(i) * (0.35 + 0.65 * e);
 			const path = new Path2D();
+			const pts: { x: number; y: number }[] = [];
 			for (let k = 0; k <= 96; k++) {
 				const p = this.place(r * (1 + 0.004 * noise((k / 96) * TAU, this.seed + i)), (k / 96) * TAU, f.leanX, f.leanY);
+				pts.push(p);
 				if (k === 0) path.moveTo(p.x, p.y);
 				else path.lineTo(p.x, p.y);
 			}
 			ctx.globalAlpha = Math.min(1, orbitAlpha * (f.hover === i ? 1 + f.hoverAmt * 1.4 : 1));
 			ctx.stroke(path);
+			const pen = this.pen(0.1 + i * 0.13, 0.85);
+			if (pen) traces.push({ pts, ...pen });
 		}
 		ctx.setLineDash([]);
+		// The pen pass inks each orbit once over its dashes, then lets the ink fade back.
+		for (const { pts, t, fade } of traces) {
+			const n = Math.max(1, Math.round(96 * t));
+			ctx.globalAlpha = 0.85 * (1 - fade);
+			ctx.lineWidth = 2.2;
+			ctx.beginPath();
+			for (let k = 0; k <= n; k++) {
+				if (k === 0) ctx.moveTo(pts[k].x, pts[k].y);
+				else ctx.lineTo(pts[k].x, pts[k].y);
+			}
+			ctx.stroke();
+			if (t < 1) {
+				ctx.beginPath();
+				ctx.arc(pts[n].x, pts[n].y, 2.8, 0, TAU);
+				ctx.fill();
+			}
+		}
+		ctx.lineWidth = 1.2;
 		ctx.globalAlpha = 1;
 
 		const mobile = w < 768;
@@ -649,18 +764,30 @@ export class Solar {
 			const appear = Math.min(1, Math.max(0, e * 1.6 - 0.25 - i * 0.07));
 			const grow = 1 - Math.pow(1 - appear, 3);
 			const hover = f.hover === i ? f.hoverAmt : 0;
-			let x = p.x;
-			let y = p.y;
+			const focused = f.focus === i ? f.focusAmt : 0;
+			const o = this.stepFling(i, p.x, p.y, dt);
+			let x = p.x + o.x * (1 - focused);
+			let y = p.y + o.y * (1 - focused);
 			let radius = this.size * look.size * grow * p.s * (1 + hover * 0.16);
 			let z = p.z;
-			const focused = f.focus === i ? f.focusAmt : 0;
 			if (focused > 0) {
 				x += (target.x - x) * focused;
 				y += (target.y - y) * focused;
 				radius += (target.r * look.size ** 0.3 - radius) * focused;
 				z += (this.dist - z) * focused * 0.5;
 			}
-			this.bodies.push({ x, y, r: radius, z, i, alpha: grow * (focused > 0 ? 1 : 1 - 0.78 * fa), hover, focused });
+			this.bodies.push({
+				x,
+				y,
+				r: radius,
+				z,
+				i,
+				alpha: grow * (focused > 0 ? 1 : 1 - 0.78 * fa),
+				hover,
+				focused,
+				vx: o.vx * (1 - focused),
+				vy: o.vy * (1 - focused),
+			});
 			if (f.focus === i) this.focusDisc = { x, y, r: radius };
 		}
 
@@ -715,6 +842,63 @@ export class Solar {
 
 	get centerY() {
 		return this.h / 2 + this.offY;
+	}
+
+	// A planet held by the pointer follows it; let go, it springs back to its place on the orbit.
+	private stepFling(i: number, ox: number, oy: number, dt: number) {
+		const o = (this.flings[i] ??= { x: 0, y: 0, vx: 0, vy: 0 });
+		if (this.held === i) {
+			const a = 1 - Math.exp(-30 * dt);
+			const nx = o.x + (this.handX + this.grabX - ox - o.x) * a;
+			const ny = o.y + (this.handY + this.grabY - oy - o.y) * a;
+			if (dt > 0) {
+				o.vx += ((nx - o.x) / dt - o.vx) * 0.5;
+				o.vy += ((ny - o.y) / dt - o.vy) * 0.5;
+			}
+			o.x = nx;
+			o.y = ny;
+		} else if (o.x || o.y || o.vx || o.vy) {
+			const k = TUNING.fling.stiffness;
+			const c = this.calm ? 2 * Math.sqrt(k) : TUNING.fling.damping;
+			const h = dt / 3;
+			for (let s = 0; s < 3; s++) {
+				o.vx += (-k * o.x - c * o.vx) * h;
+				o.vy += (-k * o.y - c * o.vy) * h;
+				o.x += o.vx * h;
+				o.y += o.vy * h;
+			}
+			if (Math.abs(o.x) + Math.abs(o.y) < 0.2 && Math.abs(o.vx) + Math.abs(o.vy) < 4) o.x = o.y = o.vx = o.vy = 0;
+		}
+		const speed = Math.hypot(o.vx, o.vy);
+		if (speed > 3500) {
+			o.vx *= 3500 / speed;
+			o.vy *= 3500 / speed;
+		}
+		return o;
+	}
+
+	grab(i: number, x: number, y: number) {
+		const b = this.bodies.find((o) => o.i === i);
+		if (!b) return false;
+		this.held = i;
+		this.grabX = b.x - x;
+		this.grabY = b.y - y;
+		this.handX = x;
+		this.handY = y;
+		return true;
+	}
+
+	moveHand(x: number, y: number) {
+		this.handX = x;
+		this.handY = y;
+	}
+
+	release() {
+		this.held = -1;
+	}
+
+	patternOf(i: number) {
+		return LOOKS[i % LOOKS.length].pattern;
 	}
 
 	colorOf(i: number) {

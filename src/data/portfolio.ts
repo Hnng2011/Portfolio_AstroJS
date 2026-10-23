@@ -5,6 +5,15 @@ export interface CaseStudy {
 	metrics: { label: string; value: string }[];
 }
 
+// A handwritten note on a case's preview. Positions are percentages of the preview frame:
+// `at` is the centre of the note, the arrow runs from `from` to `to` (both optional).
+export interface Note {
+	text: string;
+	at: [number, number];
+	from?: [number, number];
+	to?: [number, number];
+}
+
 export interface Project {
 	index: string;
 	title: string;
@@ -14,6 +23,8 @@ export interface Project {
 	tags: string[];
 	url?: string;
 	image?: string;
+	video?: string;
+	notes?: Note[];
 	diagram?: boolean;
 	status?: string;
 	caseStudy: CaseStudy;
@@ -42,6 +53,11 @@ export const projects: Project[] = [
 		tags: ['Next.js', 'WebGL'],
 		url: 'https://ubiw.space/',
 		image: '/work/ubiw-studio.webp',
+		video: '/work/ubiw-studio.mp4',
+		notes: [
+			{ text: 'a live WebGL room, 60 fps', at: [17, 9], from: [22, 14], to: [27, 34] },
+			{ text: 'hotspots fly the camera in', at: [76, 91], from: [70, 86], to: [62, 54] },
+		],
 		status: 'Live Project',
 		caseStudy: {
 			challenge:
@@ -70,6 +86,10 @@ export const projects: Project[] = [
 		tags: ['React', 'Turborepo', 'Playwright'],
 		status: 'Live Project',
 		diagram: true,
+		notes: [
+			{ text: 'React Hook Form + Zod', at: [58, 5], from: [52, 9], to: [44, 33] },
+			{ text: 'pricing: CPI / PPQ / SP', at: [16, 90], from: [24, 86], to: [36, 77] },
+		],
 		caseStudy: {
 			challenge:
 				'Legacy pricing screens re-rendered heavy market data in loops, form rules were fragile, and clients needed a portal of their own next to the internal tool.',
@@ -97,6 +117,7 @@ export const projects: Project[] = [
 		tags: ['Next.js', 'Supabase', 'Tinybird'],
 		url: 'https://formo.so/',
 		image: '/work/formo.webp',
+		notes: [{ text: 'formo.so as it looks today', at: [74, 93] }],
 		caseStudy: {
 			challenge:
 				'One product had to serve both ordinary forms and token-gated Web3 campaigns, with analytics that update as events arrive.',
@@ -124,6 +145,8 @@ export const projects: Project[] = [
 		tags: ['Astro', 'Responsive UI'],
 		url: 'https://jiggermixology.com/',
 		image: '/work/jigger-mixology.webp',
+		video: '/work/jigger-mixology.mp4',
+		notes: [{ text: 'three service lines up front', at: [22, 88], from: [24, 82], to: [22, 62] }],
 		caseStudy: {
 			challenge:
 				'An F&B consultancy needed a fast website that makes consulting, training and cafe-setup services clear within seconds.',
@@ -151,6 +174,10 @@ export const projects: Project[] = [
 		tags: ['Remix', 'SSR'],
 		url: 'https://nymusickr.com/',
 		image: '/work/nymusickr.webp',
+		notes: [
+			{ text: 'localized for each market', at: [66, 22], from: [76, 18], to: [85, 9] },
+			{ text: 'server-rendered with Remix', at: [26, 66] },
+		],
 		caseStudy: {
 			challenge:
 				'A music store had to load fast and rank well in search while it was translated for new markets and moved off a legacy codebase.',
