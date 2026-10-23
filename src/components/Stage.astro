@@ -93,14 +93,16 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		</nav>
 		<ul class="quick" aria-label="Get in touch">
 			{
-				contactLinks.map((l) => (
+				contactLinks
+					.filter((l) => l.label !== 'Email')
+					.map((l) => (
 					<li>
 						<a
 							class="pill icon-pill"
 							href={l.url}
-							target={l.url.startsWith('http') ? '_blank' : undefined}
+							target="_blank"
 							rel="noopener noreferrer"
-							aria-label={l.label === 'Email' ? `Email ${l.url.replace('mailto:', '')}` : l.label}
+							aria-label={l.label}
 							title={l.label}
 						>
 							<DoodleIcon name={l.label} />

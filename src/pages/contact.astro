@@ -7,7 +7,12 @@ import Layout from '../layouts/Layout.astro';
 import { contactLinks } from '../data/portfolio';
 
 const email = contactLinks.find((l) => l.label === 'Email')!.url;
-const others = contactLinks.filter((l) => l.label !== 'Email');
+const address = email.replace('mailto:', '');
+const topics = [
+	{ label: 'A role', subject: 'About a frontend role' },
+	{ label: 'A project', subject: 'About a project' },
+	{ label: 'Just saying hi', subject: 'Saying hi' },
+];
 ---
 
 <Layout title="Contact — Phi Hung" page="contact">
@@ -17,30 +22,49 @@ const others = contactLinks.filter((l) => l.label !== 'Email');
 			<div class="note">
 				<span class="tape tape-l" aria-hidden="true"></span>
 				<span class="tape tape-r" aria-hidden="true"></span>
-				<h1 class="t-sheet" id="contact-title">Say hello</h1>
-				<p class="lead">Open to frontend roles, remote or in Vietnam.</p>
-				<a class="pill pill-solid mail" href={email}>
-					<DoodleIcon name="email" />
-					{email.replace('mailto:', '')}
-				</a>
-				<ul class="links">
-					{
-						others.map((l) => (
-							<li>
-								<a class="pill" href={l.url} target="_blank" rel="noopener noreferrer">
-									<DoodleIcon name={l.label} />
-									{l.label}
-								</a>
-							</li>
-						))
-					}
-					<li>
-						<a class="pill" href="/cv/Lu-Phi-Hung-CV.pdf" target="_blank" rel="noopener" download>
-							<DoodleIcon name="cv" />
-							Download CV
-						</a>
-					</li>
-				</ul>
+				<div class="hello">
+					<h1 class="t-sheet" id="contact-title">Say hello</h1>
+					<p class="lead">Open to frontend roles, remote or in Vietnam.</p>
+					<a class="pill pill-solid mail" href={email}>
+						<DoodleIcon name="email" />
+						{address}
+					</a>
+					<div class="meta-row">
+						<button type="button" class="pill t-label copy" data-copy={address} aria-label={`Copy ${address}`}>
+							<DoodleIcon name="copy" />
+							<span data-copy-label>Copy</span>
+						</button>
+						<p class="clock">
+							It's <time data-clock>--:--</time> in Ho Chi Minh City (UTC+7).
+						</p>
+					</div>
+					<p class="sr-only" aria-live="polite" data-copy-status></p>
+				</div>
+
+				<form class="compose" data-compose data-to={address}>
+					<h2 class="compose-title">Or write it here</h2>
+					<fieldset class="topics">
+						<legend>It's about</legend>
+						{
+							topics.map((t, k) => (
+								<label class="topic">
+									<input type="radio" name="topic" value={t.subject} checked={k === 0} />
+									<span>{t.label}</span>
+								</label>
+							))
+						}
+					</fieldset>
+					<label class="field">
+						<span>Your name</span>
+						<input name="name" autocomplete="name" />
+					</label>
+					<label class="field">
+						<span>Message</span>
+						<textarea name="message" rows="3" required></textarea>
+					</label>
+					<button type="submit" class="pill pill-solid t-label send">Open in my email app</button>
+					<p class="fine">Nothing is sent from this site. It opens your email app with this filled in.</p>
+				</form>
 			</div>
 			<svg class="plane" viewBox="0 0 600 320" fill="none" stroke="#17130f" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
 				<path
@@ -66,6 +90,52 @@ const others = contactLinks.filter((l) => l.label !== 'Email');
 
 <script>
 	import '../scripts/page';
+
+	const clock = document.querySelector<HTMLTimeElement>('[data-clock]')!;
+	const time = new Intl.DateTimeFormat('en-GB', {
+		timeZone: 'Asia/Ho_Chi_Minh',
+		hour: '2-digit',
+		minute: '2-digit',
+		hour12: false,
+	});
+	const tick = () => (clock.textContent = time.format(new Date()));
+	tick();
+	setInterval(tick, 15000);
+
+	const copy = document.querySelector<HTMLButtonElement>('[data-copy]')!;
+	const copyLabel = copy.querySelector<HTMLElement>('[data-copy-label]')!;
+	const status = document.querySelector<HTMLElement>('[data-copy-status]')!;
+	let copyTimer = 0;
+	copy.addEventListener('click', async () => {
+		const text = copy.dataset.copy!;
+		try {
+			await navigator.clipboard.writeText(text);
+		} catch {
+			const field = Object.assign(document.createElement('textarea'), { value: text });
+			document.body.append(field);
+			field.select();
+			document.execCommand('copy');
+			field.remove();
+		}
+		copyLabel.textContent = 'Copied!';
+		status.textContent = `${text} copied`;
+		clearTimeout(copyTimer);
+		copyTimer = window.setTimeout(() => {
+			copyLabel.textContent = 'Copy';
+			status.textContent = '';
+		}, 1800);
+	});
+
+	const form = document.querySelector<HTMLFormElement>('[data-compose]')!;
+	form.addEventListener('submit', (e) => {
+		e.preventDefault();
+		const data = new FormData(form);
+		const name = String(data.get('name') ?? '').trim();
+		const message = String(data.get('message') ?? '').trim();
+		const subject = `${data.get('topic')}${name ? ` (from ${name})` : ''}`;
+		const body = name ? `${message}\n\n${name}` : message;
+		location.href = `mailto:${form.dataset.to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;
+	});
 </script>
 
 <style>
@@ -83,20 +153,23 @@ const others = contactLinks.filter((l) => l.label !== 'Email');
 		flex: 1;
 		display: grid;
 		place-items: center;
-		padding: 2rem clamp(1rem, 3vw, 2.5rem) 22vh;
+		padding: 1.25rem clamp(1rem, 3vw, 2.5rem) 12vh;
 	}
 
 	.note {
 		position: relative;
 		z-index: 2;
-		width: min(100%, 34rem);
-		padding: clamp(1.75rem, 4vw, 2.75rem);
+		width: min(100%, 60rem);
+		display: grid;
+		grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+		gap: clamp(1.5rem, 3vw, 2.75rem);
+		align-items: center;
+		padding: clamp(1.5rem, 3.5vh, 2.5rem) clamp(1.5rem, 3.5vw, 2.75rem);
 		border: 2.5px solid var(--color-ink);
 		border-radius: 6px 14px 8px 12px / 12px 6px 14px 8px;
 		background: #fbf7ef;
 		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
-		rotate: -1.5deg;
-		text-align: center;
+		rotate: -1deg;
 	}
 
 	.tape {
@@ -124,22 +197,144 @@ const others = contactLinks.filter((l) => l.label !== 'Email');
 	}
 
 	.mail {
-		margin-top: 1.75rem;
+		margin-top: 1.5rem;
 		font-size: var(--text-body);
 		font-weight: 700;
-		padding: 0.9em 1.5em;
+		padding: 0.9em 1.4em;
 	}
 
-	.links {
+	.meta-row {
 		margin-top: 1rem;
 		display: flex;
-		justify-content: center;
 		flex-wrap: wrap;
-		gap: 0.5rem;
+		align-items: center;
+		gap: 0.6rem 1rem;
 	}
 
-	.links .pill {
+	.copy {
+		padding: 0.55em 1em;
+	}
+
+	.copy :global(.doodle-icon) {
+		width: 1rem;
+		height: 1rem;
+	}
+
+	.clock {
+		font-size: var(--text-small);
+		color: var(--color-ash);
+	}
+
+	.clock time {
+		font-weight: 800;
+		color: var(--color-ink);
+	}
+
+	/* The compose card: ruled like a notepad page */
+	.compose {
+		position: relative;
+		display: grid;
+		gap: 0.7rem;
+		padding: 1.1rem 1.25rem 1rem;
+		border: 2px solid var(--color-ink);
+		border-radius: 4px 9px 5px 10px / 9px 4px 10px 5px;
+		background: #fff;
+		box-shadow: 3px 4px 0 var(--color-ink);
+		rotate: 1.4deg;
+	}
+
+	.compose-title {
+		font-size: 1.25rem;
+		font-weight: 800;
+		line-height: 1.1;
+	}
+
+	.topics {
+		display: flex;
+		flex-wrap: wrap;
+		gap: 0.4rem;
+		border: 0;
+	}
+
+	.topics legend,
+	.field > span {
+		margin-bottom: 0.35rem;
+		font-size: var(--text-label);
 		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.topic span {
+		display: inline-block;
+		padding: 0.35em 0.85em;
+		border: 1.5px solid var(--color-ink);
+		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
+		font-size: var(--text-small);
+		font-weight: 700;
+		cursor: pointer;
+		transition:
+			background-color 0.3s var(--ease-out),
+			color 0.3s var(--ease-out);
+	}
+
+	.topic input {
+		position: absolute;
+		opacity: 0;
+		pointer-events: none;
+	}
+
+	.topic input:checked + span {
+		background: var(--color-ink);
+		color: var(--color-paper);
+	}
+
+	.topic input:focus-visible + span {
+		outline: 2px solid var(--color-ink);
+		outline-offset: 3px;
+	}
+
+	.field {
+		display: grid;
+	}
+
+	.field input,
+	.field textarea {
+		width: 100%;
+		padding: 0.5rem 0.7rem;
+		border: 2px solid var(--color-ink);
+		border-radius: 4px 7px 5px 8px / 7px 4px 8px 5px;
+		background: #fbf7ef;
+		font: inherit;
+		font-size: var(--text-body);
+		color: var(--color-ink);
+	}
+
+	.field textarea {
+		resize: vertical;
+		min-height: 5.3rem;
+		line-height: 1.6rem;
+		background: repeating-linear-gradient(
+			#fbf7ef 0 calc(1.6rem - 1px),
+			rgb(122 166 217 / 0.45) calc(1.6rem - 1px) 1.6rem
+		);
+		background-position: 0 0.5rem;
+		background-attachment: local;
+	}
+
+	.field input:focus-visible,
+	.field textarea:focus-visible {
+		outline: 2px solid var(--color-amber-deep);
+		outline-offset: 2px;
+	}
+
+	.send {
+		justify-self: start;
+	}
+
+	.fine {
+		font-size: var(--text-label);
+		color: var(--color-ash);
 	}
 
 	.plane {
@@ -152,6 +347,15 @@ const others = contactLinks.filter((l) => l.label !== 'Email');
 	}
 
 	@media (max-width: 767px) {
+		.note {
+			grid-template-columns: 1fr;
+			text-align: left;
+		}
+
+		.compose {
+			rotate: 0.6deg;
+		}
+
 		.plane {
 			inset: 2% 0 auto;
 			width: 100%;
