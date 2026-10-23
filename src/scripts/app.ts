@@ -29,6 +29,7 @@ const meFront = stage.querySelector<HTMLElement>('[data-me="front"]')!;
 const cubeFace = meBack.querySelector<SVGRectElement>('[data-cube-face]')!;
 const cubeButton = stage.querySelector<HTMLButtonElement>('[data-cube]')!;
 const backMe = stage.querySelector<HTMLButtonElement>('[data-back-me]')!;
+const flingHint = stage.querySelector<HTMLElement>('[data-fling-hint]')!;
 const meadow = stage.querySelector<HTMLElement>('[data-meadow]')!;
 const talkButton = stage.querySelector<HTMLButtonElement>('[data-talk]')!;
 const bubble = stage.querySelector<HTMLElement>('[data-bubble]')!;
@@ -194,18 +195,59 @@ function openArchive() {
 	);
 }
 
+// The preview on the planet flies into place as the case's photo.
+function flipIn(article: HTMLElement, from: DOMRect | null) {
+	const frame = article.querySelector<HTMLElement>('[data-flip]');
+	const shot = article.querySelector<HTMLElement>('.case-shot');
+	sheets.case.classList.toggle('is-flip', !!(frame && shot && from && !reduced));
+	if (!frame || !shot || !from || reduced) return;
+	gsap.set(frame, { clearProps: 'transform' });
+	const f = frame.getBoundingClientRect();
+	const r = shot.getBoundingClientRect();
+	const scale = from.width / r.width;
+	gsap.fromTo(
+		frame,
+		{
+			x: from.left - f.left - (r.left - f.left) * scale,
+			y: from.top - f.top - (r.top - f.top) * scale,
+			scale,
+		},
+		{ x: 0, y: 0, scale: 1, duration: 0.85, ease: 'expo.out', clearProps: 'transform' },
+	);
+}
+
+function playVideo(article: HTMLElement) {
+	const video = article.querySelector<HTMLVideoElement>('[data-video]');
+	if (!video) return;
+	if (reduced) {
+		video.controls = true;
+		return;
+	}
+	video.currentTime = 0;
+	video.play().catch(() => (video.controls = true));
+}
+
 function openSheet(_name: 'case', k = 0) {
 	const dialog = sheets.case;
 	const panel = dialog.querySelector<HTMLElement>('[data-panel]')!;
+	const article = dialog.querySelector<HTMLElement>(`[data-case="${k}"]`)!;
 	dialog.querySelectorAll<HTMLElement>('[data-case]').forEach((a, i) => (a.hidden = i !== k));
 	dialog.setAttribute('aria-labelledby', `case-title-${k}`);
 	dialog.style.setProperty('--case-bg', solar ? solar.colorOf(k) : '');
+	dialog.dataset.pattern = solar ? solar.patternOf(k) : '';
 	const flood = splat.painted && state.focus === k;
+	const from = flood ? (screens[k].querySelector<HTMLElement>('.holo-frame')?.getBoundingClientRect() ?? null) : null;
+	const ox = from ? from.left + from.width / 2 : innerWidth / 2;
+	const oy = from ? from.top + from.height / 2 : innerHeight / 2;
+	dialog.style.setProperty('--ox', `${Math.round(ox)}px`);
+	dialog.style.setProperty('--oy', `${Math.round(oy)}px`);
 	focusPlanet(k);
 	const reveal = () => {
 		showSheet(dialog);
 		gsap.set(panel, { xPercent: 0, yPercent: 0 });
 		gsap.fromTo(panel, { opacity: flood ? 1 : 0 }, { opacity: 1, duration: flood ? 0 : 0.35, ease: 'power2.out' });
+		flipIn(article, from);
+		playVideo(article);
 		requestAnimationFrame(() => dialog.classList.add('is-open'));
 	};
 	if (flood) {
@@ -226,6 +268,7 @@ function closeSheet(dialog: HTMLDialogElement) {
 	};
 	if (dialog === sheets.case) {
 		dialog.classList.remove('is-open');
+		dialog.querySelectorAll<HTMLVideoElement>('[data-video]').forEach((v) => v.pause());
 		gsap.to(panel, {
 			opacity: 0,
 			duration: reduced ? 0.1 : 0.3,
@@ -233,6 +276,7 @@ function closeSheet(dialog: HTMLDialogElement) {
 			ease: 'power2.in',
 			onComplete: () => {
 				done();
+				dialog.classList.remove('is-flip');
 				splat.floodTo(false);
 			},
 		});
@@ -333,6 +377,7 @@ addEventListener('keydown', (e) => {
 const drag = {
 	on: false,
 	id: -1,
+	planet: -1,
 	startX: 0,
 	lastX: 0,
 	lastY: 0,
@@ -351,6 +396,11 @@ stage.addEventListener('pointerdown', (e) => {
 	drag.lastT = performance.now();
 	drag.moved = 0;
 	drag.speed = 0;
+	drag.planet = -1;
+	if (solar && inSolar() && state.focus < 0) {
+		const k = solar.pick(e.clientX, e.clientY);
+		if (k >= 0 && solar.grab(k, e.clientX, e.clientY)) drag.planet = k;
+	}
 	stage.setPointerCapture(e.pointerId);
 });
 
@@ -367,6 +417,11 @@ stage.addEventListener('pointermove', (e) => {
 	drag.moved += Math.abs(d);
 	drag.lastX = e.clientX;
 	drag.lastY = e.clientY;
+	if (drag.planet >= 0) {
+		solar?.moveHand(e.clientX, e.clientY);
+		if (drag.moved > 6) setCursorMode('label', 'Whee!');
+		return;
+	}
 	if (!inSolar()) {
 		hush();
 		walk.active = false;
@@ -387,6 +442,18 @@ function endDrag(e: PointerEvent) {
 	if (!drag.on || e.pointerId !== drag.id) return;
 	drag.on = false;
 	if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+	if (drag.planet >= 0) {
+		const k = drag.planet;
+		drag.planet = -1;
+		solar?.release();
+		if (drag.moved < 6 && e.type === 'pointerup') {
+			focusPlanet(k);
+		} else {
+			flung = true;
+			setCursorMode('plain');
+		}
+		return;
+	}
 	if (!inSolar()) return;
 	if (drag.moved < 6 && e.type === 'pointerup') {
 		const k = solar ? solar.pick(e.clientX, e.clientY, state.focus) : -1;
@@ -410,6 +477,9 @@ stage.addEventListener('pointerleave', () => {
 });
 
 let solar: Solar | null = null;
+let flung = false;
+let inkStart = 0;
+let entering = false;
 const splat = new Splat(splatCanvas);
 
 const face = { x: 0, y: 0, w: 1, h: 1 };
@@ -653,6 +723,12 @@ function frame(now: number) {
 		archiveButton.tabIndex = showBack ? 0 : -1;
 	}
 	if (stage.classList.contains('in-solar') !== solarMode) stage.classList.toggle('in-solar', solarMode);
+	const nowEntering = state.zoomTarget === 1 && state.zoom > 0.72;
+	if (nowEntering && !entering) inkStart = now;
+	entering = nowEntering;
+	const inkAge = entering ? (now - inkStart) / 1000 : -1;
+	const hint = solarMode && state.focus < 0 && !flung && !state.sheetOpen && inkAge > 1.8 && inkAge < 12;
+	if (flingHint.classList.contains('is-on') !== hint) flingHint.classList.toggle('is-on', hint);
 	if (meFront.inert !== solarMode) {
 		meFront.inert = solarMode;
 		cubeButton.tabIndex = solarMode ? -1 : 0;
@@ -713,6 +789,7 @@ function frame(now: number) {
 				turn: walk.turn,
 				view: zoomView(),
 				labels: solarMode ? 1 : 0,
+				ink: reduced || inkAge > 2.4 ? -1 : inkAge,
 			},
 			now,
 		);
@@ -735,6 +812,7 @@ document.addEventListener('visibilitychange', () => {
 
 function start() {
 	solar = new Solar(solarCanvas, n, labels);
+	solar.calm = reduced;
 	solar.setQuality(TIERS[perf.tier]);
 	layout();
 

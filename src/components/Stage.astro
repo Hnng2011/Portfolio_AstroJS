@@ -23,8 +23,8 @@ const period = (year: string) => year.replace(' - ', ' – ');
 	</div>
 	<div class="layer labels" aria-hidden="true">
 		{
-			projects.map((p) => (
-				<span class="planet-label" data-label>
+			projects.map((p, i) => (
+				<span class="planet-label" data-label style={`--i: ${i}`}>
 					<span class="planet-name t-label">{p.title}</span>
 					<span class="planet-tags">{p.tags.join(' · ')}</span>
 				</span>
@@ -116,6 +116,13 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			</li>
 		</ul>
 	</footer>
+
+	<p class="fling-hint" data-fling-hint aria-hidden="true">
+		<svg viewBox="0 0 46 30" aria-hidden="true">
+			<path d="M4 26c4-12 14-20 30-19m0 0-6-5m6 5-5 6" />
+		</svg>
+		psst… drag a planet and let go
+	</p>
 
 	<button type="button" class="pill t-label archive-open" data-open-archive aria-hidden="true" tabindex="-1">
 		Archive · {archive.length}
@@ -496,6 +503,53 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		transition: color 0.4s var(--ease-out);
 	}
 
+	.planet-label {
+		clip-path: inset(-8px 100% -8px -8px);
+	}
+
+	:global(.in-solar) .planet-label {
+		clip-path: inset(-8px -8px -8px -8px);
+		transition: clip-path 0.6s var(--ease-out) calc(0.2s + var(--i) * 0.13s);
+	}
+
+	.fling-hint {
+		position: absolute;
+		left: 50%;
+		bottom: max(1.6rem, env(safe-area-inset-bottom));
+		z-index: 9;
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+		translate: -50% 0.5rem;
+		font-size: var(--text-small);
+		font-weight: 700;
+		white-space: nowrap;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			opacity 0.5s var(--ease-out),
+			translate 0.5s var(--ease-out);
+	}
+
+	.fling-hint:global(.is-on) {
+		opacity: 1;
+		translate: -50% 0;
+	}
+
+	.fling-hint svg {
+		width: 2.2rem;
+		height: 1.5rem;
+		overflow: visible;
+	}
+
+	.fling-hint path {
+		fill: none;
+		stroke: var(--color-ink);
+		stroke-width: 2.2;
+		stroke-linecap: round;
+		stroke-linejoin: round;
+	}
+
 	.planet-name {
 		font-size: 0.8125rem;
 	}
@@ -732,6 +786,11 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			left: auto;
 			right: 1rem;
 			top: max(1rem, env(safe-area-inset-top));
+			bottom: auto;
+		}
+
+		.fling-hint {
+			top: calc(max(1rem, env(safe-area-inset-top)) + 8.6rem);
 			bottom: auto;
 		}
 
