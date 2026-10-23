@@ -13,6 +13,8 @@ const topics = [
 	{ label: 'A project', subject: 'About a project' },
 	{ label: 'Just saying hi', subject: 'Saying hi' },
 ];
+// Each card's paper is inked three times, one per still frame of the boil (doodle-frame-1..3 in the layout).
+const frames = [0, 1, 2];
 ---
 
 <Layout title="Contact — Phi Hung" page="contact">
@@ -20,6 +22,17 @@ const topics = [
 		<SiteNav current="contact" />
 		<section class="contact" aria-labelledby="contact-title">
 			<div class="note">
+				{frames.map((n) => <span class="boil" style={`--f: ${n}; --frame: url(#doodle-frame-${n + 1})`} aria-hidden="true" />)}
+				<span class="plane" aria-hidden="true">
+					<svg class="plane-art" viewBox="-46 -17 74 34" fill="none" stroke="#17130f" stroke-linecap="round" stroke-linejoin="round">
+						<path d="M-21 2.5c-6 .6-11 2.4-16 5.6M-41 10.6l-2.6 1.8" stroke-width="1.1" stroke-dasharray="3.2 3.6" opacity="0.55" />
+						<path d="M25 0-13 10.5-9.5 2.6z" fill="#e6dccb" stroke-width="1.25" />
+						<path d="M-6.5 6.3 3 3.4M-9.8 8.4.4 5.3M-3 4.2 5.6 1.8" stroke-width="0.7" opacity="0.6" />
+						<path d="M25 0-16-13-9.5 2.6z" fill="#fbf7ef" stroke-width="1.25" />
+						<path d="M25 0-12 1.1" stroke-width="0.9" />
+						<path d="M-9.5 2.6-14 4.2-13 10.5" stroke-width="1.25" />
+					</svg>
+				</span>
 				<span class="tape tape-l" aria-hidden="true"></span>
 				<span class="tape tape-r" aria-hidden="true"></span>
 				<div class="hello">
@@ -42,6 +55,7 @@ const topics = [
 				</div>
 
 				<form class="compose" data-compose data-to={address}>
+					{frames.map((n) => <span class="boil" style={`--f: ${n}; --frame: url(#doodle-frame-${n + 1})`} aria-hidden="true" />)}
 					<h2 class="compose-title">Or write it here</h2>
 					<fieldset class="topics">
 						<legend>It's about</legend>
@@ -56,32 +70,16 @@ const topics = [
 					</fieldset>
 					<label class="field">
 						<span>Your name</span>
-						<input name="name" autocomplete="name" />
+						<span class="well"><input name="name" autocomplete="name" /></span>
 					</label>
 					<label class="field">
 						<span>Message</span>
-						<textarea name="message" rows="3" required></textarea>
+						<span class="well"><textarea name="message" rows="3" required></textarea></span>
 					</label>
 					<button type="submit" class="pill pill-solid t-label send">Open in my email app</button>
 					<p class="fine">Nothing is sent from this site. It opens your email app with this filled in.</p>
 				</form>
 			</div>
-			<svg class="plane" viewBox="0 0 600 320" fill="none" stroke="#17130f" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-				<path
-					id="plane-route"
-					d="M20 260C120 120 220 300 320 180S520 40 580 120"
-					stroke-width="2"
-					stroke-dasharray="6 9"
-					opacity="0.45"
-				/>
-				<g>
-					<path d="M-18-10 20 0-18 10-10 0z" fill="#fbf7ef" stroke-width="2.4" />
-					<path d="M-10 0 20 0" stroke-width="1.8" />
-					<animateMotion dur="7s" repeatCount="indefinite" rotate="auto">
-						<mpath href="#plane-route"></mpath>
-					</animateMotion>
-				</g>
-			</svg>
 		</section>
 		<Meadow />
 		<Cursor />
@@ -147,6 +145,58 @@ const topics = [
 		overflow: hidden;
 	}
 
+	/* A card's paper and inked edge sit under its text, so the text stays crisp. The card is too big to
+	   re-filter eight times a second, so it is three copies, each filtered once with a still frame of the
+	   character's boil, and only which copy shows changes (an opacity step on the compositor, as in the
+	   meadow). */
+	.boil {
+		position: absolute;
+		inset: calc(var(--line) * -1);
+		z-index: -1;
+		border-radius: inherit;
+		pointer-events: none;
+		will-change: opacity;
+		animation: card-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.boil + .boil {
+		opacity: 0;
+	}
+
+	.boil::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border: var(--line) solid var(--color-ink);
+		border-radius: inherit;
+		background: var(--paper);
+		box-shadow: var(--ink-shadow, none);
+		filter: var(--frame);
+	}
+
+	/* A hair over a third, so a step never falls between two copies and shows no paper. */
+	@keyframes card-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	/* Touch screens and reduced motion keep the first inking, still wobbly. */
+	@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+		.boil {
+			animation: none;
+			will-change: auto;
+		}
+
+		.boil + .boil {
+			display: none;
+		}
+	}
+
 	.contact {
 		position: relative;
 		z-index: 7;
@@ -157,6 +207,8 @@ const topics = [
 	}
 
 	.note {
+		--line: 2.5px;
+		--paper: #fbf7ef;
 		position: relative;
 		z-index: 2;
 		width: min(100%, 60rem);
@@ -165,9 +217,8 @@ const topics = [
 		gap: clamp(1.5rem, 3vw, 2.75rem);
 		align-items: center;
 		padding: clamp(1.5rem, 3.5vh, 2.5rem) clamp(1.5rem, 3.5vw, 2.75rem);
-		border: 2.5px solid var(--color-ink);
+		border: 2.5px solid transparent;
 		border-radius: 6px 14px 8px 12px / 12px 6px 14px 8px;
-		background: #fbf7ef;
 		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
 		rotate: -1deg;
 	}
@@ -177,7 +228,13 @@ const topics = [
 		top: -0.8rem;
 		width: 4.5rem;
 		height: 1.5rem;
-		background: rgb(242 165 65 / 0.8);
+		background: var(--tape);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	.tape-r {
+		animation-delay: -0.125s;
 	}
 
 	.tape-l {
@@ -232,14 +289,16 @@ const topics = [
 
 	/* The compose card: ruled like a notepad page */
 	.compose {
+		--line: 2px;
+		--paper: #fff;
+		--ink-shadow: 3px 4px 0 var(--color-ink);
 		position: relative;
+		isolation: isolate;
 		display: grid;
 		gap: 0.7rem;
 		padding: 1.1rem 1.25rem 1rem;
-		border: 2px solid var(--color-ink);
+		border: 2px solid transparent;
 		border-radius: 4px 9px 5px 10px / 9px 4px 10px 5px;
-		background: #fff;
-		box-shadow: 3px 4px 0 var(--color-ink);
 		rotate: 1.4deg;
 	}
 
@@ -257,7 +316,7 @@ const topics = [
 	}
 
 	.topics legend,
-	.field > span {
+	.field > span:not(.well) {
 		margin-bottom: 0.35rem;
 		font-size: var(--text-label);
 		font-weight: 700;
@@ -290,11 +349,33 @@ const topics = [
 		display: grid;
 	}
 
+	/* The field's inked outline is drawn over it on its own layer; the control itself is never filtered. */
+	.well {
+		position: relative;
+		display: grid;
+	}
+
+	.well::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border: 2px solid var(--color-ink);
+		border-radius: 4px 7px 5px 8px / 7px 4px 8px 5px;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		pointer-events: none;
+	}
+
+	.field + .field .well::after {
+		border-radius: 7px 4px 8px 5px / 4px 8px 5px 7px;
+		animation-delay: -0.25s;
+	}
+
 	.field input,
 	.field textarea {
 		width: 100%;
 		padding: 0.5rem 0.7rem;
-		border: 2px solid var(--color-ink);
+		border: 2px solid transparent;
 		border-radius: 4px 7px 5px 8px / 7px 4px 8px 5px;
 		background: #fbf7ef;
 		font: inherit;
@@ -329,13 +410,47 @@ const topics = [
 		color: var(--color-ash);
 	}
 
+	/* A paper plane circles the note on a closed loop, so it never jumps back to a start. It flies behind
+	   the paper, ducking out of sight at the corners, and keeps clear of the words. */
 	.plane {
 		position: absolute;
-		inset: 8% 4% auto;
-		width: 92%;
-		height: auto;
-		z-index: 1;
+		top: 0;
+		left: 0;
+		z-index: -2;
+		width: 9.25rem;
+		offset-path: ellipse(57% 68% at 50% 50%);
+		offset-anchor: 69% 50%;
+		offset-rotate: auto;
+		/* Where it rests when motion is reduced: up and to the right, in view on any desktop. */
+		offset-distance: 82%;
 		pointer-events: none;
+		will-change: transform;
+		animation: plane-orbit 20s linear infinite;
+	}
+
+	.plane-art {
+		display: block;
+		width: 100%;
+		height: auto;
+		overflow: visible;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	@keyframes plane-orbit {
+		from {
+			offset-distance: 0%;
+		}
+		to {
+			offset-distance: 100%;
+		}
+	}
+
+	/* Reduced motion: the plane rests on its trail. */
+	@media (prefers-reduced-motion: reduce) {
+		.plane {
+			animation: none;
+		}
 	}
 
 	@media (max-width: 767px) {
@@ -348,9 +463,11 @@ const topics = [
 			rotate: 0.6deg;
 		}
 
+		/* On a phone the note is tall: the loop swings out under it, over the meadow. */
 		.plane {
-			inset: 2% 0 auto;
-			width: 100%;
+			width: 7rem;
+			offset-path: ellipse(54% 54% at 50% 56%);
+			offset-distance: 25%;
 		}
 	}
 </style>

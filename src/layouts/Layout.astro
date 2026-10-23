@@ -48,6 +48,18 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 				<feDisplacementMap in="SourceGraphic" in2="noise" scale="1.8" xChannelSelector="R" yChannelSelector="G"
 				></feDisplacementMap>
 			</filter>
+			<filter id="doodle-rough" x="-5%" y="-5%" width="110%" height="110%">
+				<feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed="3" result="noise">
+					<animate
+						attributeName="seed"
+						values="3;4;5;6"
+						dur="0.5s"
+						calcMode="discrete"
+						repeatCount="indefinite"></animate>
+				</feTurbulence>
+				<feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" xChannelSelector="R" yChannelSelector="G"
+				></feDisplacementMap>
+			</filter>
 			<filter id="doodle-boil" x="-5%" y="-5%" width="110%" height="110%">
 				<feTurbulence type="fractalNoise" baseFrequency="0.035" numOctaves="2" seed="1" result="noise">
 					<animate
@@ -60,7 +72,35 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 				<feDisplacementMap in="SourceGraphic" in2="noise" scale="2.6" xChannelSelector="R" yChannelSelector="G"
 				></feDisplacementMap>
 			</filter>
+			<!-- Three still frames of doodle-rough. Big drawings boil by stacking a copy under each and stepping
+			     which one shows, so nothing is re-filtered while they boil (see Meadow). -->
+			{
+				[3, 4, 5].map((seed, i) => (
+					<filter id={`doodle-frame-${i + 1}`} x="-5%" y="-5%" width="110%" height="110%">
+						<feTurbulence type="fractalNoise" baseFrequency="0.045" numOctaves="2" seed={seed} result="noise" />
+						<feDisplacementMap in="SourceGraphic" in2="noise" scale="3.4" xChannelSelector="R" yChannelSelector="G" />
+					</filter>
+				))
+			}
 		</svg>
+		<script is:inline>
+			// SMIL ignores reduced motion, so hold the boiling filters on their first frame.
+			if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.currentScript.previousElementSibling.pauseAnimations();
+		</script>
 		<slot />
 	</body>
 </html>
+
+<style is:global>
+	/* Masking tape, torn at both ends and inked along its edges; pieces of it boil with the lines they hold. */
+	:root {
+		--tape: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'%3E%3Cpath d='M3 2.5 97 3.5 94 7.5 99 11 95 15 100 19 95.5 23 98 27.5 2 26.5 5.5 23 .5 19 4.5 15 0 11 4 7.5Z' fill='rgba(242,165,65,.84)'/%3E%3Cpath d='M6 8.5 94 9.5' stroke='%23fff' stroke-opacity='.38' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 24 23 6M42 25 49 6M68 25 75 6' stroke='%23fff' stroke-opacity='.3' stroke-width='1.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M3 2.5 97 3.5M2 26.5 98 27.5' stroke='%2317130f' stroke-width='1.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+		--tape-blue: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 30' preserveAspectRatio='none'%3E%3Cpath d='M3 2.5 97 3.5 94 7.5 99 11 95 15 100 19 95.5 23 98 27.5 2 26.5 5.5 23 .5 19 4.5 15 0 11 4 7.5Z' fill='rgba(122,166,217,.8)'/%3E%3Cpath d='M6 8.5 94 9.5' stroke='%23fff' stroke-opacity='.38' stroke-width='3' stroke-linecap='round'/%3E%3Cpath d='M16 24 23 6M42 25 49 6M68 25 75 6' stroke='%23fff' stroke-opacity='.3' stroke-width='1.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3Cpath d='M3 2.5 97 3.5M2 26.5 98 27.5' stroke='%2317130f' stroke-width='1.6' stroke-linecap='round' vector-effect='non-scaling-stroke'/%3E%3C/svg%3E") center / 100% 100% no-repeat;
+	}
+
+	/* Paper tooth: a still speckle of ink tiled under everything, drawn once as an image, never filtered live. */
+	html body {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='200' height='200'%3E%3Cfilter id='t' x='0' y='0' width='1' height='1'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.7' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .09 0 0 0 0 .075 0 0 0 0 .06 .36 0 0 0 -.185'/%3E%3C/filter%3E%3Crect width='200' height='200' filter='url(%23t)'/%3E%3C/svg%3E");
+		background-size: 200px;
+	}
+</style>

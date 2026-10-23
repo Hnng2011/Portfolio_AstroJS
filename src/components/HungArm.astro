@@ -1,0 +1,45 @@
+---
+// One arm of the front view. The back slot (under the shirt) is the whole arm, its sleeve and the hand: the
+// shirt's armhole overlaps the top of the sleeve, as on a real shoulder. The front slot (over the shirt)
+// is only the forearm and hand, shown when the hand comes in front of his body, as when he holds a strap.
+import { COLORS as C } from '../lib/hung';
+
+interface Props {
+	i: number;
+	d: string;
+	sleeve: string;
+	fore: string;
+	hand: string;
+	slot: 'back' | 'front';
+}
+
+const { i, d, sleeve, fore, hand, slot } = Astro.props;
+const fist = 'M-12 -3C-15 10-12 24 0 25C12 25 15 12 13 -3Z';
+const palm = 'M-12 -2C-14 8-12 17-4 19H6C13 17 15 8 13 -2Z';
+const fingers = 'M-8 15V31M0 17V34M8 15V30M12 5Q22 7 24 17';
+const mirror = i === 0 ? 'scale(-1 1)' : undefined;
+---
+
+<g data-slot={`${i}-${slot}`} style={slot === 'front' ? 'display: none' : undefined}>
+	{
+		slot === 'back' ? (
+			<>
+				<path data-arm={i} d={d} fill={C.skin} />
+				<path data-sleeve={i} d={sleeve} fill={C.tee} />
+			</>
+		) : (
+			<path data-fore={i} d={fore} fill={C.skin} />
+		)
+	}
+	<g data-hand={i} transform={hand}>
+		<g data-shut transform={mirror}>
+			<path d={fist} fill={C.skin} />
+			<path d="M-7 11q5 4 11 2" stroke-width="2.4" />
+		</g>
+		<g data-open style="display: none" transform={mirror}>
+			<path d={fingers} stroke-width="10" />
+			<path d={fingers} stroke={C.skin} stroke-width="4.6" />
+			<path d={palm} fill={C.skin} />
+		</g>
+	</g>
+</g>

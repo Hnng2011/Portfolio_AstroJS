@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-Astro 5, Tailwind CSS 4, GSAP 3 (sheets and intro), Canvas 2D for the hand-drawn solar system and the ink effects. Deployed to Cloudflare Pages (`wrangler.toml` project `portfolio-hnng`, output `dist`).
+Astro 5, Tailwind CSS 4, the Web Animations API for the sheets, SVG posed from script for the character and the rocket, Canvas 2D for the hand-drawn solar system and the ink effects. Deployed to Cloudflare Pages (`wrangler.toml` project `portfolio-hnng`, output `dist`).
 
 ## Purpose
 
@@ -29,8 +29,9 @@ Recruiters and hiring managers filling frontend roles (confirmed by the owner, 2
 ## Brand commitments
 
 - Doodle cartoon style, flat 2D (no attempt at 3D), playful. Paper ground, ink lines, marker colours; Shantell Sans.
-- Home is one locked screen: a chibi doodle of the owner with a backpack, carrying a glass cube labelled "my work" with the solar system inside, walking side-on across a doodle meadow with butterflies and bees. Clicking him gives a short random line (name, one-line intro, or a nudge to see the work).
-- Scrolling (or clicking the cube) stops him where he is, turns him to the camera, and zooms into the cube until it becomes the full solar system: one unique planet per project, re-inked by a pen pass as you arrive. Planets can be grabbed and flung; they spring back to their orbits. Clicking a planet throws ink to preview it; clicking the preview floods the screen and the preview flies into the full case.
+- Home is one locked screen: a doodle cartoon of the owner (a young adult about 3.3 heads tall, not chibi: whites in his eyes, four-fingered hands, chunky sneakers) with a backpack, on a doodle meadow with butterflies and bees, beside a chunky rocket with "my work" taped to its door. He waves once when you arrive, then breathes, blinks, follows the pointer and now and then glances at the rocket. Clicking him gives a short random line (name, one-line intro, or a nudge to see the work). He does not pace about; the owner found that pointless.
+- Scrolling down (or clicking the rocket) is the trip to the work: he walks over, climbs the stairs, ducks in, gives a thumbs-up from the porthole, and the rocket squats, lifts off and climbs with the camera a beat behind into the solar system: one unique planet per project, re-inked by a pen pass as you arrive. The rocket keeps flying in a corner with him at the porthole. Scrolling back up (or clicking the rocket, or "Fly home") stands it on its tail and lands it on a slowing burn; he climbs out and walks back to his spot. A second scroll or click hurries a trip along. Planets can be grabbed and flung; they spring back to their orbits. Clicking a planet throws ink to preview it; clicking the preview floods the screen and the preview flies into the full case.
+- Motion is cartoon with weight: drawn views swap on turns with the head leading, steps roll heel to toe with knees bending (the limbs are worked out by IK in `src/lib/hung.ts`), the rocket squashes and stretches, the smoke billows. Lines boil like hand inking.
 - A case is a scrapbook spread on the planet's colour and pattern, fitting one desktop screen: a taped photo or screen recording with handwritten notes and arrows, the approach as three sticky notes, the problem on a taped scrap and the outcome on an index card. Earlier, shut-down projects live in an Archive.
 - Info and Contact are separate pages in the same style, reached through a two-pour ink transition. Info shows the owner waving in the middle with about and experience on either side.
 - Title: Creative Frontend Engineer. English only.

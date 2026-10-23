@@ -7,254 +7,263 @@ interface Props {
 
 const { kind, title, image } = Astro.props;
 const rows = [0, 1, 2, 3, 4];
+// The lines are drawn three times, one per still frame of the boil (doodle-frame-1..3 in the layout), and
+// any words once more on top, unfiltered, so they stay crisp.
+const layers = [0, 1, 2, ...(kind === 1 || kind === 8 ? ['words'] : [])];
 ---
 
 {
 	image ? (
 		<img class="sketch-img" src={image} alt={`${title}, preview`} loading="lazy" />
 	) : (
-		<svg
-			class="sketch"
-			viewBox="0 0 320 200"
-			fill="none"
-			stroke="currentColor"
-			stroke-width="1.6"
-			stroke-linecap="round"
-			stroke-linejoin="round"
-			role="img"
-			aria-label={`${title}, rough sketch`}
-		>
-			{kind !== 6 && kind !== 8 && (
-				<g>
-					<rect x="6" y="6" width="308" height="188" rx="4" />
-					<path d="M6 22h308" />
-					<circle cx="16" cy="14" r="2.2" />
-					<circle cx="24" cy="14" r="2.2" />
-					<circle cx="32" cy="14" r="2.2" />
-					<rect x="110" y="10" width="100" height="8" rx="4" opacity="0.6" />
-				</g>
-			)}
-
-			{kind === 0 && (
-				<g>
-					<path d="M40 178 110 120h100l70 58" />
-					<path d="M110 120V40h100v80M110 40l-70-12v150M210 40l70-12v150" opacity="0.7" />
-					<rect x="132" y="56" width="56" height="36" />
-					<path d="M160 56v36M132 74h56" opacity="0.6" />
-					<path d="M70 150h70l-8 18H78z" />
-					<rect x="88" y="132" width="34" height="18" />
-					<path d="M190 152h60M200 152v22M240 152v22" />
-					<circle cx="226" cy="138" r="8" opacity="0.7" />
-				</g>
-			)}
-
-			{kind === 1 && (
-				<g font-family="Shantell Sans, Comic Sans MS, sans-serif" stroke-width="1.1">
-					<rect x="12" y="28" width="58" height="160" fill="rgb(23 19 15 / 0.05)" />
-					<text x="20" y="44" font-size="8" font-weight="800" fill="currentColor" stroke="none">Offers</text>
-					{['Pricing', 'Markets', 'Quotas', 'Clients'].map((t, i) => (
-						<g>
-							{i === 0 && <rect x="16" y={52 + i * 16} width="50" height="13" rx="6" fill="#f2a541" stroke="none" />}
-							<text x="22" y={61 + i * 16} font-size="7" fill="currentColor" stroke="none">{t}</text>
-						</g>
-					))}
-					<text x="80" y="42" font-size="9" font-weight="800" fill="currentColor" stroke="none">Offer #A-01 · Demo study</text>
-					<rect x="230" y="32" width="76" height="14" rx="7" fill="currentColor" stroke="none" />
-					<text x="268" y="42" font-size="7" text-anchor="middle" fill="#fff" stroke="none">Save draft</text>
-					{[
-						['Market', 'Market A'],
-						['Sample size', '500'],
-						['Incidence', '35%'],
-						['Length', '15 min'],
-					].map(([k, v], i) => (
-						<g>
-							<text x={80 + (i % 2) * 112} y={62 + Math.floor(i / 2) * 30} font-size="6.5" fill="currentColor" stroke="none" opacity="0.7">{k}</text>
-							<rect x={80 + (i % 2) * 112} y={66 + Math.floor(i / 2) * 30} width="104" height="15" rx="3" fill="#fff" />
-							<text x={85 + (i % 2) * 112} y={76.5 + Math.floor(i / 2) * 30} font-size="7.5" fill="currentColor" stroke="none">{v}</text>
-						</g>
-					))}
-					<path d="M80 124h226" opacity="0.4" />
-					<text x="80" y="138" font-size="7" font-weight="700" fill="currentColor" stroke="none">Price breakdown</text>
-					{[0, 1, 2].map((i) => (
-						<g>
-							<path d={`M80 ${148 + i * 12}h150`} opacity="0.25" />
-							<rect x="80" y={143 + i * 12} width={[96, 62, 120][i]} height="7" rx="3" fill={['#7aa6d9', '#5fb3a3', '#ef8f6f'][i]} />
-						</g>
-					))}
-					<rect x="244" y="138" width="62" height="44" rx="4" fill="#fff" />
-					<text x="275" y="152" font-size="6.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7">Total</text>
-					<text x="275" y="170" font-size="11" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none">$ —</text>
-					<text x="306" y="190" font-size="5.5" text-anchor="end" fill="currentColor" stroke="none" opacity="0.65">Illustration · data replaced</text>
-				</g>
-			)}
-
-			{kind === 8 && (
-				<g font-family="Shantell Sans, Comic Sans MS, sans-serif" stroke-width="1.2">
-					{/* One monorepo: two apps on top of one shared layer. Generic on purpose: no product, domain or company detail. */}
-					<rect x="8" y="8" width="304" height="130" rx="8" stroke-dasharray="5 4" />
-					<text x="18" y="21" font-size="8.5" font-weight="800" fill="currentColor" stroke="none">Turborepo monorepo</text>
-					<text x="302" y="21" font-size="7" text-anchor="end" fill="currentColor" stroke="none" opacity="0.7">React + TypeScript</text>
-					{[
-						['Internal app', 22, '#b49ad6'],
-						['Client portal', 174, '#ef8f6f'],
-					].map(([t, x, c]) => (
-						<g>
-							<rect x={x} y="28" width="124" height="32" rx="4" fill="#fff" />
-							<rect x={+x + 1} y="29" width="122" height="8" rx="3" fill={c} fill-opacity="0.45" stroke="none" />
-							<path d={`M${x} 37h124`} />
-							{[7, 12.5, 18].map((d) => <circle cx={+x + d} cy="33" r="1.4" />)}
-							<text x={+x + 62} y="53" font-size="9" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none">{t}</text>
-						</g>
-					))}
-					<path d="M84 61v15M80.5 72l3.5 4 3.5-4M236 61v15M232.5 72l3.5 4 3.5-4" />
-					<text x="160" y="73" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">both use shared packages</text>
-					<rect x="18" y="79" width="284" height="52" rx="6" fill="rgb(23 19 15 / 0.04)" />
-					{[
-						['UI kit', 'Tailwind', '+ shadcn/ui', '#f2a541'],
-						['Typed forms', 'React Hook Form', '+ Zod schemas', '#7aa6d9'],
-						['Server state', 'TanStack Query', 'cache, polled', '#5fb3a3'],
-					].map(([t, a, b, c], i) => {
-						const x = 24 + i * 92;
-						return (
+		<span class="sketch" role="img" aria-label={`${title}, rough sketch`}>
+			{layers.map((layer) => (
+				<span
+					class={layer === 'words' ? 'sketch-words' : 'sketch-lines'}
+					style={layer === 'words' ? undefined : `--f: ${layer}; --frame: url(#doodle-frame-${+layer + 1})`}
+				>
+					<svg
+						viewBox="0 0 320 200"
+						fill="none"
+						stroke="currentColor"
+						stroke-width="1.6"
+						stroke-linecap="round"
+						stroke-linejoin="round"
+						aria-hidden="true"
+					>
+						{kind !== 6 && kind !== 8 && (
 							<g>
-								<rect x={x} y="84" width="86" height="42" rx="4" fill={c} fill-opacity="0.4" />
-								<text x={x + 7} y="97" font-size="8" font-weight="800" fill="currentColor" stroke="none">{t}</text>
-								<text x={x + 7} y="108.5" font-size="7.5" fill="currentColor" stroke="none">{a}</text>
-								<text x={x + 7} y="119" font-size="7.5" fill="currentColor" stroke="none">{b}</text>
-								{i === 0 && <path d={`M${x + 68} 89h6v6h-6zM${x + 76} 93h6v6h-6z`} stroke-width="1" />}
-								{i === 1 && <path d={`M${x + 70} 89h10v10h-10zM${x + 72.5} 94l2 2.5 4-5`} stroke-width="1" />}
-								{i === 2 && <path d={`M${x + 80.5} 92.5a5 5 0 1 1-1.6-3.6M${x + 79.5} 86.5v2.6h-2.6`} stroke-width="1" />}
+								<rect x="6" y="6" width="308" height="188" rx="4" />
+								<path d="M6 22h308" />
+								<circle cx="16" cy="14" r="2.2" />
+								<circle cx="24" cy="14" r="2.2" />
+								<circle cx="32" cy="14" r="2.2" />
+								<rect x="110" y="10" width="100" height="8" rx="4" opacity="0.6" />
 							</g>
-						);
-					})}
+						)}
 
-					{/* The quality gate every change passes before it merges. */}
-					<text x="14" y="152" font-size="8.5" font-weight="800" fill="currentColor" stroke="none">Every pull request</text>
-					{['lint', 'types', 'unit', 'build', 'e2e'].map((t, i) => {
-						const x = 14 + i * 54;
-						return (
+						{kind === 0 && (
 							<g>
-								<rect x={x} y="158" width="40" height="16" rx="8" fill="#fff" />
-								<text x={x + 20} y="169" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none">{t}</text>
-								<path d={`M${x + 43} 166h8M${x + 48} 163l3 3-3 3`} />
+								<path d="M40 178 110 120h100l70 58" />
+								<path d="M110 120V40h100v80M110 40l-70-12v150M210 40l70-12v150" opacity="0.7" />
+								<rect x="132" y="56" width="56" height="36" />
+								<path d="M160 56v36M132 74h56" opacity="0.6" />
+								<path d="M70 150h70l-8 18H78z" />
+								<rect x="88" y="132" width="34" height="18" />
+								<path d="M190 152h60M200 152v22M240 152v22" />
+								<circle cx="226" cy="138" r="8" opacity="0.7" />
 							</g>
-						);
-					})}
-					<circle cx="295" cy="166" r="9" fill="#5fb3a3" fill-opacity="0.55" />
-					<path d="M290.5 166.5l3 3 6-6.5" stroke-width="1.6" />
-					{[
-						['Vitest', 134],
-						['Vite', 188],
-						['Playwright', 242],
-						['merge', 295],
-					].map(([t, x]) => (
-						<text x={x} y="184" font-size="7" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7">{t}</text>
-					))}
-					<text x="312" y="197" font-size="6.5" text-anchor="end" fill="currentColor" stroke="none" opacity="0.6">Simplified · no company data</text>
-				</g>
-			)}
-			{kind === 2 && (
-				<g>
-					<rect x="14" y="30" width="186" height="96" />
-					<path d="M24 110 52 90l26 8 28-30 26 16 30-34 26 10" />
-					<path d="M24 116h166" opacity="0.4" />
-					{[0, 1, 2, 3, 4, 5].map((i) => (
-						<rect x={28 + i * 28} y={150 - (i % 3) * 8 - i * 3} width="14" height={(i % 3) * 8 + i * 3 + 30} opacity="0.7" />
-					))}
-					<rect x="210" y="30" width="96" height="156" />
-					{[0, 1, 2].map((i) => (
-						<g>
-							<path d={`M220 ${48 + i * 34}h40`} opacity="0.6" />
-							<rect x="220" y={54 + i * 34} width="76" height="14" rx="3" />
-						</g>
-					))}
-					<rect x="220" y="160" width="76" height="16" rx="8" />
-				</g>
-			)}
+						)}
 
-			{kind === 3 && (
-				<g>
-					<rect x="14" y="30" width="292" height="92" />
-					<path d="M150 46h32l-16 26zM166 72v26M154 100h24" />
-					<path d="M40 70h70M40 82h52" opacity="0.7" />
-					<rect x="40" y="94" width="44" height="12" rx="6" />
-					{[0, 1, 2].map((i) => (
-						<g>
-							<rect x={14 + i * 100} y="132" width="92" height="54" />
-							<circle cx={34 + i * 100} cy="150" r="8" opacity="0.7" />
-							<path d={`M${26 + i * 100} 168h60M${26 + i * 100} 176h40`} opacity="0.6" />
-						</g>
-					))}
-				</g>
-			)}
+						{kind === 1 && (
+							<g font-family="Shantell Sans, Comic Sans MS, sans-serif" stroke-width="1.1">
+								<rect x="12" y="28" width="58" height="160" fill="rgb(23 19 15 / 0.05)" />
+								<text x="20" y="44" font-size="8" font-weight="800" fill="currentColor" stroke="none">Offers</text>
+								{['Pricing', 'Markets', 'Quotas', 'Clients'].map((t, i) => (
+									<g>
+										{i === 0 && <rect x="16" y={52 + i * 16} width="50" height="13" rx="6" fill="#f2a541" stroke="none" />}
+										<text x="22" y={61 + i * 16} font-size="7" fill="currentColor" stroke="none">{t}</text>
+									</g>
+								))}
+								<text x="80" y="42" font-size="9" font-weight="800" fill="currentColor" stroke="none">Offer #A-01 · Demo study</text>
+								<rect x="230" y="32" width="76" height="14" rx="7" fill="currentColor" stroke="none" />
+								<text x="268" y="42" font-size="7" text-anchor="middle" fill="#fff" stroke="none">Save draft</text>
+								{[
+									['Market', 'Market A'],
+									['Sample size', '500'],
+									['Incidence', '35%'],
+									['Length', '15 min'],
+								].map(([k, v], i) => (
+									<g>
+										<text x={80 + (i % 2) * 112} y={62 + Math.floor(i / 2) * 30} font-size="6.5" fill="currentColor" stroke="none" opacity="0.7">{k}</text>
+										<rect x={80 + (i % 2) * 112} y={66 + Math.floor(i / 2) * 30} width="104" height="15" rx="3" fill="#fff" />
+										<text x={85 + (i % 2) * 112} y={76.5 + Math.floor(i / 2) * 30} font-size="7.5" fill="currentColor" stroke="none">{v}</text>
+									</g>
+								))}
+								<path d="M80 124h226" opacity="0.4" />
+								<text x="80" y="138" font-size="7" font-weight="700" fill="currentColor" stroke="none">Price breakdown</text>
+								{[0, 1, 2].map((i) => (
+									<g>
+										<path d={`M80 ${148 + i * 12}h150`} opacity="0.25" />
+										<rect x="80" y={143 + i * 12} width={[96, 62, 120][i]} height="7" rx="3" fill={['#7aa6d9', '#5fb3a3', '#ef8f6f'][i]} />
+									</g>
+								))}
+								<rect x="244" y="138" width="62" height="44" rx="4" fill="#fff" />
+								<text x="275" y="152" font-size="6.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7">Total</text>
+								<text x="275" y="170" font-size="11" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none">$ —</text>
+								<text x="306" y="190" font-size="5.5" text-anchor="end" fill="currentColor" stroke="none" opacity="0.65">Illustration · data replaced</text>
+							</g>
+						)}
 
-			{kind === 4 && (
-				<g>
-					<path d="M14 40h292" opacity="0.4" />
-					{[0, 1, 2, 3].map((c) =>
-						[0, 1].map((r) => (
+						{kind === 8 && (
+							<g font-family="Shantell Sans, Comic Sans MS, sans-serif" stroke-width="1.2">
+								{/* One monorepo: two apps on top of one shared layer. Generic on purpose: no product, domain or company detail. */}
+								<rect x="8" y="8" width="304" height="130" rx="8" stroke-dasharray="5 4" />
+								<text x="18" y="21" font-size="8.5" font-weight="800" fill="currentColor" stroke="none">Turborepo monorepo</text>
+								<text x="302" y="21" font-size="7" text-anchor="end" fill="currentColor" stroke="none" opacity="0.7">React + TypeScript</text>
+								{[
+									['Internal app', 22, '#b49ad6'],
+									['Client portal', 174, '#ef8f6f'],
+								].map(([t, x, c]) => (
+									<g>
+										<rect x={x} y="28" width="124" height="32" rx="4" fill="#fff" />
+										<rect x={+x + 1} y="29" width="122" height="8" rx="3" fill={c} fill-opacity="0.45" stroke="none" />
+										<path d={`M${x} 37h124`} />
+										{[7, 12.5, 18].map((d) => <circle cx={+x + d} cy="33" r="1.4" />)}
+										<text x={+x + 62} y="53" font-size="9" font-weight="800" text-anchor="middle" fill="currentColor" stroke="none">{t}</text>
+									</g>
+								))}
+								<path d="M84 61v15M80.5 72l3.5 4 3.5-4M236 61v15M232.5 72l3.5 4 3.5-4" />
+								<text x="160" y="73" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.75">both use shared packages</text>
+								<rect x="18" y="79" width="284" height="52" rx="6" fill="rgb(23 19 15 / 0.04)" />
+								{[
+									['UI kit', 'Tailwind', '+ shadcn/ui', '#f2a541'],
+									['Typed forms', 'React Hook Form', '+ Zod schemas', '#7aa6d9'],
+									['Server state', 'TanStack Query', 'cache, polled', '#5fb3a3'],
+								].map(([t, a, b, c], i) => {
+									const x = 24 + i * 92;
+									return (
+										<g>
+											<rect x={x} y="84" width="86" height="42" rx="4" fill={c} fill-opacity="0.4" />
+											<text x={x + 7} y="97" font-size="8" font-weight="800" fill="currentColor" stroke="none">{t}</text>
+											<text x={x + 7} y="108.5" font-size="7.5" fill="currentColor" stroke="none">{a}</text>
+											<text x={x + 7} y="119" font-size="7.5" fill="currentColor" stroke="none">{b}</text>
+											{i === 0 && <path d={`M${x + 68} 89h6v6h-6zM${x + 76} 93h6v6h-6z`} stroke-width="1" />}
+											{i === 1 && <path d={`M${x + 70} 89h10v10h-10zM${x + 72.5} 94l2 2.5 4-5`} stroke-width="1" />}
+											{i === 2 && <path d={`M${x + 80.5} 92.5a5 5 0 1 1-1.6-3.6M${x + 79.5} 86.5v2.6h-2.6`} stroke-width="1" />}
+										</g>
+									);
+								})}
+
+								{/* The quality gate every change passes before it merges. */}
+								<text x="14" y="152" font-size="8.5" font-weight="800" fill="currentColor" stroke="none">Every pull request</text>
+								{['lint', 'types', 'unit', 'build', 'e2e'].map((t, i) => {
+									const x = 14 + i * 54;
+									return (
+										<g>
+											<rect x={x} y="158" width="40" height="16" rx="8" fill="#fff" />
+											<text x={x + 20} y="169" font-size="7.5" text-anchor="middle" fill="currentColor" stroke="none">{t}</text>
+											<path d={`M${x + 43} 166h8M${x + 48} 163l3 3-3 3`} />
+										</g>
+									);
+								})}
+								<circle cx="295" cy="166" r="9" fill="#5fb3a3" fill-opacity="0.55" />
+								<path d="M290.5 166.5l3 3 6-6.5" stroke-width="1.6" />
+								{[
+									['Vitest', 134],
+									['Vite', 188],
+									['Playwright', 242],
+									['merge', 295],
+								].map(([t, x]) => (
+									<text x={x} y="184" font-size="7" text-anchor="middle" fill="currentColor" stroke="none" opacity="0.7">{t}</text>
+								))}
+							</g>
+						)}
+						{kind === 2 && (
 							<g>
-								<rect x={18 + c * 74} y={48 + r * 72} width="62" height="48" />
-								<circle cx={49 + c * 74} cy={72 + r * 72} r="16" opacity="0.7" />
-								<circle cx={49 + c * 74} cy={72 + r * 72} r="3" />
-								<path d={`M18 ${104 + r * 72}h44`} transform={`translate(${c * 74} 0)`} opacity="0.6" />
+								<rect x="14" y="30" width="186" height="96" />
+								<path d="M24 110 52 90l26 8 28-30 26 16 30-34 26 10" />
+								<path d="M24 116h166" opacity="0.4" />
+								{[0, 1, 2, 3, 4, 5].map((i) => (
+									<rect x={28 + i * 28} y={150 - (i % 3) * 8 - i * 3} width="14" height={(i % 3) * 8 + i * 3 + 30} opacity="0.7" />
+								))}
+								<rect x="210" y="30" width="96" height="156" />
+								{[0, 1, 2].map((i) => (
+									<g>
+										<path d={`M220 ${48 + i * 34}h40`} opacity="0.6" />
+										<rect x="220" y={54 + i * 34} width="76" height="14" rx="3" />
+									</g>
+								))}
+								<rect x="220" y="160" width="76" height="16" rx="8" />
 							</g>
-						)),
-					)}
-				</g>
-			)}
+						)}
 
-			{kind === 5 && (
-				<g>
-					<rect x="14" y="30" width="72" height="156" opacity="0.7" />
-					{rows.map((i) => (
-						<g>
-							<circle cx="28" cy={46 + i * 26} r="7" />
-							<path d={`M40 ${44 + i * 26}h36M40 ${50 + i * 26}h24`} opacity="0.6" />
-						</g>
-					))}
-					<rect x="96" y="40" width="120" height="22" rx="11" />
-					<rect x="170" y="70" width="130" height="22" rx="11" />
-					<rect x="96" y="100" width="96" height="22" rx="11" />
-					<rect x="190" y="130" width="110" height="22" rx="11" />
-					<rect x="96" y="164" width="190" height="20" rx="10" />
-					<circle cx="296" cy="174" r="8" />
-				</g>
-			)}
+						{kind === 3 && (
+							<g>
+								<rect x="14" y="30" width="292" height="92" />
+								<path d="M150 46h32l-16 26zM166 72v26M154 100h24" />
+								<path d="M40 70h70M40 82h52" opacity="0.7" />
+								<rect x="40" y="94" width="44" height="12" rx="6" />
+								{[0, 1, 2].map((i) => (
+									<g>
+										<rect x={14 + i * 100} y="132" width="92" height="54" />
+										<circle cx={34 + i * 100} cy="150" r="8" opacity="0.7" />
+										<path d={`M${26 + i * 100} 168h60M${26 + i * 100} 176h40`} opacity="0.6" />
+									</g>
+								))}
+							</g>
+						)}
 
-			{kind === 6 && (
-				<g>
-					<rect x="14" y="26" width="168" height="112" rx="5" />
-					<path d="M80 138l-6 18h48l-6-18M64 156h68" />
-					<rect x="26" y="38" width="144" height="16" opacity="0.6" />
-					{[0, 1, 2].map((i) => <rect x={26 + i * 50} y="64" width="44" height="62" opacity="0.7" />)}
-					<rect x="196" y="40" width="74" height="104" rx="6" />
-					<path d="M206 56h54M206 66h40" opacity="0.6" />
-					<rect x="206" y="78" width="54" height="54" opacity="0.7" />
-					<rect x="276" y="70" width="34" height="68" rx="6" />
-					<path d="M284 82h18M284 90h12" opacity="0.6" />
-					<rect x="284" y="98" width="18" height="30" opacity="0.7" />
-					<circle cx="176" cy="178" r="12" />
-					<path d="M170 178l4 4 8-8" />
-				</g>
-			)}
+						{kind === 4 && (
+							<g>
+								<path d="M14 40h292" opacity="0.4" />
+								{[0, 1, 2, 3].map((c) =>
+									[0, 1].map((r) => (
+										<g>
+											<rect x={18 + c * 74} y={48 + r * 72} width="62" height="48" />
+											<circle cx={49 + c * 74} cy={72 + r * 72} r="16" opacity="0.7" />
+											<circle cx={49 + c * 74} cy={72 + r * 72} r="3" />
+											<path d={`M18 ${104 + r * 72}h44`} transform={`translate(${c * 74} 0)`} opacity="0.6" />
+										</g>
+									)),
+								)}
+							</g>
+						)}
 
-			{kind === 7 && (
-				<g>
-					<rect x="226" y="30" width="80" height="16" rx="8" />
-					<path d="M14 54h292" opacity="0.4" />
-					{[0, 1, 2, 3].map((i) => (
-						<g>
-							<rect x={14 + i * 74} y="62" width="66" height="122" rx="4" />
-							<rect x={20 + i * 74} y="68" width="54" height="54" opacity="0.7" />
-							<path d={`M${20 + i * 74} ${132}l20 -18 14 10 20 -16`} opacity="0.5" />
-							<path d={`M${20 + i * 74} 140h40M${20 + i * 74} 150h28`} opacity="0.6" />
-							<rect x={20 + i * 74} y="162" width="54" height="14" rx="7" />
-						</g>
-					))}
-				</g>
-			)}
-		</svg>
+						{kind === 5 && (
+							<g>
+								<rect x="14" y="30" width="72" height="156" opacity="0.7" />
+								{rows.map((i) => (
+									<g>
+										<circle cx="28" cy={46 + i * 26} r="7" />
+										<path d={`M40 ${44 + i * 26}h36M40 ${50 + i * 26}h24`} opacity="0.6" />
+									</g>
+								))}
+								<rect x="96" y="40" width="120" height="22" rx="11" />
+								<rect x="170" y="70" width="130" height="22" rx="11" />
+								<rect x="96" y="100" width="96" height="22" rx="11" />
+								<rect x="190" y="130" width="110" height="22" rx="11" />
+								<rect x="96" y="164" width="190" height="20" rx="10" />
+								<circle cx="296" cy="174" r="8" />
+							</g>
+						)}
+
+						{kind === 6 && (
+							<g>
+								<rect x="14" y="26" width="168" height="112" rx="5" />
+								<path d="M80 138l-6 18h48l-6-18M64 156h68" />
+								<rect x="26" y="38" width="144" height="16" opacity="0.6" />
+								{[0, 1, 2].map((i) => <rect x={26 + i * 50} y="64" width="44" height="62" opacity="0.7" />)}
+								<rect x="196" y="40" width="74" height="104" rx="6" />
+								<path d="M206 56h54M206 66h40" opacity="0.6" />
+								<rect x="206" y="78" width="54" height="54" opacity="0.7" />
+								<rect x="276" y="70" width="34" height="68" rx="6" />
+								<path d="M284 82h18M284 90h12" opacity="0.6" />
+								<rect x="284" y="98" width="18" height="30" opacity="0.7" />
+								<circle cx="176" cy="178" r="12" />
+								<path d="M170 178l4 4 8-8" />
+							</g>
+						)}
+
+						{kind === 7 && (
+							<g>
+								<rect x="226" y="30" width="80" height="16" rx="8" />
+								<path d="M14 54h292" opacity="0.4" />
+								{[0, 1, 2, 3].map((i) => (
+									<g>
+										<rect x={14 + i * 74} y="62" width="66" height="122" rx="4" />
+										<rect x={20 + i * 74} y="68" width="54" height="54" opacity="0.7" />
+										<path d={`M${20 + i * 74} ${132}l20 -18 14 10 20 -16`} opacity="0.5" />
+										<path d={`M${20 + i * 74} 140h40M${20 + i * 74} 150h28`} opacity="0.6" />
+										<rect x={20 + i * 74} y="162" width="54" height="14" rx="7" />
+									</g>
+								))}
+							</g>
+						)}
+					</svg>
+				</span>
+			))}
+		</span>
 	)
 }
 
@@ -269,5 +278,69 @@ const rows = [0, 1, 2, 3, 4];
 	.sketch-img {
 		object-fit: cover;
 		object-position: top;
+	}
+
+	/* The first copy sizes the sketch as the single drawing did; the rest lie on top of it. */
+	.sketch {
+		position: relative;
+	}
+
+	.sketch > span {
+		display: block;
+		height: 100%;
+	}
+
+	.sketch > span + span {
+		position: absolute;
+		inset: 0;
+	}
+
+	.sketch svg {
+		display: block;
+		width: 100%;
+		height: 100%;
+	}
+
+	/* The lines boil like the character's, without re-filtering: each copy is filtered once with a still
+	   frame and only which copy shows changes, an opacity step on the compositor. */
+	.sketch-lines {
+		will-change: opacity;
+		animation: sketch-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.sketch-lines + .sketch-lines {
+		opacity: 0;
+	}
+
+	.sketch-lines svg {
+		filter: var(--frame);
+	}
+
+	.sketch-lines text,
+	.sketch-words svg :not(g, text) {
+		display: none;
+	}
+
+	/* A hair over a third, so a step never falls between two copies and shows no lines. */
+	@keyframes sketch-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	/* Touch screens and reduced motion keep the first inking, still wobbly. */
+	@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+		.sketch-lines {
+			animation: none;
+			will-change: auto;
+		}
+
+		.sketch-lines + .sketch-lines {
+			display: none;
+		}
 	}
 </style>

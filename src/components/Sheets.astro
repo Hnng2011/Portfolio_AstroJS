@@ -21,13 +21,24 @@ function arrow(from: [number, number], to: [number, number]) {
 		[x2, y2],
 		[x2 - ux * h + uy * h * 0.6, y2 - uy * h - ux * h * 0.6],
 	];
+	// Each arrow gets its own small box, so the boil filters only the arrow and not the whole preview.
+	const xs = [x1, cx, x2, ...head.map(([x]) => x)];
+	const ys = [y1, cy, y2, ...head.map(([, y]) => y)];
+	const pad = 3;
+	const [bx, by] = [Math.min(...xs) - pad, Math.min(...ys) - pad];
+	const [bw, bh] = [Math.max(...xs) + pad - bx, Math.max(...ys) + pad - by];
 	return {
 		line: `M${r2(x1)} ${r2(y1)}Q${r2(cx)} ${r2(cy)} ${r2(x2)} ${r2(y2)}`,
 		head: `M${head.map(([x, y]) => `${r2(x)} ${r2(y)}`).join('L')}`,
+		box: `${r2(bx)} ${r2(by)} ${r2(bw)} ${r2(bh)}`,
+		place: `left: ${r2(bx / 1.6)}%; top: ${r2(by)}%; width: ${r2(bw / 1.6)}%; height: ${r2(bh)}%`,
 	};
 }
 const arrows = (notes: Note[] = []) =>
 	notes.flatMap((n) => (n.from && n.to ? [arrow(n.from, n.to)] : []));
+// Big pieces of paper are inked three times, one per still frame of the boil (doodle-frame-1..3 in the layout).
+const frames = [0, 1, 2];
+const frame = (n: number) => `--f: ${n}; --frame: url(#doodle-frame-${n + 1})`;
 ---
 
 <dialog class="sheet sheet-case" data-sheet="case" aria-labelledby="case-title-0">
@@ -90,10 +101,12 @@ const arrows = (notes: Note[] = []) =>
 
 					<div class="case-notes">
 						<section class="note note-problem" style="--i: 3">
+							{frames.map((n) => <span class="boil" style={frame(n)} aria-hidden="true" />)}
 							<h3 class="hand">The problem</h3>
 							<p>{p.caseStudy.challenge}</p>
 						</section>
 						<section class="note note-outcome" style="--i: 4">
+							{frames.map((n) => <span class="boil" style={frame(n)} aria-hidden="true" />)}
 							<h3 class="hand">What shipped</h3>
 							<p>{p.caseStudy.outcome}</p>
 						</section>
@@ -128,18 +141,17 @@ const arrows = (notes: Note[] = []) =>
 									</div>
 								)}
 							</div>
+							{frames.map((n) => <span class="boil" style={frame(n)} aria-hidden="true" />)}
 							{p.notes && (
 								<div class="annos" aria-hidden="true">
-									<svg viewBox="0 0 160 100">
-										{arrows(p.notes).map((a) => (
-											<g>
-												<path class="halo" d={a.line} />
-												<path class="halo" d={a.head} />
-												<path class="ink line" d={a.line} pathLength="1" />
-												<path class="ink head" d={a.head} pathLength="1" />
-											</g>
-										))}
-									</svg>
+									{arrows(p.notes).map((a) => (
+										<svg class="arrow" viewBox={a.box} preserveAspectRatio="none" style={a.place}>
+											<path class="halo" d={a.line} />
+											<path class="halo" d={a.head} />
+											<path class="ink line" d={a.line} pathLength="1" />
+											<path class="ink head" d={a.head} pathLength="1" />
+										</svg>
+									))}
 									{p.notes.map((n, k) => (
 										<span class="anno" style={`left: ${n.at[0]}%; top: ${n.at[1]}%; --k: ${k}`}>
 											{n.text}
@@ -179,6 +191,7 @@ const arrows = (notes: Note[] = []) =>
 						<ol class="stickies">
 							{p.caseStudy.approach.map((a, k) => (
 								<li class="sticky" style={`--k: ${k}`}>
+									{frames.map((n) => <span class="boil" style={frame(n)} aria-hidden="true" />)}
 									<span class="sticky-n" aria-hidden="true">
 										{k + 1}
 									</span>
@@ -318,14 +331,47 @@ const arrows = (notes: Note[] = []) =>
 	}
 
 	.chips li {
+		position: relative;
+		z-index: 0;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
 		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
-		border: 1px solid var(--color-line-strong);
+		border: 1px solid transparent;
 		padding: 0.35rem 0.8rem;
 		font-size: var(--text-small);
 		color: var(--color-ink);
+		rotate: var(--tilt, -0.6deg);
+	}
+
+	/* Each chip is drawn a little differently and boils on its own beat, so the row looks hand-made. */
+	.chips li:nth-child(3n + 2) {
+		--tilt: 0.7deg;
+		--beat: -0.125s;
+	}
+
+	.chips li:nth-child(3n) {
+		--tilt: -0.2deg;
+		--beat: -0.25s;
+	}
+
+	.chips li:nth-child(2n) {
+		border-radius: 1.35em 1.8em 1.25em 1.7em / 1.8em 1.25em 1.7em 1.35em;
+	}
+
+	/* A chip's line and paper boil on a layer under its label, so the label stays crisp. */
+	.chips li::before {
+		content: '';
+		position: absolute;
+		inset: -1px;
+		z-index: -1;
+		border: 1px solid var(--chip-ink, var(--color-line-strong));
+		border-radius: inherit;
+		background: var(--chip-paper, none);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		animation-delay: var(--beat, 0s);
+		pointer-events: none;
 	}
 
 	/* Archive */
@@ -341,8 +387,24 @@ const arrows = (notes: Note[] = []) =>
 	}
 
 	.archive-list > li {
+		position: relative;
 		padding-top: 1.25rem;
-		border-top: 2px dashed rgb(23 19 15 / 0.35);
+		border-top: 2px solid transparent;
+	}
+
+	/* The dashed rule between entries, on a strip tall enough for its boil. */
+	.archive-list > li::before {
+		content: '';
+		position: absolute;
+		top: -8px;
+		left: 0;
+		right: 0;
+		height: 12px;
+		background: repeating-linear-gradient(90deg, rgb(23 19 15 / 0.35) 0 6px, transparent 6px 10px) 0 6px / 100% 2px
+			no-repeat;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		pointer-events: none;
 	}
 
 	.arch-title {
@@ -442,6 +504,8 @@ const arrows = (notes: Note[] = []) =>
 		height: 0.9rem;
 		margin-top: 0.4rem;
 		overflow: visible;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
 	}
 
 	.scribble path {
@@ -484,8 +548,8 @@ const arrows = (notes: Note[] = []) =>
 	}
 
 	.sheet-case .chips li {
-		border-color: var(--color-ink);
-		background: rgb(255 255 255 / 0.55);
+		--chip-ink: var(--color-ink);
+		--chip-paper: rgb(255 255 255 / 0.55);
 	}
 
 	.specs {
@@ -519,13 +583,28 @@ const arrows = (notes: Note[] = []) =>
 	}
 
 	.frame {
+		--line: 2.5px;
 		position: relative;
 		padding: 0.55rem;
-		border: 2.5px solid var(--color-ink);
-		background: #fbf7ef;
+		border: 2.5px solid transparent;
+		background: #fbf7ef padding-box;
+		/* The paper reaches to the middle of the inked edge, so the boiling line always covers it. */
+		outline: 1.25px solid #fbf7ef;
+		outline-offset: -2.5px;
 		box-shadow: 0 26px 44px -26px rgb(23 19 15 / 0.7);
 		rotate: -1.2deg;
 		transform-origin: 0 0;
+	}
+
+	/* The frame's edge and the line round the picture, drawn over the media; the media itself is never filtered. */
+	.frame .boil {
+		z-index: auto;
+	}
+
+	.frame .boil::before {
+		background: none;
+		outline: 2px solid var(--color-ink);
+		outline-offset: calc(-4.5px - 0.55rem);
 	}
 
 	.frame::before,
@@ -536,7 +615,9 @@ const arrows = (notes: Note[] = []) =>
 		top: -0.75rem;
 		width: 5.5rem;
 		height: 1.5rem;
-		background: rgb(242 165 65 / 0.85);
+		background: var(--tape);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
 	}
 
 	.frame::before {
@@ -547,11 +628,12 @@ const arrows = (notes: Note[] = []) =>
 	.frame::after {
 		right: -1.4rem;
 		rotate: 32deg;
+		animation-delay: -0.125s;
 	}
 
 	.case-shot {
 		aspect-ratio: 16 / 10;
-		border: 2px solid var(--color-ink);
+		border: 2px solid transparent;
 		background: var(--color-paper);
 		overflow: hidden;
 	}
@@ -582,31 +664,31 @@ const arrows = (notes: Note[] = []) =>
 		display: none;
 	}
 
-	.annos svg {
+	.annos .arrow {
 		position: absolute;
-		inset: 0;
-		width: 100%;
-		height: 100%;
 		overflow: visible;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
 	}
 
+	/* Widths are in the preview's own units (about 2.4px and 6px on a desktop screen), so the
+	   pathLength dash below covers the whole arrow; a non-scaling stroke broke it into dashes. */
 	.annos path {
 		fill: none;
 		stroke-linecap: round;
 		stroke-linejoin: round;
-		vector-effect: non-scaling-stroke;
 	}
 
 	.annos .halo {
 		stroke: #fff;
-		stroke-width: 6;
+		stroke-width: 1.5;
 		opacity: 0;
 		transition: opacity 0.3s linear 0.9s;
 	}
 
 	.annos .ink {
 		stroke: var(--color-ink);
-		stroke-width: 2.4;
+		stroke-width: 0.6;
 		stroke-dasharray: 1;
 		stroke-dashoffset: 1;
 		transition: stroke-dashoffset 0.6s var(--ease-out) 0.85s;
@@ -631,10 +713,8 @@ const arrows = (notes: Note[] = []) =>
 		translate: -50% -50%;
 		rotate: calc(-2.5deg + var(--k) * 4deg);
 		padding: 0.25em 0.65em 0.3em;
-		border: 1.5px solid var(--color-ink);
+		border: 1.5px solid transparent;
 		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
-		background: #fff;
-		box-shadow: 2px 3px 0 var(--color-ink);
 		font-size: clamp(0.75rem, 1.6vh, 0.9375rem);
 		font-weight: 700;
 		white-space: nowrap;
@@ -648,6 +728,31 @@ const arrows = (notes: Note[] = []) =>
 	.sheet-case:global(.is-open) .anno {
 		opacity: 1;
 		scale: 1;
+	}
+
+	/* The label's paper, line and hard shadow boil under its text. The shadow is its own copy of the
+	   shape, so the filter's box never clips it. */
+	.anno::before,
+	.anno::after {
+		content: '';
+		position: absolute;
+		inset: -1.5px;
+		border-radius: inherit;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		pointer-events: none;
+	}
+
+	.anno::before {
+		z-index: -1;
+		border: 1.5px solid var(--color-ink);
+		background: #fff;
+	}
+
+	.anno::after {
+		z-index: -2;
+		background: var(--color-ink);
+		translate: 2px 3px;
 	}
 
 	.anno-list {
@@ -685,6 +790,8 @@ const arrows = (notes: Note[] = []) =>
 		width: 2.2rem;
 		height: 1.3rem;
 		overflow: visible;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
 	}
 
 	.hand path {
@@ -704,11 +811,11 @@ const arrows = (notes: Note[] = []) =>
 	}
 
 	.sticky {
+		--line: 2px;
 		position: relative;
 		padding: 0.9rem 1rem 1.1rem;
-		border: 2px solid var(--color-ink);
+		border: 2px solid transparent;
 		border-radius: 3px 7px 4px 8px / 7px 3px 8px 4px;
-		background: var(--paper);
 		box-shadow: 0 14px 20px -14px rgb(23 19 15 / 0.7);
 		rotate: var(--r);
 	}
@@ -739,6 +846,9 @@ const arrows = (notes: Note[] = []) =>
 		rotate: calc(-4deg + var(--k) * 3deg);
 		background: rgb(255 255 255 / 0.6);
 		border: 1px solid rgb(23 19 15 / 0.15);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		animation-delay: calc(var(--k) * -0.125s);
 	}
 
 	.sticky-n {
@@ -785,14 +895,15 @@ const arrows = (notes: Note[] = []) =>
 	}
 
 	.note {
+		--line: 2px;
 		position: relative;
 		padding: 1rem 1.1rem 1.15rem;
-		border: 2px solid var(--color-ink);
+		border: 2px solid transparent;
 		box-shadow: 0 14px 20px -14px rgb(23 19 15 / 0.7);
 	}
 
 	.note-problem {
-		background: #fbf7ef;
+		--paper: #fbf7ef;
 		border-radius: 6px 2px 8px 3px / 3px 8px 2px 6px;
 		rotate: -1deg;
 	}
@@ -806,11 +917,13 @@ const arrows = (notes: Note[] = []) =>
 		height: 1.2rem;
 		rotate: -6deg;
 		background: rgb(122 166 217 / 0.8);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
 	}
 
 	.note-outcome {
 		padding-left: 2.6rem;
-		background: linear-gradient(90deg, #fff 1.8rem, rgb(239 143 111 / 0.75) 1.8rem 1.95rem, #fff 1.95rem);
+		--paper: linear-gradient(90deg, #fff 1.8rem, rgb(239 143 111 / 0.75) 1.8rem 1.95rem, #fff 1.95rem);
 		border-radius: 3px;
 		rotate: 0.8deg;
 	}
@@ -822,6 +935,57 @@ const arrows = (notes: Note[] = []) =>
 			transparent 0 calc(1.45rem - 1.5px),
 			rgb(122 166 217 / 0.5) calc(1.45rem - 1.5px) 1.45rem
 		);
+	}
+
+	/* A big piece of paper and its inked edge sit on layers under its text, so the text stays crisp. It is
+	   too big to re-filter eight times a second, so it is three copies, each filtered once with a still
+	   frame of the character's boil, and only which copy shows changes (an opacity step on the
+	   compositor, as in the meadow). */
+	.boil {
+		position: absolute;
+		inset: calc(var(--line) * -1);
+		z-index: -1;
+		border-radius: inherit;
+		pointer-events: none;
+		will-change: opacity;
+		animation: card-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.boil + .boil {
+		opacity: 0;
+	}
+
+	.boil::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		border: var(--line) solid var(--color-ink);
+		border-radius: inherit;
+		background: var(--paper);
+		filter: var(--frame);
+	}
+
+	/* A hair over a third, so a step never falls between two copies and shows no paper. */
+	@keyframes card-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	/* Touch screens and reduced motion keep the first inking, still wobbly. */
+	@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+		.boil {
+			animation: none;
+			will-change: auto;
+		}
+
+		.boil + .boil {
+			display: none;
+		}
 	}
 
 	/* Entrances */
@@ -966,12 +1130,27 @@ const arrows = (notes: Note[] = []) =>
 		}
 
 		.anno-list li {
+			position: relative;
+			z-index: 0;
 			padding: 0.2em 0.6em;
-			border: 1.5px solid var(--color-ink);
+			border: 1.5px solid transparent;
 			border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
-			background: #fff;
 			font-size: var(--text-small);
 			font-weight: 700;
+		}
+
+		/* Inked like the chips, under the words. */
+		.anno-list li::before {
+			content: '';
+			position: absolute;
+			inset: -1.5px;
+			z-index: -1;
+			border: 1.5px solid var(--color-ink);
+			border-radius: inherit;
+			background: #fff;
+			filter: url(#doodle-frame-1);
+			animation: var(--ink-boil);
+			pointer-events: none;
 		}
 
 		.panel {

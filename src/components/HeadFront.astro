@@ -1,0 +1,48 @@
+---
+// His face from the front, chin at the origin. Used on the body and in the rocket's porthole.
+import { COLORS as C } from '../lib/hung';
+
+const eyes = [
+	{ id: 'l', x: -17 },
+	{ id: 'r', x: 17 },
+];
+---
+
+<g data-face>
+	<path d="M-45 -86C-60 -92-64 -64-50 -56" fill={C.skin} />
+	<path d="M45 -86C60 -92 64 -64 50 -56" fill={C.skin} />
+	<path d="M-52 -78q-4 6 1 12M52 -78q4 6-1 12" stroke-width="2.4" />
+	<path d="M-48 -76C-50 -44-38 -14-18 -4C-8 1 8 1 18 -4C38 -14 50 -44 48 -76C48 -116 26 -134 0 -134C-26 -134-48 -116-48 -76Z" fill={C.skin} />
+	<ellipse cx="-28" cy="-40" rx="8" ry="4" fill={C.blush} stroke="none" opacity="0.28" />
+	<ellipse cx="28" cy="-40" rx="8" ry="4" fill={C.blush} stroke="none" opacity="0.28" />
+	<path
+		d="M-50 -76C-62 -110-50 -146-10 -152C10 -156 30 -152 42 -142C56 -130 62 -110 54 -86L50 -78Q50 -94 44 -102Q40 -96 34 -90Q30 -106 22 -114Q16 -100 6 -92Q2 -110-6 -118Q-14 -104-26 -96Q-28 -112-34 -118Q-44 -106-46 -96Z"
+		fill={C.hair}
+	/>
+	<path d="M-30 -136q14 -10 32 -10M36 -132q6 6 8 14" stroke={C.shine} stroke-width="3.4" />
+	<path d="M-31 -86q11 -7 24 -3M8 -89q13 -4 24 3" stroke-width="4.6" />
+	{
+		eyes.map((e) => (
+			<g>
+				<g data-eye={e.id} data-cy="-66">
+					<path d={`M${e.x - 8.5} -66C${e.x - 9} -74 ${e.x - 4} -77 ${e.x} -77C${e.x + 5} -77 ${e.x + 9} -73 ${e.x + 8.5} -66C${e.x + 8} -59 ${e.x + 4} -56 ${e.x} -56C${e.x - 5} -56 ${e.x - 8} -59 ${e.x - 8.5} -66Z`} fill="#fff" stroke-width="2.2" />
+					<g data-pupil>
+						<ellipse cx={e.x + 0.6} cy="-65.4" rx="4.4" ry="5.6" fill={C.ink} stroke="none" />
+						<circle cx={e.x + 2.2} cy="-68" r="1.3" fill="#fff" stroke="none" />
+					</g>
+					<path d={`M${e.x - 10} -70C${e.x - 6} -78 ${e.x + 6} -79 ${e.x + 10} -71`} stroke-width="3.6" />
+				</g>
+				<path data-lid={e.id} d={`M${e.x - 10} -66q10 6 20 0`} stroke-width="3" style="display: none" />
+			</g>
+		))
+	}
+	<path d="M3 -60q9 9 1 15" stroke-width="3" />
+	<path data-mouth="smile" d="M-15 -30q15 11 30 0" stroke-width="3.2" />
+	<path data-mouth="flat" d="M-10 -28h20" stroke-width="3.2" style="display: none" />
+	<ellipse data-mouth="o" cx="0" cy="-28" rx="6" ry="7" fill={C.lip} stroke-width="2.8" style="display: none" />
+	<path data-mouth="open" d="M-14 -33q14 20 28 0z" fill={C.lip} stroke-width="2.8" style="display: none" />
+	<g data-mouth="grin" style="display: none">
+		<path d="M-17 -34q17 22 34 0z" fill={C.lip} stroke-width="2.8" />
+		<path d="M-13 -32q13 4 26 0" stroke="#fff" stroke-width="3" />
+	</g>
+</g>

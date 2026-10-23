@@ -1,10 +1,9 @@
-import { gsap } from 'gsap';
 import { projects } from '../data/portfolio';
-import { Birds } from '../lib/birds';
 import { Flyers } from '../lib/flyers';
 import { DoodleCursor } from '../lib/cursor';
 import { bindInkLinks } from '../lib/ink';
-import { Solar, TUNING as SOLAR_TUNING, type SolarView } from '../lib/solar';
+import { Launch } from '../lib/launch';
+import { Solar, type SolarView } from '../lib/solar';
 import { Splat } from '../lib/splat';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -24,19 +23,16 @@ const holo = stage.querySelector<HTMLElement>('[data-holo]')!;
 const splatCanvas = stage.querySelector<HTMLCanvasElement>('[data-splat]')!;
 const screens = Array.from(holo.querySelectorAll<HTMLButtonElement>('[data-holo-screen]'));
 const back = stage.querySelector<HTMLButtonElement>('[data-holo-back]')!;
-const meBack = stage.querySelector<HTMLElement>('[data-me="back"]')!;
-const meFront = stage.querySelector<HTMLElement>('[data-me="front"]')!;
-const cubeFace = meBack.querySelector<SVGRectElement>('[data-cube-face]')!;
-const cubeButton = stage.querySelector<HTMLButtonElement>('[data-cube]')!;
+const rocketButton = stage.querySelector<HTMLButtonElement>('[data-rocket]')!;
+const hungButton = stage.querySelector<HTMLButtonElement>('[data-hung-button]')!;
+const sayBox = stage.querySelector<HTMLElement>('[data-say]')!;
 const backMe = stage.querySelector<HTMLButtonElement>('[data-back-me]')!;
 const flingHint = stage.querySelector<HTMLElement>('[data-fling-hint]')!;
-const meadow = stage.querySelector<HTMLElement>('[data-meadow]')!;
-const talkButton = stage.querySelector<HTMLButtonElement>('[data-talk]')!;
 const bubble = stage.querySelector<HTMLElement>('[data-bubble]')!;
 const LINES = [
 	"Hi, I'm Hung!",
 	'I build product UI with React, Next.js and TypeScript.',
-	'My work is in this cube. Scroll to step in!',
+	'My work is up there. Scroll and we fly!',
 ];
 let line = -1;
 const nextLine = () => {
@@ -53,31 +49,26 @@ function say(text: string) {
 	void bubble.offsetWidth;
 	bubble.classList.add('is-on');
 	talkUntil = performance.now() + Math.max(2600, text.length * 70);
-	for (const el of [meBack, meFront]) el.classList.add('is-talking');
+	launch.actor.face.talk(Math.min(2.6, 0.5 + text.length * 0.045));
 }
 
 function hush() {
 	if (!talkUntil) return;
 	talkUntil = 0;
 	bubble.classList.remove('is-on');
-	for (const el of [meBack, meFront]) el.classList.remove('is-talking');
 }
-const flyerLayers = [...stage.querySelectorAll<HTMLElement>('[data-flyers], [data-clouds], [data-sky-birds]')];
 const flyers = new Flyers(stage);
-const birds = new Birds(stage);
-const walk = {
-	x: 0,
-	y: 0,
-	dir: 1,
-	pause: 0,
-	active: !reduced,
-	idle: 0,
-	phase: 0,
-	moving: false,
-	started: false,
-	side: false,
-	turn: 0,
-};
+const launch = new Launch(
+	{
+		hung: hungButton,
+		rocket: rocketButton,
+		pad: stage.querySelector<HTMLElement>('[data-pad]')!,
+		smoke: stage.querySelector<SVGSVGElement>('[data-smoke]')!,
+		ground: [...stage.querySelectorAll<HTMLElement>('[data-meadow], [data-flyers]')],
+		sky: [...stage.querySelectorAll<HTMLElement>('[data-clouds]')],
+	},
+	reduced,
+);
 const cursor = stage.querySelector<HTMLElement>('.cursor')!;
 const doodle = new DoodleCursor(cursor);
 
@@ -96,21 +87,15 @@ const state = {
 	leanY: 0,
 	pointer: { x: -9999, y: -9999, inside: false, moved: false },
 	sheetOpen: false,
-	zoom: 0,
-	zoomTarget: 0,
-	zoomInput: 0,
 };
-const inSolar = () => state.zoom >= 0.999 && state.zoomTarget === 1;
+const inSolar = () => launch.inSpace;
 
-function zoomTo(v: number) {
+// Up to the work, or home to the meadow; a second ask during a trip hurries it along.
+function fly(v: 0 | 1) {
 	hush();
-	walk.active = false;
-	walk.idle = 0;
-	state.zoomTarget = v;
-	state.zoomInput = 0;
 	if (v === 0) unfocus();
+	launch.go(v);
 }
-const intro = { v: reduced ? 1 : 0 };
 
 bindInkLinks({ color: '#f2a541' });
 
@@ -173,15 +158,26 @@ function showSheet(dialog: HTMLDialogElement) {
 	if (finePointer) dialog.append(cursor);
 }
 
+// The sheets move with the Web Animations API, on the site's easing tokens.
+const EASE_OUT = 'cubic-bezier(0.16, 1, 0.3, 1)';
+const EASE_IN = 'cubic-bezier(0.7, 0, 0.84, 0)';
+const offstage = () => (narrow.matches ? 'translateY(100%)' : 'translateX(100%)');
+
+function still(el: HTMLElement) {
+	for (const a of el.getAnimations()) a.cancel();
+}
+
 function openArchive() {
 	const dialog = sheets.archive;
 	const panel = dialog.querySelector<HTMLElement>('[data-panel]')!;
 	showSheet(dialog);
-	const from = narrow.matches ? { yPercent: 100 } : { xPercent: 100 };
-	gsap.fromTo(
-		panel,
-		{ ...from, opacity: reduced ? 0 : 1 },
-		{ xPercent: 0, yPercent: 0, opacity: 1, duration: reduced ? 0.2 : 0.85, ease: 'expo.out' },
+	still(panel);
+	panel.animate(
+		[
+			{ transform: reduced ? 'none' : offstage(), opacity: reduced ? 0 : 1 },
+			{ transform: 'none', opacity: 1 },
+		],
+		{ duration: reduced ? 200 : 850, easing: EASE_OUT },
 	);
 }
 
@@ -191,19 +187,16 @@ function flipIn(article: HTMLElement, from: DOMRect | null) {
 	const shot = article.querySelector<HTMLElement>('.case-shot');
 	sheets.case.classList.toggle('is-flip', !!(frame && shot && from && !reduced));
 	if (!frame || !shot || !from || reduced) return;
-	gsap.set(frame, { clearProps: 'transform' });
+	still(frame);
 	const f = frame.getBoundingClientRect();
 	const r = shot.getBoundingClientRect();
 	const scale = from.width / r.width;
-	gsap.fromTo(
-		frame,
-		{
-			x: from.left - f.left - (r.left - f.left) * scale,
-			y: from.top - f.top - (r.top - f.top) * scale,
-			scale,
-		},
-		{ x: 0, y: 0, scale: 1, duration: 0.85, ease: 'expo.out', clearProps: 'transform' },
-	);
+	const x = from.left - f.left - (r.left - f.left) * scale;
+	const y = from.top - f.top - (r.top - f.top) * scale;
+	frame.animate([{ transform: `translate(${x}px, ${y}px) scale(${scale})` }, { transform: 'none' }], {
+		duration: 850,
+		easing: EASE_OUT,
+	});
 }
 
 function playVideo(article: HTMLElement) {
@@ -234,8 +227,8 @@ function openSheet(_name: 'case', k = 0) {
 	focusPlanet(k);
 	const reveal = () => {
 		showSheet(dialog);
-		gsap.set(panel, { xPercent: 0, yPercent: 0 });
-		gsap.fromTo(panel, { opacity: flood ? 1 : 0 }, { opacity: 1, duration: flood ? 0 : 0.35, ease: 'power2.out' });
+		still(panel);
+		if (!flood) panel.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 350, easing: EASE_OUT });
 		flipIn(article, from);
 		playVideo(article);
 		requestAnimationFrame(() => dialog.classList.add('is-open'));
@@ -259,26 +252,29 @@ function closeSheet(dialog: HTMLDialogElement) {
 	if (dialog === sheets.case) {
 		dialog.classList.remove('is-open');
 		dialog.querySelectorAll<HTMLVideoElement>('[data-video]').forEach((v) => v.pause());
-		gsap.to(panel, {
-			opacity: 0,
-			duration: reduced ? 0.1 : 0.3,
-			delay: reduced ? 0 : 0.12,
-			ease: 'power2.in',
-			onComplete: () => {
-				done();
-				dialog.classList.remove('is-flip');
-				splat.floodTo(false);
-			},
+		const out = panel.animate([{ opacity: 1 }, { opacity: 0 }], {
+			duration: reduced ? 100 : 300,
+			delay: reduced ? 0 : 120,
+			easing: EASE_IN,
+			fill: 'forwards',
 		});
+		out.onfinish = () => {
+			done();
+			dialog.classList.remove('is-flip');
+			splat.floodTo(false);
+			out.cancel();
+		};
 		return;
 	}
-	const to = narrow.matches ? { yPercent: 100 } : { xPercent: 100 };
-	gsap.to(panel, {
-		...(reduced ? { opacity: 0 } : to),
-		duration: reduced ? 0.15 : 0.45,
-		ease: 'power3.in',
-		onComplete: done,
+	const out = panel.animate([{}, reduced ? { opacity: 0 } : { transform: offstage() }], {
+		duration: reduced ? 150 : 450,
+		easing: EASE_IN,
+		fill: 'forwards',
 	});
+	out.onfinish = () => {
+		done();
+		out.cancel();
+	};
 }
 
 Object.values(sheets).forEach((dialog) => {
@@ -292,14 +288,31 @@ Object.values(sheets).forEach((dialog) => {
 	dialog.querySelector('[data-close]')!.addEventListener('click', () => closeSheet(dialog));
 });
 
-cubeButton.addEventListener('click', () => zoomTo(1));
-talkButton.addEventListener('click', () => say(nextLine()));
-backMe.addEventListener('click', () => zoomTo(0));
+// A swipe that starts on the rocket or on him is a gesture, not a click.
+let swallowClick = false;
+rocketButton.addEventListener('click', () => {
+	if (swallowClick) return;
+	fly(launch.inSpace ? 0 : 1);
+});
+hungButton.addEventListener('click', () => {
+	if (swallowClick || launch.phase !== 'ground') return;
+	const text = nextLine();
+	if (line === 0) launch.actor.greet(2);
+	say(text);
+});
+backMe.addEventListener('click', () => fly(0));
 sunButton.addEventListener('click', openArchive);
 screens.forEach((s, i) => s.addEventListener('click', () => openSheet('case', i)));
 back.addEventListener('click', unfocus);
 picks.forEach((b, i) => {
-	b.addEventListener('focus', () => focusPlanet(i));
+	// Tabbing to a project from the meadow flies there first, in a hurry.
+	b.addEventListener('focus', () => {
+		if (!inSolar()) {
+			fly(1);
+			launch.hurry();
+		}
+		focusPlanet(i);
+	});
 	b.addEventListener('click', () => openSheet('case', i));
 });
 
@@ -311,27 +324,48 @@ function stepFocus(dir: number) {
 	focusPlanet(state.focus + dir);
 }
 
+// A scroll gesture is a run of wheel events; momentum keeps them coming after a trip has begun, so one
+// gesture sets off at most one trip, and only a fresh gesture hurries a trip along.
+const wheel = { sum: 0, at: 0, spent: false };
 addEventListener(
 	'wheel',
 	(e) => {
 		if (state.sheetOpen) return;
+		const now = performance.now();
+		const fresh = now - wheel.at > 260;
+		if (fresh) {
+			wheel.sum = 0;
+			wheel.spent = false;
+		}
+		wheel.at = now;
 		const unit = e.deltaMode === 1 ? 16 : e.deltaMode === 2 ? innerHeight : 1;
-		const d = (Math.abs(e.deltaY) >= Math.abs(e.deltaX) ? e.deltaY : e.deltaX) * unit;
+		const vertical = Math.abs(e.deltaY) >= Math.abs(e.deltaX);
+		const d = (vertical ? e.deltaY : e.deltaX) * unit;
+		if (launch.busy) {
+			if (fresh) launch.hurry();
+			return;
+		}
 		if (!inSolar()) {
-			const step = Math.max(-120, Math.min(120, d));
-			hush();
-			walk.active = false;
-			walk.idle = 0;
-			state.zoomTarget = Math.min(1, Math.max(0, state.zoomTarget + step * 0.0016));
-			state.yawTarget += step * 0.006;
-			state.zoomInput = performance.now();
+			// Down the page is up to the work, after a little travel so a stray tick does not launch him.
+			wheel.sum += vertical ? d : 0;
+			if (wheel.sum > 40 && !wheel.spent) {
+				wheel.spent = true;
+				fly(1);
+			}
 			return;
 		}
 		if (state.focus >= 0) {
 			if (Math.abs(d) > 12) stepFocus(Math.sign(d));
 			return;
 		}
-		state.yawTarget += Math.max(-160, Math.min(160, d)) * 0.0022;
+		// Back up the page flies home. Scrolling never spins the system; dragging does.
+		if (vertical && d < 0) {
+			wheel.sum += d;
+			if (wheel.sum < -60 && !wheel.spent) {
+				wheel.spent = true;
+				fly(0);
+			}
+		}
 	},
 	{ passive: true },
 );
@@ -340,13 +374,14 @@ addEventListener('keydown', (e) => {
 	if (state.sheetOpen || e.altKey || e.metaKey || e.ctrlKey) return;
 	const next = e.key === 'ArrowRight' || e.key === 'ArrowDown';
 	const prev = e.key === 'ArrowLeft' || e.key === 'ArrowUp';
+	if (launch.busy) {
+		if (next || prev || e.key === 'Escape') launch.hurry();
+		return;
+	}
 	if (!inSolar()) {
 		if (next) {
 			e.preventDefault();
-			zoomTo(1);
-		} else if (prev) {
-			e.preventDefault();
-			zoomTo(0);
+			fly(1);
 		}
 		return;
 	}
@@ -357,7 +392,7 @@ addEventListener('keydown', (e) => {
 	} else if (e.key === 'Escape' && state.focus >= 0) {
 		unfocus();
 	} else if (e.key === 'Escape') {
-		zoomTo(0);
+		fly(0);
 	} else if (e.key === 'Enter' && state.focus >= 0 && !(e.target as HTMLElement).closest('a, button')) {
 		e.preventDefault();
 		openSheet('case', state.focus);
@@ -369,7 +404,11 @@ const drag = {
 	id: -1,
 	planet: -1,
 	sun: false,
+	// Started on the rocket or on him: tracked for a swipe, but the button keeps its click.
+	soft: false,
+	fired: false,
 	startX: 0,
+	startY: 0,
 	lastX: 0,
 	lastY: 0,
 	lastT: 0,
@@ -378,10 +417,16 @@ const drag = {
 };
 
 stage.addEventListener('pointerdown', (e) => {
-	if ((e.target as HTMLElement).closest('a, button, [data-hud]')) return;
+	const target = e.target as HTMLElement;
+	const soft = !!target.closest('[data-rocket], [data-hung-button]');
+	if (!soft && target.closest('a, button, [data-hud]')) return;
+	swallowClick = false;
 	drag.on = true;
+	drag.soft = soft;
+	drag.fired = false;
 	drag.id = e.pointerId;
 	drag.startX = e.clientX;
+	drag.startY = e.clientY;
 	drag.lastX = e.clientX;
 	drag.lastY = e.clientY;
 	drag.lastT = performance.now();
@@ -394,7 +439,7 @@ stage.addEventListener('pointerdown', (e) => {
 		if (k >= 0 && solar.grab(k, e.clientX, e.clientY)) drag.planet = k;
 		else drag.sun = solar.overSun(e.clientX, e.clientY);
 	}
-	stage.setPointerCapture(e.pointerId);
+	if (!soft) stage.setPointerCapture(e.pointerId);
 });
 
 stage.addEventListener('pointermove', (e) => {
@@ -415,17 +460,26 @@ stage.addEventListener('pointermove', (e) => {
 		if (drag.moved > 6) setCursorMode('label', 'Whee!');
 		return;
 	}
+	// Swipe up on the meadow to launch, down in space to fly home.
+	const pullX = e.clientX - drag.startX;
+	const pullY = e.clientY - drag.startY;
+	const upright = Math.abs(pullY) > Math.abs(pullX) * 1.4;
 	if (!inSolar()) {
-		hush();
-		walk.active = false;
-		walk.idle = 0;
-		state.zoomTarget = Math.min(1, Math.max(0, state.zoomTarget - dy * (narrow.matches ? 0.004 : 0.0025)));
-		state.yawTarget -= dy * 0.012;
-		state.zoomInput = now;
+		if (!drag.fired && upright && pullY < -60 && !launch.busy) {
+			drag.fired = true;
+			fly(1);
+		}
 		return;
 	}
 	if (state.focus >= 0) return;
-	const delta = -d * (narrow.matches ? 0.008 : 0.0045);
+	if (!drag.fired && upright && pullY > 80) {
+		drag.fired = true;
+		fly(0);
+		return;
+	}
+	// Only a sideways drag turns the system; an up-and-down swipe is a scroll, and scrolls don't spin it.
+	if (upright) return;
+	const delta = -dx * (narrow.matches ? 0.008 : 0.0045);
 	state.yawTarget += delta;
 	drag.speed = delta / Math.max(1, now - drag.lastT);
 	drag.lastT = now;
@@ -435,6 +489,14 @@ function endDrag(e: PointerEvent) {
 	if (!drag.on || e.pointerId !== drag.id) return;
 	drag.on = false;
 	if (stage.hasPointerCapture(e.pointerId)) stage.releasePointerCapture(e.pointerId);
+	if (drag.soft || drag.fired) {
+		swallowClick = drag.fired || drag.moved > 10;
+		return;
+	}
+	if (launch.busy) {
+		if (drag.moved < 6) launch.hurry();
+		return;
+	}
 	if (drag.planet >= 0) {
 		const k = drag.planet;
 		drag.planet = -1;
@@ -479,87 +541,22 @@ let sunHover = false;
 let sunHoverAmt = 0;
 let sunBox = '';
 let flung = false;
-let inkStart = 0;
-let entering = false;
 const splat = new Splat(splatCanvas);
 
-const face = { x: 0, y: 0, w: 1, h: 1 };
-function measureFace() {
-	for (const el of [meBack, meFront]) el.style.transform = '';
-	const r = cubeFace.getBoundingClientRect();
-	const m = meBack.getBoundingClientRect();
-	face.x = r.left;
-	face.y = r.top;
-	face.w = r.width;
-	face.h = r.height;
-	const origin = `${r.left + r.width / 2 - m.left}px ${r.top + r.height / 2 - m.top}px`;
-	for (const el of [meBack, meFront]) el.style.transformOrigin = origin;
-	lastZoomStyle = -1;
-}
-
-let lastZoomStyle = -1;
-let lastMeTransform = '';
-let lastMeFade = '';
-const easeInOut = (p: number) => (p < 0.5 ? 4 * p * p * p : 1 - Math.pow(-2 * p + 2, 3) / 2);
-function zoomView(): SolarView | null {
-	const e = easeInOut(state.zoom);
-	if (e >= 0.999 || !solar) {
-		if (lastZoomStyle !== 1) {
-			lastZoomStyle = 1;
-			for (const el of [meBack, meFront, meadow, ...flyerLayers]) el.style.visibility = 'hidden';
-			lastMeTransform = '';
-			root.classList.remove('is-zooming');
-		}
-		return null;
-	}
+// The system hangs a screen above the meadow; the camera brings it down as the rocket climbs.
+function tripView(): SolarView | null {
+	if (!solar || launch.sysOffset === 0) return null;
 	const w = innerWidth;
 	const h = innerHeight;
-	const fx = face.x + face.w / 2 + walk.x * (1 - e);
-	const fy = face.y + face.h / 2 + walk.y * (1 - e);
-	const rx = face.x + face.w / 2;
-	const ry = face.y + face.h / 2;
-	const tx = w / 2;
-	const ty = solar.centerY;
-	const cx = fx + (tx - fx) * e;
-	const cy = fy + (ty - fy) * e;
-	const k = Math.max(face.w / w, face.h / h);
-	const g = Math.pow(1 / k, e);
-	const s = k * g;
-	const side = face.w * g;
-	const open = Math.min(1, Math.max(0, (e - 0.45) / 0.55));
-	const stretch = open * open * (3 - 2 * open);
-	const cw = side + (Math.max(side, w * 1.2) - side) * stretch;
-	const ch = side + (Math.max(side, (h / 2 + Math.abs(ty - h / 2)) * 2.4) - side) * stretch;
-	if (Math.abs(e - lastZoomStyle) > 0.0005 || (state.zoom > 0 && state.zoom < 0.2) || walk.moving || e === 0) {
-		lastZoomStyle = e;
-		const t = `translate3d(${cx - rx}px, ${cy - ry}px, 0) scale(${g})`;
-		const scene = String(Math.max(0, 1 - e * 2.4));
-		if (meadow.style.opacity !== scene) {
-			meadow.style.opacity = scene;
-			for (const el of flyerLayers) el.style.opacity = scene;
-		}
-		const fade = String(1 - Math.min(1, Math.max(0, (e - 0.4) / 0.4)));
-		if (t !== lastMeTransform || fade !== lastMeFade) {
-			lastMeTransform = t;
-			lastMeFade = fade;
-			for (const el of [meBack, meFront]) {
-				el.style.transform = t;
-				el.style.opacity = fade;
-				el.style.visibility = '';
-			}
-			for (const el of [meadow, ...flyerLayers]) el.style.visibility = '';
-		}
-		meFront.style.setProperty('--pop', String(Math.min(1, state.zoom * 6)));
-		root.classList.toggle('is-zooming', e > 0.001);
-	}
-	return { cx, cy, s, clip: { x: cx - cw / 2, y: cy - ch / 2, w: cw, h: ch, r: 5 * g * (1 - stretch) } };
+	return { cx: w / 2, cy: solar.centerY + launch.sysOffset, s: 1, clip: { x: 0, y: 0, w, h, r: 0 } };
 }
 
 function layout() {
 	solar?.layout(innerWidth, innerHeight);
-	measureFace();
+	launch.layout(innerWidth, innerHeight);
+	if (!narrow.matches) backMe.style.left = `${Math.round(launch.noseInSpace().x + 28)}px`;
+	else backMe.style.left = '';
 	flyers.resize(innerWidth, innerHeight);
-	birds.resize(innerWidth, innerHeight);
 	splat.resize(innerWidth, innerHeight);
 	holoSize();
 }
@@ -641,62 +638,47 @@ function placeHolo() {
 	setHolo(state.focus >= 0 && thrown === state.focus && splat.painted);
 }
 
-function walkRange() {
-	return narrow.matches ? innerWidth * 0.12 : Math.min(innerWidth * 0.3, 440);
+// The speech bubble rides above his head.
+let sayAt = '';
+function placeSay() {
+	if (talkUntil && performance.now() > talkUntil) hush();
+	const head = launch.head();
+	const x = Math.round(head.x + (narrow.matches ? 0 : 46 * head.s));
+	const y = Math.round(head.y - 12 * head.s);
+	const key = `${x},${y}`;
+	if (key === sayAt) return;
+	sayAt = key;
+	sayBox.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 }
 
-let walkClass = '';
-function updateWalk(dt: number) {
-	const atRest = state.zoomTarget === 0 && state.zoom < 0.001;
-	if (talkUntil && performance.now() > talkUntil) hush();
-	const talking = talkUntil > 0;
-	if (!walk.active && atRest && !reduced) {
-		walk.idle += dt;
-		if (walk.idle > 0.8) walk.active = true;
+// In space the rocket fades when a planet or a label slides behind it, and lets the pointer through to them.
+const labelEls = [...labels, sunLabel];
+const veil = { amt: 1, goal: 1, at: 0, shown: '' };
+function updateVeil(now: number, dt: number) {
+	if (!launch.inSpace || !solar || reduced) {
+		veil.goal = 1;
+	} else if (now - veil.at > 100) {
+		veil.at = now;
+		const boxes = labelEls
+			.filter((el) => Number(el.style.opacity || 0) > 0.2)
+			.map((el) => el.getBoundingClientRect());
+		const behind = (p: { x: number; y: number }) =>
+			solar!.pick(p.x, p.y) >= 0 || boxes.some((b) => p.x > b.left - 8 && p.x < b.right + 8 && p.y > b.top - 8 && p.y < b.bottom + 8);
+		veil.goal = launch.veilPoints().some(behind) ? 0.22 : 1;
 	}
-	const range = walkRange();
-	if (!walk.started) {
-		walk.started = true;
-		walk.x = reduced ? 0 : -range;
-	}
-	walk.moving = false;
-	if (talking) {
-		walk.moving = false;
-	} else if (walk.active && atRest) {
-		if (walk.pause > 0) {
-			walk.pause -= dt;
-		} else {
-			walk.x += walk.dir * (narrow.matches ? 46 : 78) * dt;
-			walk.moving = true;
-			if (Math.abs(walk.x) >= range) {
-				walk.x = Math.sign(walk.x) * range;
-				walk.dir = -Math.sign(walk.x);
-				walk.pause = 0.35;
-			}
-		}
-	} else {
-		walk.x = Math.max(-range, Math.min(range, walk.x));
-	}
-	walk.phase += walk.moving ? dt * 15 : 0;
-	walk.y = walk.moving ? -Math.abs(Math.sin(walk.phase * 0.84)) * 8 : walk.y * (1 - ease(10, dt));
-	const strolling = walk.active && atRest && !talking;
-	walk.side = strolling;
-	const turnGoal = strolling ? walk.dir * SOLAR_TUNING.carryTurn : 0;
-	walk.turn += (turnGoal - walk.turn) * (reduced ? 1 : ease(7, dt));
-	const cls = `${walk.moving ? 'm' : ''}${strolling ? (walk.dir > 0 ? 'r' : 'l') : ''}`;
-	if (cls !== walkClass) {
-		walkClass = cls;
-		for (const el of [meBack, meFront]) {
-			el.classList.toggle('is-walking', walk.moving);
-			el.classList.toggle('is-side', strolling);
-			el.classList.toggle('face-left', strolling && walk.dir < 0);
-		}
-	}
+	veil.amt += (veil.goal - veil.amt) * ease(veil.goal < veil.amt ? 9 : 4, dt);
+	if (Math.abs(veil.goal - veil.amt) < 0.005) veil.amt = veil.goal;
+	const shown = veil.amt.toFixed(2);
+	if (shown === veil.shown) return;
+	veil.shown = shown;
+	rocketButton.style.opacity = veil.amt < 1 ? shown : '';
+	rocketButton.classList.toggle('is-veiled', veil.amt < 0.6);
 }
 
 let raf = 0;
 let last = performance.now();
 let pickTick = 0;
+let solarDrawn = true;
 
 function frame(now: number) {
 	const interval = now - last;
@@ -708,13 +690,8 @@ function frame(now: number) {
 		return;
 	}
 
-	if (state.zoomInput && now - state.zoomInput > 420 && state.zoomTarget > 0 && state.zoomTarget < 1) {
-		state.zoomTarget = state.zoomTarget > 0.3 ? 1 : 0;
-		state.zoomInput = 0;
-	}
-	const zoomRate = state.zoomInput ? 10 : 2.6;
-	state.zoom += (state.zoomTarget - state.zoom) * (reduced ? 1 : ease(zoomRate, dt));
-	if (Math.abs(state.zoomTarget - state.zoom) < 0.0008) state.zoom = state.zoomTarget;
+	launch.update(dt, now, finePointer && state.pointer.inside ? state.pointer : null);
+	placeSay();
 	const solarMode = inSolar();
 	const showBack = solarMode && state.focus < 0;
 	if (showBack !== (backMe.getAttribute('aria-hidden') === 'false')) {
@@ -724,22 +701,18 @@ function frame(now: number) {
 		sunButton.tabIndex = showBack ? 0 : -1;
 	}
 	if (stage.classList.contains('in-solar') !== solarMode) stage.classList.toggle('in-solar', solarMode);
-	const nowEntering = state.zoomTarget === 1 && state.zoom > 0.72;
-	if (nowEntering && !entering) inkStart = now;
-	entering = nowEntering;
-	const inkAge = entering ? (now - inkStart) / 1000 : -1;
+	const inkAge = launch.inkAge;
 	const hint = solarMode && state.focus < 0 && !flung && !state.sheetOpen && inkAge > 1.8 && inkAge < 12;
 	if (flingHint.classList.contains('is-on') !== hint) flingHint.classList.toggle('is-on', hint);
-	if (meFront.inert !== solarMode) {
-		meFront.inert = solarMode;
-		cubeButton.tabIndex = solarMode ? -1 : 0;
+	if (rocketButton.dataset.phase !== launch.phase) {
+		rocketButton.dataset.phase = launch.phase;
+		rocketButton.setAttribute('aria-label', launch.inSpace ? 'Fly home' : 'Fly to my work');
+		hungButton.inert = launch.phase !== 'ground';
 		setCursorMode('plain');
 	}
 
-	updateWalk(dt);
-	if (state.zoom < 0.999 && !reduced) {
+	if (launch.progress < 1 && !reduced) {
 		flyers.update(now / 1000);
-		birds.update(now / 1000, dt);
 	}
 
 	if (!reduced) state.time += dt * (state.focus >= 0 ? 0.25 : 1);
@@ -761,8 +734,8 @@ function frame(now: number) {
 				!over && solarMode && state.focus < 0 && state.hover < 0 && solar.overSun(state.pointer.x, state.pointer.y);
 			state.pointer.moved = false;
 			if (sunHover) setCursorMode('label', 'Archive');
-			else if (over === cubeButton) setCursorMode('label', 'Open');
-			else if (over === talkButton) setCursorMode('label', 'Say hi');
+			else if (over === rocketButton) setCursorMode('label', launch.inSpace ? 'Fly home' : 'Launch');
+			else if (over === hungButton) setCursorMode('label', 'Say hi');
 			else if (over?.matches('[data-holo-screen]')) setCursorMode('label', 'Open');
 			else if (!over && !doodle.magnet)
 				setCursorMode(state.hover >= 0 ? 'label' : 'plain', state.hover >= 0 ? 'View' : '');
@@ -780,20 +753,24 @@ function frame(now: number) {
 	state.leanX += (lx - state.leanX) * ease(2, dt);
 	state.leanY += (ly - state.leanY) * ease(2, dt);
 
-	if (solar) {
+	// The system is drawn only once the camera is near enough to see it.
+	const sysVisible = launch.sysOffset > -innerHeight * 1.2;
+	if (solar && (sysVisible || solarDrawn)) {
+		solarDrawn = sysVisible;
+		const swing = inkAge >= 0 && inkAge < 1.8 ? 0.5 * (1 - inkAge / 1.8) ** 2 : 0;
 		solar.render(
 			{
 				yaw: state.yaw,
 				time: state.time,
 				hover: state.hoverShown,
 				hoverAmt: state.hoverAmt,
-				intro: intro.v,
+				intro: launch.intro,
 				focus: state.focusShown,
 				focusAmt: state.focusAmt,
 				leanX: reduced ? 0 : state.leanX,
 				leanY: reduced ? 0 : state.leanY,
-				turn: walk.turn,
-				view: zoomView(),
+				turn: reduced ? 0 : swing,
+				view: tripView(),
 				labels: solarMode ? 1 : 0,
 				ink: reduced || inkAge > 2.4 ? -1 : inkAge,
 				sunHover: sunHoverAmt,
@@ -810,6 +787,7 @@ function frame(now: number) {
 			sunButton.style.width = sunButton.style.height = `${Math.round(d.r * 2)}px`;
 		}
 	}
+	updateVeil(now, dt);
 	placeHolo();
 	splat.draw(now);
 
@@ -832,24 +810,25 @@ function start() {
 	solar.setQuality(TIERS[perf.tier]);
 	layout();
 
-	if (reduced) {
-		root.classList.add('is-ready');
-	} else {
-		gsap
-			.timeline()
-			.to(intro, { v: 1, duration: 2.6, ease: 'power2.out' }, 0.2)
-			.call(() => root.classList.add('is-ready'), [], 0.7)
-			.call(
-				() => {
-					if (state.zoomTarget === 0 && !talkUntil) {
-						line = 0;
-						say(LINES[0]);
-					}
-				},
-				[],
-				2.4,
-			);
-	}
+	launch.onHome = () => {
+		launch.actor.greet(2);
+		say('Welcome back!');
+	};
+	root.classList.add('is-ready');
+	// He says hello once the page has settled, then, if nobody has touched anything, how to see the work.
+	let touched = false;
+	for (const type of ['wheel', 'pointerdown', 'keydown']) addEventListener(type, () => (touched = true), { once: true, passive: true });
+	window.setTimeout(() => {
+		if (launch.phase !== 'ground' || talkUntil) return;
+		line = 0;
+		launch.actor.greet(3);
+		say(LINES[0]);
+	}, reduced ? 400 : 1300);
+	window.setTimeout(() => {
+		if (touched || launch.phase !== 'ground' || talkUntil) return;
+		line = 2;
+		say(LINES[2]);
+	}, reduced ? 3400 : 4600);
 	last = performance.now();
 	raf = requestAnimationFrame(frame);
 }

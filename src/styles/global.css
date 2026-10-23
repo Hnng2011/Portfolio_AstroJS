@@ -10,6 +10,9 @@
 	--color-dim: #675f53;
 	--color-amber: #f2a541;
 	--color-amber-deep: #8a5512;
+	--color-teal: #5fb3a3;
+	--color-blue: #7aa6d9;
+	--color-coral: #ef8f6f;
 	--color-line: rgb(23 19 15 / 0.16);
 	--color-line-strong: rgb(23 19 15 / 0.4);
 
@@ -18,7 +21,7 @@
 	--text-body: 1rem;
 	--text-lead: 1.1875rem;
 	--text-title: clamp(2.25rem, 4.6vw, 4.25rem);
-	--text-name: clamp(2.25rem, 3.4vw, 3.25rem);
+	--text-name: clamp(2.75rem, 4.6vw, 4.5rem);
 
 	--ease-out: cubic-bezier(0.16, 1, 0.3, 1);
 	--ease-in: cubic-bezier(0.7, 0, 0.84, 0);
@@ -33,6 +36,98 @@
 	font-size: 100%;
 	font-variant-numeric: tabular-nums;
 	font-variation-settings: 'INFM' 60;
+	--ink: url(#doodle-frame-1);
+	--ink-boil-inside: ink-steps 0.375s steps(1) infinite;
+	--ink-boil: ink-frames 0.375s steps(1) infinite;
+	--ink-flip: ink-flip 0.25s steps(1) infinite;
+}
+
+/*
+ * Inked lines boil like the character's, stepping through the layout's three still frames of his ink
+ * (doodle-frame-1..3) eight times a second. An animated filter would re-filter its drawing every frame.
+ * Three ways, cheapest first:
+ *
+ * - Copies taking turns: ink a drawing two or three times with still frames and step which copy shows
+ *   (opacity, on the compositor), as the pills, the meadow and the cards do. No main-thread work.
+ * - `--ink-boil-inside` on an element, `filter: var(--ink)` on drawings inside it or on its own
+ *   ::before/::after. Only the frame number is animated and a style query swaps the still filter, so
+ *   nothing gets a layer; each driving element costs a little main-thread time every frame.
+ * - `filter: url(#doodle-frame-1)` with `animation: var(--ink-boil)` boils an element by swapping its
+ *   own filter. It gives the element a layer whose filter the compositor reapplies every frame, so keep
+ *   it for the odd piece of lettering.
+ *
+ * Touch screens and reduced motion keep the first frame, still wobbly.
+ */
+@property --ink-frame {
+	syntax: '<integer>';
+	inherits: true;
+	initial-value: 1;
+}
+
+@keyframes ink-steps {
+	0% {
+		--ink-frame: 1;
+	}
+	33.4% {
+		--ink-frame: 2;
+	}
+	66.7% {
+		--ink-frame: 3;
+	}
+}
+
+@container style(--ink-frame: 2) {
+	*,
+	::before,
+	::after {
+		--ink: url(#doodle-frame-2);
+	}
+}
+
+@container style(--ink-frame: 3) {
+	*,
+	::before,
+	::after {
+		--ink: url(#doodle-frame-3);
+	}
+}
+
+@keyframes ink-frames {
+	0% {
+		filter: url(#doodle-frame-1);
+	}
+	33.4% {
+		filter: url(#doodle-frame-2);
+	}
+	66.7% {
+		filter: url(#doodle-frame-3);
+	}
+}
+
+/* Two inked copies taking turns: give the second `opacity: 0` and `animation-delay: -0.125s`. */
+@keyframes ink-flip {
+	0% {
+		opacity: 1;
+	}
+	50%,
+	100% {
+		opacity: 0;
+	}
+}
+
+@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+	:root {
+		--ink-boil-inside: none;
+		--ink-boil: none;
+		--ink-flip: none;
+	}
+}
+
+/* How far a pill's hover wash has spread from the pointer, so it can be drawn and boiled with the paper. */
+@property --pill-fill {
+	syntax: '<number>';
+	inherits: false;
+	initial-value: 0;
 }
 
 .page-stage,
@@ -94,6 +189,7 @@ a {
 	text-transform: uppercase;
 }
 
+/* Display lettering is the one place text itself boils, like hand lettering; small text stays sharp. */
 @utility t-title {
 	font-size: var(--text-title);
 	font-weight: 820;
@@ -101,6 +197,8 @@ a {
 	line-height: 0.92;
 	text-transform: uppercase;
 	text-wrap: balance;
+	filter: var(--ink);
+	animation: var(--ink-boil);
 }
 
 @utility t-name {
@@ -109,6 +207,8 @@ a {
 	letter-spacing: -0.01em;
 	line-height: 1;
 	font-variation-settings: 'INFM' 100;
+	filter: var(--ink);
+	animation: var(--ink-boil);
 }
 
 @utility t-sheet {
@@ -118,6 +218,8 @@ a {
 	line-height: 1;
 	text-wrap: balance;
 	font-variation-settings: 'INFM' 100;
+	filter: var(--ink);
+	animation: var(--ink-boil);
 }
 
 @utility pill {
@@ -126,25 +228,24 @@ a {
 	white-space: nowrap;
 	gap: 0.6em;
 	border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
-	border: 2px solid var(--color-ink);
+	/* The line and the paper are drawn by ::after, so they can boil while the label stays sharp. */
+	border: 2px solid transparent;
 	padding: 0.8em 1.3em;
-	background: #fff;
+	background: #fff padding-box;
+	--pill-wash: var(--color-ink);
 	font-weight: 700;
 	rotate: var(--tilt, -0.6deg);
 	transition:
-		border-color 0.4s var(--ease-out),
 		background-color 0.4s var(--ease-out),
 		color 0.4s var(--ease-out),
 		rotate 0.3s var(--ease-out),
 		translate 0.3s var(--ease-out);
-
 }
 
 @utility pill-solid {
-	background: var(--color-ink);
-	border-color: var(--color-ink);
+	background-color: var(--color-ink);
 	color: var(--color-paper);
-
+	--pill-wash: var(--color-amber);
 }
 
 .cursor {
@@ -191,10 +292,10 @@ a {
 	position: absolute;
 	top: 22px;
 	left: 20px;
+	isolation: isolate;
 	padding: 0.3rem 0.75rem 0.35rem;
-	border: 2px solid var(--color-ink);
+	border: 2px solid transparent;
 	border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
-	background: var(--color-amber);
 	color: var(--color-ink);
 	font-size: var(--text-label);
 	font-weight: 700;
@@ -212,6 +313,21 @@ a {
 	transform: rotate(-3deg);
 }
 
+.cursor-tag::before {
+	content: '';
+	position: absolute;
+	inset: -2px;
+	z-index: -1;
+	border: 2px solid var(--color-ink);
+	border-radius: inherit;
+	background: var(--color-amber);
+	filter: var(--ink);
+}
+
+.cursor.is-label .cursor-tag {
+	animation: var(--ink-boil-inside);
+}
+
 .pill,
 .close {
 	position: relative;
@@ -222,32 +338,62 @@ a {
 	--tilt: 0.7deg;
 }
 
+/*
+ * A pill's inked line, its paper and the hover wash sit under the label, so the label stays sharp.
+ * They are inked twice, with two still frames of the character's ink, the second a hair different
+ * like a second pass of the pen, and the two take turns on the compositor four times a second each:
+ * the boil costs no main-thread work and nothing is re-filtered. The paper takes the pill's own
+ * background colour, so pages can still colour a pressed pill.
+ */
 .pill::before,
+.pill::after {
+	content: '';
+	position: absolute;
+	inset: -2px;
+	z-index: -1;
+	border: 2px solid var(--color-ink);
+	border-radius: inherit;
+	background-color: inherit;
+	background-image: radial-gradient(
+		circle at var(--mx, 50%) var(--my, 50%),
+		var(--pill-wash) calc(var(--pill-fill) * 100%),
+		transparent 0
+	);
+	background-origin: border-box;
+	filter: url(#doodle-frame-1);
+	animation: var(--ink-flip);
+	transition: --pill-fill 0.6s var(--ease-out);
+	pointer-events: none;
+}
+
+.pill::before {
+	border-radius: 1.35em 1.8em 1.25em 1.7em / 1.8em 1.25em 1.7em 1.35em;
+	rotate: 0.5deg;
+	opacity: 0;
+	filter: url(#doodle-frame-2);
+	animation-delay: -0.125s;
+}
+
 .close::before {
 	content: '';
 	position: absolute;
 	inset: 0;
 	z-index: -1;
 	border-radius: inherit;
-	background: var(--color-ink);
+	background: var(--color-amber);
 	clip-path: circle(0% at var(--mx, 50%) var(--my, 50%));
 	transition: clip-path 0.6s var(--ease-out);
 }
 
-.pill::after,
 .close::after {
 	content: '';
 	position: absolute;
 	inset: -4px -3px -2px -4px;
 	border: 1.5px solid var(--color-ink);
-	border-radius: 1.35em 1.8em 1.25em 1.7em / 1.8em 1.25em 1.7em 1.35em;
+	border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%;
 	opacity: 0.45;
 	rotate: 1.2deg;
 	pointer-events: none;
-}
-
-.close::after {
-	border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%;
 }
 
 :is(.pill, .close):hover,
@@ -256,20 +402,26 @@ a {
 	translate: 0 -2px;
 }
 
-:is(.pill, .close):hover::before,
-:is(.pill, .close):focus-visible::before {
+.pill:hover::before,
+.pill:hover::after,
+.pill:focus-visible::before,
+.pill:focus-visible::after {
+	--pill-fill: 1.5;
+}
+
+.close:hover::before,
+.close:focus-visible::before {
 	clip-path: circle(150% at var(--mx, 50%) var(--my, 50%));
 }
 
-:is(.pill, .close):hover,
-:is(.pill, .close):focus-visible {
-	border-color: var(--color-ink);
+.pill:hover,
+.pill:focus-visible {
 	color: var(--color-paper);
 }
 
-.pill-solid::before,
-.close::before {
-	background: var(--color-amber);
+.close:hover,
+.close:focus-visible {
+	border-color: var(--color-ink);
 }
 
 .pill-solid:hover,
