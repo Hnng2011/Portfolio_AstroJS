@@ -2,13 +2,12 @@
 import { profile } from '../data/portfolio';
 
 interface Props {
-	current: 'home' | 'info' | 'contact';
+	current: 'info' | 'contact';
 	brand?: boolean;
 }
 
 const { current, brand = true } = Astro.props;
 const links = [
-	{ id: 'home', label: 'Home', href: '/' },
 	{ id: 'info', label: 'Info', href: '/info' },
 	{ id: 'contact', label: 'Contact', href: '/contact' },
 ];
@@ -19,7 +18,6 @@ const links = [
 		brand && (
 			<a href="/" data-ink class="brand">
 				<span class="t-name">{profile.name}</span>
-				<span class="brand-role">{profile.role}</span>
 			</a>
 		)
 	}
@@ -55,13 +53,7 @@ const links = [
 	}
 
 	.brand {
-		display: grid;
-		gap: 0.5rem;
 		text-decoration: none;
-	}
-
-	.brand-role {
-		font-size: var(--text-small);
 	}
 
 	nav {

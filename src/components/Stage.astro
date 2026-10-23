@@ -2,23 +2,66 @@
 import { archive, contactLinks, profile, projects } from '../data/portfolio';
 import DoodleIcon from './DoodleIcon.astro';
 import Cursor from './Cursor.astro';
-import Me from './Me.astro';
+import Hung from './Hung.astro';
 import Meadow from './Meadow.astro';
+import Rocket from './Rocket.astro';
 import Sketch from './Sketch.astro';
 
 const period = (year: string) => year.replace(' - ', ' – ');
+
+// Smoke puffs: unit circles drawn by a wobbling hand, scaled up as they billow.
+let seed = 5;
+const rnd = () => {
+	seed = (seed * 9301 + 49297) % 233280;
+	return seed / 233280;
+};
+const puffs = Array.from({ length: 26 }, () => {
+	const n = 9;
+	const pts = Array.from({ length: n }, (_, k) => {
+		const a = (k / n) * Math.PI * 2;
+		const r = 0.9 + rnd() * 0.2;
+		return [Math.cos(a) * r, Math.sin(a) * r];
+	});
+	const mid = (a: number[], b: number[]) => [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+	const f = (v: number) => v.toFixed(2);
+	let d = `M${mid(pts[n - 1], pts[0]).map(f).join(' ')}`;
+	for (let k = 0; k < n; k++) {
+		const m = mid(pts[k], pts[(k + 1) % n]);
+		d += `Q${f(pts[k][0] * 1.12)} ${f(pts[k][1] * 1.12)} ${f(m[0])} ${f(m[1])}`;
+	}
+	return `${d}Z`;
+});
 ---
 
 <main id="stage" class="stage" data-stage>
 	<Meadow />
-	<div class="me-wrap me-wrap-back" data-me="back" aria-hidden="true">
-		<Me layer="back" />
+	<div class="pad" data-pad aria-hidden="true">
+		<svg viewBox="-200 -20 400 40" fill="none" stroke="#17130f" stroke-width="3" stroke-linejoin="round">
+			<path d="M-176 -6H176L190 6H-190Z" fill="#d9d1c3" />
+			<path d="M-190 6H190V13H-190Z" fill="#bdb3a4" />
+			<path d="M-150 0h22M-96 0h22M74 0h22M128 0h22" stroke-width="2.2" opacity="0.5" />
+		</svg>
 	</div>
 	<canvas class="layer solar" data-solar aria-hidden="true"></canvas>
-	<div class="me-wrap me-wrap-front" data-me="front">
-		<Me layer="front" />
-		<button type="button" class="me-cube" data-cube aria-label="Open my work"></button>
-		<button type="button" class="me-talk" data-talk aria-label="Say hi to Phi Hung"></button>
+	<button type="button" class="rocket" data-rocket aria-label="Fly to my work">
+		<Rocket />
+	</button>
+	<svg class="layer smoke" data-smoke aria-hidden="true" fill="#fbf7ef" stroke="#17130f" stroke-linejoin="round">
+		{
+			puffs.map((d) => (
+				<g data-puff style="opacity: 0">
+					<path d={d} stroke-width="2.4" vector-effect="non-scaling-stroke" />
+					<path d="M0.2 0.62A0.68 0.68 0 0 0 0.66 0.05" fill="none" stroke-width="1.8" opacity="0.5" vector-effect="non-scaling-stroke" />
+				</g>
+			))
+		}
+	</svg>
+	<button type="button" class="hung" data-hung-button aria-label="Say hi to Phi Hung">
+		<svg class="hung-art" viewBox="-150 -500 300 520" aria-hidden="true">
+			<Hung />
+		</svg>
+	</button>
+	<div class="say" data-say>
 		<p class="me-bubble" data-bubble role="status" aria-live="polite"></p>
 	</div>
 	<div class="layer labels" aria-hidden="true">
@@ -42,6 +85,28 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			projects.map((p, i) => (
 				<button type="button" class="holo-screen" data-holo-screen={i} hidden>
 					<span class="holo-frame">
+						<svg class="holo-ink" viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden="true">
+							{[
+								[
+									'M0.6 1.2Q52 -0.6 99.36 0.3Q98.6 50 99.21 99.46Q48 100.4 0.39 99.13Q1.3 52 0.6 1.2Z',
+									'M-0.56 1.34Q52 -0.6 100.34 0.41M99.34 -0.64Q98.6 50 99.24 100.69M100.72 99.28Q48 100.4 -0.59 99.09M0.47 101.51Q1.3 52 0.71 0.4',
+								],
+								[
+									'M0.69 1.09Q47 2.1 99.57 0.87Q100.4 46 99.26 99.59Q55 98.5 0.79 99.62Q-0.2 50 0.69 1.09Z',
+									'M-0.5 0.96Q47 2.1 101.09 0.96M99.65 -1.69Q100.4 46 99.22 100.38M100.23 99.72Q55 98.5 0.33 99.43M0.93 100.64Q-0.2 50 0.74 0',
+								],
+								[
+									'M0.48 0.4Q55 -0.5 99.56 0.66Q100.5 54 99.74 98.8Q45 98.2 0.85 99.57Q1.4 47 0.48 0.4Z',
+									'M-0.64 0.23Q55 -0.5 100.59 0.72M99.49 -1.18Q100.5 54 99.81 99.8M100.53 98.96Q45 98.2 0.43 99.71M0.8 101.36Q1.4 47 0.35 -0.74',
+								],
+							].map(([mat, line]) => (
+								<g>
+									<path class="holo-drop" d={mat} transform="translate(1.1 2)" />
+									<path class="holo-mat" d={mat} />
+									<path class="holo-line" d={line} />
+								</g>
+							))}
+						</svg>
 						<Sketch kind={i} title={p.title} image={p.image} />
 					</span>
 					<span class="holo-caption">
@@ -59,7 +124,7 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
 			<path d="M13 8H3m4-4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"></path>
 		</svg>
-		Me
+		Fly home
 	</button>
 	<button type="button" class="pill t-label holo-back" data-holo-back aria-hidden="true" tabindex="-1">
 		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
@@ -71,9 +136,36 @@ const period = (year: string) => year.replace(' - ', ' – ');
 	<header class="corner corner-top" data-hud style="--d: 0s">
 		<h1 class="t-name">{profile.name}</h1>
 		<ul class="role">
-			<li>{profile.role}</li>
-			<li>{profile.stack}</li>
-			<li>{profile.location}</li>
+			<li>
+				<span class="role-line">
+					{profile.role}
+					<svg class="role-mark" style="--mark: var(--color-amber); --lean: -0.7deg; --len: calc(100% + 0.35em); --at: 0.7s" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+						<path d="M2 6.5c26-3.5 55-4.6 88-2.6s68 3.6 108-1.4" pathLength="1"></path>
+					</svg>
+				</span>
+			</li>
+			<li>
+				<span class="role-line">
+					{profile.stack}
+					<svg class="role-mark" style="--mark: var(--color-teal); --lean: 0.6deg; --len: 86%; --at: 0.95s" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+						<path d="M3 4.2c22 2.4 47 3 74 1.6s57-3.6 86-2.4c12.5.5 22 1.9 34 3.4" pathLength="1"></path>
+					</svg>
+				</span>
+			</li>
+			<li>
+				<span class="role-line">
+					{profile.location}
+					<svg class="role-mark" style="--mark: var(--color-coral); --lean: -1.8deg; --len: calc(100% + 0.5em); --at: 1.2s" viewBox="0 0 200 10" preserveAspectRatio="none" aria-hidden="true">
+						<path d="M2 7.2c30-4.4 66-5.6 104-3.6 34 1.8 62 1 92-1.6" pathLength="1"></path>
+					</svg>
+				</span>
+				<svg class="flag" viewBox="0 0 34 26" aria-hidden="true">
+					<path class="flag-pole" d="M3.6 2.4c-.3 7.6-.1 15.4.4 22.4"></path>
+					<circle class="flag-pole" cx="3.6" cy="2.4" r="1.3"></circle>
+					<path class="flag-cloth" d="M4.4 3.6c4.6-1.6 9.6 1 14.6-.2s8.8-1.8 12.2-.6c.4 4.8.2 9.6-.2 14.6-3.4-1.3-7.2.1-12 .5s-9.6-1.3-14.4.2z"></path>
+					<path class="flag-star" d="M17.6 5.4l1.12 3.5h3.66l-2.95 2.13 1.12 3.47-2.95-2.14-2.94 2.14 1.12-3.47-2.95-2.13h3.65z"></path>
+				</svg>
+			</li>
 		</ul>
 	</header>
 
@@ -170,285 +262,138 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		z-index: 3;
 	}
 
-	.me-wrap {
+	.pad,
+	.rocket,
+	.hung,
+	.say {
 		position: absolute;
-		left: 50%;
-		bottom: 3vh;
-		width: min(92vw, calc(86vh * 400 / 520));
-		aspect-ratio: 400 / 520;
-		margin-left: calc(min(92vw, calc(86vh * 400 / 520)) / -2);
-		will-change: transform, opacity;
+		top: 0;
+		left: 0;
+		will-change: transform;
 	}
 
-	.me-wrap-back {
-		z-index: 2;
+	.pad {
+		z-index: 1;
 	}
 
-	.me-wrap-front {
-		z-index: 4;
-		pointer-events: none;
-	}
-
-	.me-wrap :global(.me-art) {
+	.pad svg,
+	.rocket :global(.rocket-art),
+	.hung-art {
 		display: block;
 		width: 100%;
 		height: 100%;
 		overflow: visible;
-		filter: url(#doodle-boil);
 	}
 
-	.me-wrap :global(.me-head) {
-		transform-box: fill-box;
-		transform-origin: 50% 100%;
-		animation: me-bob 3.2s ease-in-out infinite alternate;
+	/*
+	 * The buttons and their svgs are as big as the drawings' boxes; only the inked parts take the pointer.
+	 * A rocket veiled by a planet passing behind it lets the pointer through to the planet.
+	 */
+	.rocket,
+	.hung,
+	.rocket :global(.rocket-art),
+	.hung-art,
+	.rocket:global(.is-veiled) :global(.rocket-art > *) {
+		pointer-events: none;
 	}
 
-	.me-wrap :global(.me-happy) {
-		opacity: 0;
-		transition: opacity 0.2s var(--ease-out);
+	.rocket :global(.rocket-art > *),
+	.hung-art > :global(*) {
+		pointer-events: visiblePainted;
 	}
 
-	:global(.is-zooming) .me-wrap :global(.me-happy) {
+	.rocket :global(.rocket-art),
+	.hung-art {
+		filter: url(#doodle-rough) brightness(var(--lit, 1));
+	}
+
+	.rocket {
+		z-index: 4;
+	}
+
+	.smoke {
+		z-index: 5;
+		pointer-events: none;
+		overflow: visible;
+	}
+
+	.hung {
+		z-index: 6;
+		transform-origin: 0 0;
+	}
+
+	/* Focus is a dashed ring round the porthole or his head, not a box round the whole drawing. */
+	.rocket:focus-visible,
+	.hung:focus-visible {
+		outline: none;
+	}
+
+	.rocket:focus-visible :global(.focus-ring),
+	.hung:focus-visible :global(.focus-ring) {
 		opacity: 1;
-	}
-
-	:global(.is-zooming) .me-wrap :global(.me-eyes) {
-		opacity: 0;
-	}
-
-	.me-wrap :global(.me-spark) {
-		transform-box: fill-box;
-		transform-origin: center;
-		scale: clamp(0, calc(var(--pop, 0) * 1.6 - var(--i) * 0.12), 1);
-		rotate: calc(var(--pop, 0) * 120deg);
-	}
-
-	.me-wrap :global(.me-leg) {
-		transform-box: fill-box;
-		transform-origin: 50% 0;
-	}
-
-	.me-wrap:global(.is-walking) :global(.me-leg-l) {
-		animation: me-step 0.42s ease-in-out infinite alternate;
-	}
-
-	.me-wrap:global(.is-walking) :global(.me-leg-r) {
-		animation: me-step 0.42s ease-in-out -0.42s infinite alternate;
-	}
-
-	.me-wrap :global(.me-eyes) {
-		transition: translate 0.35s var(--ease-out);
-	}
-
-	.me-wrap :global(.pose) {
-		transform-box: view-box;
-		transform-origin: 200px 300px;
-		transition:
-			scale 0.16s var(--ease-out) 0.12s,
-			opacity 0s linear 0.12s;
-	}
-
-	.me-wrap :global(.pose-side),
-	.me-wrap:global(.is-side) :global(.pose-front) {
-		opacity: 0;
-		scale: 0.02 1;
-		transition:
-			scale 0.12s var(--ease-in),
-			opacity 0s linear 0.12s;
-	}
-
-	.me-wrap:global(.is-side) :global(.pose-side) {
-		opacity: 1;
-		scale: 1 1;
-		transition:
-			scale 0.16s var(--ease-out) 0.12s,
-			opacity 0s linear 0.12s;
-	}
-
-	.me-wrap :global(.pose-mirror) {
-		transform-box: view-box;
-		transform-origin: 200px 0;
-	}
-
-	.me-wrap:global(.face-left) :global(.pose-mirror),
-	.me-wrap:global(.face-left) :global(.cube-glare) {
-		scale: -1 1;
-	}
-
-	.me-wrap :global(.cube-glare) {
-		transform-box: view-box;
-		transform-origin: 200px 0;
-	}
-
-	.me-wrap :global(.cube-label) {
-		transform-box: view-box;
-		transform-origin: 290px 288px;
-		transition:
-			scale 0.12s var(--ease-in),
-			opacity 0s linear 0.12s;
-	}
-
-	.me-wrap:global(.is-side) :global(.cube-label) {
-		scale: 0.05 1;
-		opacity: 0;
-	}
-
-	.me-wrap:not(:global(.is-side)) :global(.cube-label) {
-		transition:
-			scale 0.16s var(--ease-out) 0.12s,
-			opacity 0s linear 0.12s;
-	}
-
-	.me-wrap :global(.side-leg) {
-		transform-box: view-box;
-		transform-origin: 92px 398px;
-		transition: rotate 0.3s var(--ease-out);
-	}
-
-	.me-wrap:global(.is-walking) :global(.side-leg-front) {
-		animation: side-stride 0.5s ease-in-out infinite alternate;
-	}
-
-	.me-wrap:global(.is-walking) :global(.side-leg-back) {
-		animation: side-stride 0.5s ease-in-out -0.5s infinite alternate;
-	}
-
-	@keyframes side-stride {
-		from {
-			rotate: -30deg;
-		}
-		to {
-			rotate: 30deg;
-		}
 	}
 
 	@media (pointer: coarse) {
-		.me-wrap :global(.me-art) {
-			filter: none;
+		.rocket :global(.rocket-art),
+		.hung-art {
+			filter: brightness(var(--lit, 1));
 		}
 	}
 
-	@keyframes me-step {
-		from {
-			translate: 0 0;
-			rotate: -5deg;
-		}
-		to {
-			translate: 0 -12px;
-			rotate: 5deg;
-		}
-	}
-
-	.me-wrap :global(.me-eyes) {
-		transform-box: fill-box;
-		transform-origin: center;
-		animation: me-blink 4.6s linear infinite;
-	}
-
-	@keyframes me-bob {
-		from {
-			transform: translateY(0) rotate(-1.2deg);
-		}
-		to {
-			transform: translateY(-4px) rotate(1.2deg);
-		}
-	}
-
-	@keyframes me-blink {
-		0%,
-		94%,
-		100% {
-			transform: scaleY(1);
-		}
-		96% {
-			transform: scaleY(0.1);
-		}
-	}
-
-	.me-cube {
-		position: absolute;
-		left: 26%;
-		top: 44%;
-		width: 54%;
-		height: 42%;
-		border-radius: 6px;
-		pointer-events: auto;
-	}
-
-	.me-talk {
-		position: absolute;
-		left: 27%;
-		top: 6%;
-		width: 46%;
-		height: 38%;
-		border-radius: 50%;
-		pointer-events: auto;
+	.say {
+		z-index: 8;
+		pointer-events: none;
 	}
 
 	.me-bubble {
 		position: absolute;
-		left: 72%;
-		top: 2%;
+		left: 0;
+		bottom: 0;
 		width: max-content;
 		max-width: min(17rem, 34vw);
+		isolation: isolate;
 		padding: 0.75rem 1rem 0.85rem;
-		border: 2.5px solid var(--color-ink);
-		border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
-		background: #fbf7ef;
+		border: 2.5px solid transparent;
 		color: var(--color-ink);
 		font-size: var(--text-body);
 		font-weight: 600;
 		line-height: 1.35;
 		transform-origin: 0% 100%;
-		scale: 0.4;
+		scale: 0.85;
 		opacity: 0;
 		pointer-events: none;
 		transition:
-			scale 0.25s var(--ease-in),
-			opacity 0.2s var(--ease-in);
+			scale 0.2s var(--ease-in),
+			opacity 0.16s var(--ease-in);
 	}
 
-	.me-bubble::after {
+	/*
+	 * The balloon and its tail are one inked shape under the words, so the line runs on round the tail
+	 * with no seam and boils as one. It is a nine-slice drawing: the corners and the tail keep their
+	 * size, the straight edges stretch with the words.
+	 */
+	.me-bubble::before {
 		content: '';
 		position: absolute;
-		left: 0.9rem;
-		bottom: -0.65rem;
-		width: 1.1rem;
-		height: 1.1rem;
-		background: #fbf7ef;
-		border-right: 2.5px solid var(--color-ink);
-		border-bottom: 2.5px solid var(--color-ink);
-		transform: skewY(28deg) rotate(30deg);
+		inset: -2.5px -2.5px -20.5px;
+		z-index: -1;
+		border-style: solid;
+		border-width: 22px 22px 40px 40px;
+		border-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='84' height='72'%3E%3Cpath d='M15 2.4L68 2.2Q81.6 2.4 81.8 15L81.6 40Q81.4 52.6 68 52.8L31 52.7C26 57 19 63.5 13.5 69.5C16.5 63 18 57.5 17.5 52.9Q2.4 52.8 2.3 40L2.2 15Q2.4 2.5 15 2.4Z' fill='%23fbf7ef' stroke='%2317130f' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E") 22 22 40 40 fill / 22px 22px 40px 40px stretch;
+		filter: var(--ink);
+	}
+
+	/* Only a bubble that is up boils. */
+	.me-bubble:global(.is-on) {
+		animation: var(--ink-boil-inside);
 	}
 
 	.me-bubble:global(.is-on) {
 		scale: 1;
 		opacity: 1;
 		transition:
-			scale 0.45s cubic-bezier(0.22, 1.4, 0.36, 1),
+			scale 0.4s var(--ease-out),
 			opacity 0.2s var(--ease-out);
-	}
-
-	.me-wrap :global(.me-mouth) {
-		transform-box: fill-box;
-		transform-origin: 50% 0;
-	}
-
-	.me-wrap:global(.is-talking) :global(.me-mouth) {
-		animation: me-talk 0.16s ease-in-out infinite alternate;
-	}
-
-	@keyframes me-talk {
-		from {
-			scale: 1 1;
-		}
-		to {
-			scale: 1.1 0.35;
-		}
-	}
-
-	.me-cube:focus-visible {
-		outline-offset: 8px;
 	}
 
 	.hud-row {
@@ -557,6 +502,11 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		width: 2.2rem;
 		height: 1.5rem;
 		overflow: visible;
+		filter: var(--ink);
+	}
+
+	.fling-hint:global(.is-on) {
+		animation: var(--ink-boil-inside);
 	}
 
 	.fling-hint path {
@@ -586,9 +536,15 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		z-index: 10;
 	}
 
+	/* The name, its underlines and the flag boil together, driven from the corner. */
 	.corner-top {
 		top: max(1.5rem, env(safe-area-inset-top));
 		left: clamp(1rem, 3vw, 2.5rem);
+		animation: var(--ink-boil-inside);
+	}
+
+	.corner-top :global(.t-name) {
+		animation: none;
 	}
 
 	.corner-bottom {
@@ -602,9 +558,10 @@ const period = (year: string) => year.replace(' - ', ' – ');
 	}
 
 	.role {
-		margin-top: 0.75rem;
+		margin-top: 0.9rem;
 		display: grid;
-		gap: 0.2rem;
+		justify-items: start;
+		gap: 0.55rem;
 		font-size: var(--text-small);
 		line-height: 1.45;
 		color: var(--color-ash);
@@ -612,6 +569,78 @@ const period = (year: string) => year.replace(' - ', ' – ');
 
 	.role li:first-child {
 		color: var(--color-ink);
+	}
+
+	.role li {
+		display: flex;
+		align-items: center;
+		gap: 0.4em;
+	}
+
+	.role-line {
+		position: relative;
+	}
+
+	/* Each line gets its own swipe of marker, drawn in one after another once the corner arrives. */
+	.role-mark {
+		position: absolute;
+		left: -0.2em;
+		bottom: -0.3em;
+		width: var(--len, 100%);
+		height: 0.45em;
+		overflow: visible;
+		rotate: var(--lean, 0deg);
+		pointer-events: none;
+		filter: var(--ink);
+	}
+
+	.role-mark path {
+		fill: none;
+		stroke: var(--mark, var(--color-amber));
+		stroke-width: 3;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+		stroke-dasharray: 1;
+		stroke-dashoffset: 0;
+		transition: stroke-dashoffset 0.7s var(--ease-out) var(--at, 0.7s);
+	}
+
+	:global(.js:not(.is-ready)) .role-mark path {
+		stroke-dashoffset: 1;
+	}
+
+	/* A little Vietnamese flag on a stick, inked and boiling like everything else he draws. */
+	.flag {
+		flex: none;
+		width: 1.55em;
+		height: 1.2em;
+		overflow: visible;
+		translate: 0 -0.1em;
+		rotate: 4deg;
+		filter: var(--ink);
+	}
+
+	.flag-pole {
+		fill: none;
+		stroke: var(--color-ink);
+		stroke-width: 1.7;
+		stroke-linecap: round;
+	}
+
+	circle.flag-pole {
+		fill: var(--color-ink);
+		stroke: none;
+	}
+
+	.flag-cloth {
+		fill: #da251d;
+		stroke: var(--color-ink);
+		stroke-width: 1.6;
+		stroke-linejoin: round;
+	}
+
+	.flag-star {
+		fill: #ffcd00;
 	}
 
 	.picks button {
@@ -627,6 +656,16 @@ const period = (year: string) => year.replace(' - ', ' – ');
 	.picks button:focus-visible {
 		opacity: 1;
 		pointer-events: auto;
+	}
+
+	/* Pills that are out of sight don't boil. */
+	.picks button:not(:focus-visible)::before,
+	.picks button:not(:focus-visible)::after,
+	.back-me[aria-hidden='true']::before,
+	.back-me[aria-hidden='true']::after,
+	.holo-back[aria-hidden='true']::before,
+	.holo-back[aria-hidden='true']::after {
+		animation: none;
 	}
 
 	.splat {
@@ -673,19 +712,113 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			transform 0.6s var(--ease-out);
 	}
 
+	/* A print taped onto the ink, tilted like the one in the case it flies into. */
 	.holo-frame {
+		position: relative;
+		isolation: isolate;
 		display: block;
 		width: 100%;
 		aspect-ratio: 16 / 10;
-		border: 2px solid var(--color-ink);
-		background: rgb(240 233 220 / 0.55);
-		overflow: hidden;
-		transition: transform 0.4s var(--ease-out);
+		/* Room below for the mat and its shadow. */
+		margin-bottom: 0.7rem;
+		rotate: -1.2deg;
+		transition:
+			rotate 0.4s var(--ease-out),
+			scale 0.4s var(--ease-out);
+	}
+
+	.holo-frame::before,
+	.holo-frame::after {
+		content: '';
+		position: absolute;
+		z-index: 1;
+		top: -0.6rem;
+		width: clamp(2.6rem, 19%, 4.4rem);
+		height: 1.2rem;
+		background: var(--tape);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	.holo-frame::before {
+		left: -1.1rem;
+		rotate: -32deg;
+	}
+
+	.holo-frame::after {
+		right: -1.1rem;
+		rotate: 30deg;
 	}
 
 	.holo-screen:hover .holo-frame,
 	.holo-screen:focus-visible .holo-frame {
-		transform: rotate(-1.2deg) scale(1.02);
+		rotate: 0.6deg;
+		scale: 1.02;
+	}
+
+	/* The paper mat, its inked edge and a hard ink shadow, drawn three ways and flicked between like boiling lines. */
+	.holo-ink {
+		position: absolute;
+		top: -4%;
+		left: -2.5%;
+		z-index: -1;
+		width: 105%;
+		height: 108%;
+		overflow: visible;
+		pointer-events: none;
+	}
+
+	.holo-ink g {
+		opacity: 0;
+		animation: holo-boil 0.375s step-end infinite paused;
+	}
+
+	.holo-ink g:nth-child(1) {
+		opacity: 1;
+	}
+
+	.holo-ink g:nth-child(2) {
+		animation-delay: -0.25s;
+	}
+
+	.holo-ink g:nth-child(3) {
+		animation-delay: -0.125s;
+	}
+
+	/* The lines only boil while the preview is up. */
+	.holo:global(.is-painted) .holo-ink g {
+		animation-play-state: running;
+	}
+
+	@keyframes holo-boil {
+		0% {
+			opacity: 1;
+		}
+		33.33% {
+			opacity: 0;
+		}
+	}
+
+	.holo-drop {
+		fill: var(--color-ink);
+	}
+
+	.holo-mat {
+		fill: #fbf7ef;
+	}
+
+	.holo-line {
+		fill: none;
+		stroke: var(--color-ink);
+		stroke-width: 2.4;
+		stroke-linecap: round;
+		vector-effect: non-scaling-stroke;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.holo-ink g {
+			animation: none;
+		}
 	}
 
 	.holo-caption {
@@ -807,23 +940,12 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			font-size: 1.375rem;
 		}
 
+		/* He stands to the left on a phone, so the balloon hangs right from his head and stays on screen. */
 		.me-bubble {
-			left: 50%;
-			top: -15%;
-			translate: -50% 0;
-			max-width: 78vw;
-			transform-origin: 50% 100%;
-			text-align: center;
-		}
-
-		.me-bubble::after {
-			left: calc(50% - 0.55rem);
-		}
-
-		.me-wrap {
-			bottom: 11vh;
-			width: min(100vw, calc(70vh * 400 / 520));
-			margin-left: calc(min(100vw, calc(70vh * 400 / 520)) / -2);
+			left: -0.7rem;
+			bottom: 0.5rem;
+			max-width: 70vw;
+			transform-origin: 0.7rem 100%;
 		}
 
 		.back-me {

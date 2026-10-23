@@ -9,6 +9,8 @@ import { experiences, profile, skills } from '../data/portfolio';
 
 const stack = [...skills.primary, ...skills.secondary, ...skills.tertiary];
 const period = (p: string) => p.replace(' - ', ' – ');
+// Each card's paper is inked three times, one per still frame of the boil (doodle-frame-1..3 in the layout).
+const frames = [0, 1, 2];
 ---
 
 <Layout title="Info — Phi Hung" page="info">
@@ -16,6 +18,7 @@ const period = (p: string) => p.replace(' - ', ' – ');
 		<SiteNav current="info" brand={false} />
 		<div class="info">
 			<section class="about" aria-labelledby="about-title">
+				{frames.map((n) => <span class="boil" style={`--f: ${n}; --frame: url(#doodle-frame-${n + 1})`} aria-hidden="true" />)}
 				<h1 class="t-sheet" id="about-title">About me</h1>
 				<p class="lead">{profile.tagline}</p>
 				<p class="body">{profile.education}. {profile.language}.</p>
@@ -33,7 +36,7 @@ const period = (p: string) => p.replace(' - ', ' – ');
 			</section>
 
 			<div class="hero">
-				<p class="bubble">Hi, nice to meet you!</p>
+				<p class="bubble"><span class="bubble-ink" aria-hidden="true"></span>Hi, nice to meet you!</p>
 				<div class="wave">
 					<MeWave />
 				</div>
@@ -41,6 +44,7 @@ const period = (p: string) => p.replace(' - ', ' – ');
 			</div>
 
 			<section class="work" aria-labelledby="work-title">
+				{frames.map((n) => <span class="boil" style={`--f: ${n}; --frame: url(#doodle-frame-${n + 1})`} aria-hidden="true" />)}
 				<h2 id="work-title">Experience</h2>
 				<ol class="roles">
 					{
@@ -95,9 +99,8 @@ const period = (p: string) => p.replace(' - ', ' – ');
 
 	.about {
 		padding: 1.5rem 1.6rem 1.75rem;
-		border: 2.5px solid var(--color-ink);
+		border: 2.5px solid transparent;
 		border-radius: 8px 12px 6px 14px / 14px 8px 12px 6px;
-		background: #fbf7ef;
 		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
 		rotate: -0.8deg;
 	}
@@ -110,15 +113,16 @@ const period = (p: string) => p.replace(' - ', ' – ');
 		width: 4.5rem;
 		height: 1.5rem;
 		rotate: -8deg;
-		background: rgb(122 166 217 / 0.75);
+		background: var(--tape-blue);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
 	}
 
 	.work {
 		justify-self: end;
 		padding: 1.5rem 1.6rem 1.75rem;
-		border: 2.5px solid var(--color-ink);
+		border: 2.5px solid transparent;
 		border-radius: 6px 14px 8px 12px / 12px 6px 14px 8px;
-		background: #fbf7ef;
 		box-shadow: 0 18px 40px -24px rgb(23 19 15 / 0.45);
 		rotate: 1deg;
 	}
@@ -132,7 +136,76 @@ const period = (p: string) => p.replace(' - ', ' – ');
 		height: 1.5rem;
 		translate: -50% 0;
 		rotate: -4deg;
-		background: rgb(242 165 65 / 0.8);
+		background: var(--tape);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	.about,
+	.work {
+		--line: 2.5px;
+	}
+
+	/* The paper and its inked edge sit on layers under the text, so the text stays crisp. Small pieces
+	   boil with the site's ink (--ink-boil); a card is too big to re-filter eight times a second, so it
+	   is three copies, each filtered once with a still frame, and only which copy shows changes (an
+	   opacity step on the compositor, as in the meadow). */
+	.chips li::before,
+	.boil::before {
+		content: '';
+		position: absolute;
+		inset: calc(var(--line) * -1);
+		z-index: -1;
+		border: var(--line) solid var(--color-ink);
+		border-radius: inherit;
+		background: var(--paper, #fbf7ef);
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		animation-delay: var(--beat, 0s);
+		pointer-events: none;
+	}
+
+	.boil {
+		position: absolute;
+		inset: calc(var(--line) * -1);
+		z-index: -1;
+		border-radius: inherit;
+		pointer-events: none;
+		will-change: opacity;
+		animation: card-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.boil + .boil {
+		opacity: 0;
+	}
+
+	.boil::before {
+		inset: 0;
+		filter: var(--frame);
+		animation: none;
+	}
+
+	/* A hair over a third, so a step never falls between two copies and shows no paper. */
+	@keyframes card-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	/* Touch screens and reduced motion keep the first inking, still wobbly. */
+	@media (pointer: coarse), (prefers-reduced-motion: reduce) {
+		.boil {
+			animation: none;
+			will-change: auto;
+		}
+
+		.boil + .boil {
+			display: none;
+		}
 	}
 
 	h2 {
@@ -168,14 +241,37 @@ const period = (p: string) => p.replace(' - ', ' – ');
 	}
 
 	.chips li {
+		--line: 1.5px;
+		--paper: #fff;
+		position: relative;
+		z-index: 0;
 		display: inline-flex;
 		align-items: center;
 		gap: 0.4rem;
 		padding: 0.3rem 0.7rem;
-		border: 1.5px solid var(--color-ink);
+		border: 1.5px solid transparent;
 		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
-		background: #fff;
 		font-size: var(--text-small);
+		rotate: var(--tilt, -0.6deg);
+	}
+
+	/* Each chip is drawn a little differently and boils on its own beat, so the row looks hand-made. */
+	.chips li:nth-child(3n + 2) {
+		--tilt: 0.7deg;
+		--beat: -0.125s;
+	}
+
+	.chips li:nth-child(3n) {
+		--tilt: -0.2deg;
+		--beat: -0.25s;
+	}
+
+	.chips li:nth-child(2n) {
+		border-radius: 1.35em 1.8em 1.25em 1.7em / 1.8em 1.25em 1.7em 1.35em;
+	}
+
+	.chips li:nth-child(5n + 3) {
+		border-radius: 1.8em 1.2em 1.6em 1.45em / 1.25em 1.75em 1.4em 1.8em;
 	}
 
 	.roles {
@@ -216,8 +312,8 @@ const period = (p: string) => p.replace(' - ', ' – ');
 	.wave {
 		position: relative;
 		z-index: 9;
-		width: min(100%, calc(62vh * 400 / 520));
-		aspect-ratio: 400 / 520;
+		width: min(100%, calc(62vh * 300 / 520));
+		aspect-ratio: 300 / 520;
 		margin-bottom: 3vh;
 	}
 
@@ -226,7 +322,7 @@ const period = (p: string) => p.replace(' - ', ' – ');
 		width: 100%;
 		height: 100%;
 		overflow: visible;
-		filter: url(#doodle-boil);
+		filter: url(#doodle-rough);
 	}
 
 	@media (pointer: coarse) {
@@ -240,29 +336,47 @@ const period = (p: string) => p.replace(' - ', ' – ');
 		z-index: 10;
 		margin-bottom: -1rem;
 		padding: 0.75rem 1.1rem 0.85rem;
-		border: 2.5px solid var(--color-ink);
+		border: 2.5px solid transparent;
 		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
-		background: #fbf7ef;
 		font-weight: 700;
-		animation: bubble-pop 0.6s cubic-bezier(0.22, 1.4, 0.36, 1) 0.6s backwards;
+		animation: bubble-pop 0.45s var(--ease-out) 0.6s backwards;
 	}
 
-	.bubble::after {
+	/* The balloon and its tail are one drawing under the words, so they boil as one line with no seam:
+	   the tail's paper covers the balloon's edge between its two strokes. */
+	.bubble-ink {
+		position: absolute;
+		inset: -2.5px -2.5px -1.6rem;
+		z-index: -1;
+		border-radius: inherit;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+		pointer-events: none;
+	}
+
+	.bubble-ink::before {
 		content: '';
 		position: absolute;
-		left: 46%;
-		bottom: -0.65rem;
-		width: 1.1rem;
-		height: 1.1rem;
+		inset: 0 0 calc(1.6rem - 2.5px);
+		border: 2.5px solid var(--color-ink);
+		border-radius: inherit;
 		background: #fbf7ef;
-		border-right: 2.5px solid var(--color-ink);
-		border-bottom: 2.5px solid var(--color-ink);
-		transform: skewY(28deg) rotate(30deg);
+	}
+
+	.bubble-ink::after {
+		content: '';
+		position: absolute;
+		top: calc(100% - 1.6rem);
+		left: 46%;
+		width: 1.75rem;
+		height: 1.375rem;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 28 22'%3E%3Cpath d='M3 0C7 5 9 11 6 20 13 15 19 8 23 0' fill='%23fbf7ef' stroke='%2317130f' stroke-width='2.5' stroke-linejoin='round'/%3E%3C/svg%3E")
+			0 0 / 100% 100% no-repeat;
 	}
 
 	@keyframes bubble-pop {
 		from {
-			scale: 0.4;
+			scale: 0.85;
 			opacity: 0;
 		}
 	}

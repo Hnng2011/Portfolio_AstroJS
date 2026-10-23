@@ -1,0 +1,175 @@
+---
+// The owner as a cartoon rig of ink parts: three body views and three heads, one shown at a time.
+// src/lib/hung.ts poses it; the paths below are its resting pose so the drawing stands without script.
+import { COLORS as C, rest, solve, type View } from '../lib/hung';
+import HeadFront from './HeadFront.astro';
+import HungArm from './HungArm.astro';
+
+interface Props {
+	view?: View;
+}
+
+const { view = 'front' } = Astro.props;
+const views: View[] = ['front', 'side', 'back'];
+const solved = Object.fromEntries(views.map((v) => [v, solve(rest(v))])) as Record<View, ReturnType<typeof solve>>;
+const hidden = (v: View) => (v === view ? undefined : 'display: none');
+
+const tee =
+	'M-16 -326C-32 -325-48 -320-59 -312L-63 -300C-59 -268-56 -228-54 -184C-22 -176 22 -176 54 -184C56 -228 59 -268 63 -300L59 -312C48 -320 32 -325 16 -326C10 -316-10 -316-16 -326Z';
+const fist = 'M-12 -3C-15 10-12 24 0 25C12 25 15 12 13 -3Z';
+const shoeFront = {
+	upper: 'M-25 4C-26 -9-14 -14 0 -14C14 -14 26 -9 25 4Z',
+	sole: 'M-27 4H27C27 13 18 18 0 18C-18 18-27 13-27 4Z',
+};
+const shoeSide = {
+	upper: 'M-18 2C-19 -10-10 -15 2 -14C14 -13 24 -7 34 0C42 5 42 8 40 10H-20C-20 8-19 5-18 2Z',
+	sole: 'M-21 8H41C42 14 37 18 30 18H-15C-20 18-22 13-21 8Z',
+};
+const SOLE = '#e3dacb';
+---
+
+<g data-hung stroke={C.ink} stroke-width="3.6" stroke-linecap="round" stroke-linejoin="round" fill="none">
+	<g data-body="front" style={hidden('front')}>
+		<g data-upper transform={solved.front.upper}>
+			<rect x="-56" y="-330" width="112" height="84" rx="24" fill={C.pack} />
+		</g>
+		<g data-hips transform={solved.front.hips}></g>
+		{solved.front.legs.map((l, i) => <path data-leg={i} d={l.d} fill={C.pants} />)}
+		{
+			solved.front.legs.map((l, i) => (
+				<g data-shoe={i} transform={l.shoe}>
+					<path d={shoeFront.sole} fill={SOLE} />
+					<path d={shoeFront.upper} fill={C.shoe} />
+					<path d="M-14 -5q14 6 28 0" stroke-width="2" />
+					<path d="M-6 -12l6 3 6 -3" stroke-width="2" />
+				</g>
+			))
+		}
+		{solved.front.arms.map((a, i) => <HungArm i={i} d={a.d} sleeve={a.sleeve} fore={a.fore} hand={a.hand} slot="back" />)}
+		<g data-upper transform={solved.front.upper}>
+			<path d="M-12 -346V-320H12V-346" fill={C.skin} />
+			<path d={tee} fill={C.tee} />
+			<path d="M-16 -326q16 14 32 0" stroke-width="2.6" />
+			<path d="M-32 -322C-36 -300-38 -274-36 -232M32 -322C36 -300 38 -274 36 -232" stroke-width="17" />
+			<path d="M-32 -322C-36 -300-38 -274-36 -232M32 -322C36 -300 38 -274 36 -232" stroke={C.pack} stroke-width="10.5" />
+			<path d="M-43 -262h13M30 -262h13" stroke-width="2.4" />
+			<path d="M24 -212l12 -10M32 -204l14 -11M40 -197l11 -9" stroke-width="1.8" opacity="0.45" />
+			<path d="M-22 -296q4 10 2 22" stroke-width="1.8" opacity="0.4" />
+		</g>
+		{solved.front.arms.map((a, i) => <HungArm i={i} d={a.d} sleeve={a.sleeve} fore={a.fore} hand={a.hand} slot="front" />)}
+	</g>
+
+	<g data-body="side" style={hidden('side')}>
+		<g data-flip>
+			<g opacity="0.92">
+				<path data-arm="0" d={solved.side.arms[0].d} fill={C.skin} />
+				<path data-sleeve="0" d={solved.side.arms[0].sleeve} fill={C.tee} />
+				<g data-hand="0" transform={solved.side.arms[0].hand}><path d={fist} fill={C.skin} /></g>
+			</g>
+			{
+				solved.side.legs.map((l, i) => (
+					<g>
+						<path data-leg={i} d={l.d} fill={i === 0 ? '#2c313b' : C.pants} />
+						<g data-shoe={i} transform={l.shoe}>
+							<path d={shoeSide.sole} fill={SOLE} />
+							<path d={shoeSide.upper} fill={i === 0 ? '#ece6da' : C.shoe} />
+							<path d="M8 -9l5 5M15 -6l5 5" stroke-width="2" />
+						</g>
+					</g>
+				))
+			}
+			<g data-hips transform={solved.side.hips}></g>
+			<g data-upper transform={solved.side.upper}>
+				<rect x="-64" y="-318" width="46" height="128" rx="18" fill={C.pack} />
+				<rect x="-70" y="-268" width="24" height="50" rx="9" fill={C.packDark} stroke-width="2.6" />
+				<path d="M-58 -306v100" stroke-width="1.8" stroke-dasharray="5 6" opacity="0.6" />
+				<path d="M-4 -346L-2 -316H16L18 -346" fill={C.skin} />
+				<path
+					d="M-26 -312C-10 -328 16 -326 26 -308C32 -282 31 -224 26 -180C8 -174-12 -174-27 -180C-31 -224-31 -282-26 -312Z"
+					fill={C.tee}
+				/>
+				<path d="M-14 -318C2 -322 14 -314 18 -296L20 -236" stroke-width="17" />
+				<path d="M-14 -318C2 -322 14 -314 18 -296L20 -236" stroke={C.pack} stroke-width="10.5" />
+			</g>
+			<g>
+				<path data-arm="1" d={solved.side.arms[1].d} fill={C.skin} />
+				<path data-sleeve="1" d={solved.side.arms[1].sleeve} fill={C.tee} />
+				<g data-hand="1" transform={solved.side.arms[1].hand}>
+					<path d={fist} fill={C.skin} />
+					<path d="M-5 11q5 4 10 0" stroke-width="2.4" />
+				</g>
+			</g>
+		</g>
+	</g>
+
+	<g data-body="back" style={hidden('back')}>
+		<g data-hips transform={solved.back.hips}></g>
+		{solved.back.legs.map((l, i) => <path data-leg={i} d={l.d} fill={C.pants} />)}
+		{
+			solved.back.legs.map((l, i) => (
+				<g data-shoe={i} transform={l.shoe}>
+					<path d={shoeFront.sole} fill={SOLE} />
+					<path d="M-25 3C-26 -10-14 -15 0 -15C14 -15 26 -10 25 3Z" fill={C.shoe} />
+					<path d="M0 -15V-5" stroke-width="5" />
+				</g>
+			))
+		}
+		{
+			solved.back.arms.map((a, i) => (
+				<g>
+					<path data-arm={i} d={a.d} fill={C.skin} />
+					<path data-sleeve={i} d={a.sleeve} fill={C.tee} />
+					<g data-hand={i} transform={a.hand}><path d={fist} fill={C.skin} /></g>
+				</g>
+			))
+		}
+		<g data-upper transform={solved.back.upper}>
+			<path d="M-12 -348V-322H12V-348" fill={C.skin} />
+			<path d={tee.replace('C10 -316-10 -316-16 -326', 'C10 -330-10 -330-16 -326')} fill={C.tee} />
+			<path d="M-15 -326q15 -20 30 0" stroke-width="9" />
+			<path d="M-15 -326q15 -20 30 0" stroke={C.packDark} stroke-width="3.6" />
+			<rect x="-60" y="-326" width="120" height="138" rx="30" fill={C.pack} />
+			<rect x="-40" y="-262" width="80" height="58" rx="14" fill={C.packDark} stroke-width="2.8" />
+			<rect x="-34" y="-256" width="68" height="46" rx="10" stroke-width="1.8" stroke-dasharray="5 6" opacity="0.6" />
+			<path d="M-52 -300v84M52 -300v84" stroke-width="1.8" stroke-dasharray="5 6" opacity="0.6" />
+			<path d="M-46 -290q46 -14 92 0" stroke-width="2.4" />
+			<path d="M26 -294v12" stroke-width="3.8" />
+		</g>
+	</g>
+
+	<g data-part="head" transform={solved[view].head}>
+		<ellipse class="focus-ring" cx="0" cy="-74" rx="82" ry="98" stroke="#8a5512" stroke-width="4" stroke-dasharray="9 9" opacity="0" style="pointer-events: none" />
+		<g data-head="front" style={hidden('front')}>
+			<HeadFront />
+		</g>
+
+		<g data-head="side" style={hidden('side')}>
+			<path
+				d="M-12 -2C4 2 20 0 28 -8C34 -14 34 -22 31 -27C35 -30 36 -34 33 -38C37 -41 37 -45 34 -47C40 -50 48 -52 52 -58C54 -64 48 -68 42 -70C44 -80 44 -94 40 -104C32 -126 10 -136-12 -134C-42 -132-58 -106-56 -74C-54 -50-40 -30-24 -18C-18 -10-16 -4-12 -2Z"
+				fill={C.skin}
+			/>
+			<path d="M-4 -84C-20 -88-22 -58-6 -56" fill={C.skin} />
+			<path d="M-10 -76q-5 6 0 12" stroke-width="2.4" />
+			<ellipse cx="18" cy="-44" rx="7" ry="3.4" fill={C.blush} stroke="none" opacity="0.26" />
+			<path
+				d="M-50 -46C-62 -80-54 -126-16 -142C6 -148 30 -140 48 -104Q54 -100 56 -92Q46 -96 40 -98Q42 -90 44 -84Q34 -92 26 -100Q14 -98 4 -94Q-6 -90-8 -84Q-18 -90-22 -78Q-26 -60-30 -46Q-40 -40-50 -46Z"
+				fill={C.hair}
+			/>
+			<path d="M-34 -122q14 -12 34 -14" stroke={C.shine} stroke-width="3.4" />
+			<path d="M22 -86q9 -4 18 0" stroke-width="4.4" />
+			<ellipse cx="30" cy="-68" rx="7" ry="11" fill="#fff" stroke-width="2.6" />
+			<ellipse cx="33" cy="-67" rx="3.8" ry="5.4" fill={C.ink} stroke="none" />
+			<path d="M30 -37q4 1 6 -1" stroke-width="2.8" />
+		</g>
+
+		<g data-head="back" style={hidden('back')}>
+			<path d="M-45 -86C-60 -92-64 -64-50 -56" fill={C.skin} />
+			<path d="M45 -86C60 -92 64 -64 50 -56" fill={C.skin} />
+			<path
+				d="M-50 -70C-58 -110-36 -150 0 -152C36 -150 58 -110 50 -70C48 -46 36 -26 18 -18C6 -14-6 -14-18 -18C-36 -26-48 -46-50 -70Z"
+				fill={C.hair}
+			/>
+			<path d="M-26 -136q16 -12 36 -8M-34 -80q2 16 10 28" stroke={C.shine} stroke-width="3.4" />
+		</g>
+	</g>
+</g>
