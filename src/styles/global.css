@@ -125,13 +125,18 @@ a {
 	align-items: center;
 	white-space: nowrap;
 	gap: 0.6em;
-	border-radius: 999px;
-	border: 1px solid var(--color-line-strong);
+	border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
+	border: 2px solid var(--color-ink);
 	padding: 0.8em 1.3em;
+	background: #fff;
+	font-weight: 700;
+	rotate: var(--tilt, -0.6deg);
 	transition:
 		border-color 0.4s var(--ease-out),
 		background-color 0.4s var(--ease-out),
-		color 0.4s var(--ease-out);
+		color 0.4s var(--ease-out),
+		rotate 0.3s var(--ease-out),
+		translate 0.3s var(--ease-out);
 
 }
 
@@ -211,18 +216,44 @@ a {
 .close {
 	position: relative;
 	isolation: isolate;
-	overflow: hidden;
+}
+
+.pill:nth-child(even) {
+	--tilt: 0.7deg;
 }
 
 .pill::before,
 .close::before {
 	content: '';
 	position: absolute;
-	inset: -1px;
+	inset: 0;
 	z-index: -1;
+	border-radius: inherit;
 	background: var(--color-ink);
 	clip-path: circle(0% at var(--mx, 50%) var(--my, 50%));
 	transition: clip-path 0.6s var(--ease-out);
+}
+
+.pill::after,
+.close::after {
+	content: '';
+	position: absolute;
+	inset: -4px -3px -2px -4px;
+	border: 1.5px solid var(--color-ink);
+	border-radius: 1.35em 1.8em 1.25em 1.7em / 1.8em 1.25em 1.7em 1.35em;
+	opacity: 0.45;
+	rotate: 1.2deg;
+	pointer-events: none;
+}
+
+.close::after {
+	border-radius: 46% 54% 50% 50% / 52% 46% 54% 48%;
+}
+
+:is(.pill, .close):hover,
+:is(.pill, .close):focus-visible {
+	rotate: 0deg;
+	translate: 0 -2px;
 }
 
 :is(.pill, .close):hover::before,

@@ -563,9 +563,23 @@ const period = (year: string) => year.replace(' - ', ' – ');
 
 	.holo-cta {
 		justify-self: center;
-		text-decoration: underline;
-		text-decoration-thickness: 2px;
-		text-underline-offset: 0.3em;
+		padding: 0.55em 1.1em;
+		border: 2px solid var(--color-ink);
+		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
+		background: var(--color-ink);
+		color: var(--color-paper);
+		rotate: -1deg;
+		transition:
+			rotate 0.3s var(--ease-out),
+			background-color 0.3s var(--ease-out),
+			color 0.3s var(--ease-out);
+	}
+
+	.holo-screen:hover .holo-cta,
+	.holo-screen:focus-visible .holo-cta {
+		rotate: 1deg;
+		background: var(--color-amber);
+		color: var(--color-ink);
 	}
 
 	.holo-back {
