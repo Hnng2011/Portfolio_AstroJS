@@ -14,6 +14,7 @@ export interface Project {
 	tags: string[];
 	url?: string;
 	image?: string;
+	diagram?: boolean;
 	status?: string;
 	caseStudy: CaseStudy;
 }
@@ -32,78 +33,80 @@ export const profile = {
 
 export const projects: Project[] = [
 	{
-		index: '08',
+		index: '01',
 		title: 'UBIW Studio',
 		type: 'Frontend Engineer / Team site',
 		year: 'Sep 2026 - Present',
 		summary:
-			'The site of UBIW Studio, seven friends from HCMUS who build their own products. I build it end to end: a Next.js site whose interactive WebGL room lets the team, their seats and their things tell the story.',
+			'The site of UBIW Studio, a product team of seven friends from HCMUS. I built it end to end: a Next.js site with an interactive WebGL room where each member is introduced through their desk, machines and photos.',
 		tags: ['Next.js', 'WebGL'],
 		url: 'https://ubiw.space/',
 		image: '/work/ubiw-studio.webp',
 		status: 'Live Project',
 		caseStudy: {
 			challenge:
-				'Show a seven-person product team through its craft rather than a sales pitch, at a high frame rate on desktop and phones.',
+				'Introduce a seven-person product team through its work rather than a sales pitch, and keep it smooth on desktop and phones.',
 			approach: [
-				'Built a statically exported Next.js 16 site on Cloudflare with build-time share images',
-				'Wrote an interactive WebGL room where the team, their seats, machines and photos carry the story',
-				'Kept motion on transform and opacity with Lenis scrolling, and paused loops off-screen for 60 fps',
+				'Built a statically exported Next.js 16 site on Cloudflare with share images generated at build time',
+				'Wrote an interactive WebGL room in which desks, machines and photos introduce each member',
+				'Animated only transform and opacity, with Lenis scrolling and loops paused off-screen, to hold 60 fps',
 			],
-			outcome: 'A live team site at ubiw.space that is itself the showcase of the team’s craft.',
+			outcome:
+				'Live at ubiw.space, scoring 100 for accessibility and 100 for best practices in Lighthouse, with zero layout shift (Oct 2026).',
 			metrics: [
-				{ label: 'Stack', value: 'Next.js 16' },
-				{ label: 'Language', value: 'English' },
+				{ label: 'Stack', value: 'Next.js 16 + WebGL' },
+				{ label: 'Hosting', value: 'Cloudflare' },
 				{ label: 'Link', value: 'ubiw.space' },
 			],
 		},
 	},
 	{
-		index: '01',
+		index: '02',
 		title: 'Offer Module',
 		type: 'Frontend Engineer / TGM Research',
 		year: 'Jul 2025 - Present',
 		summary:
-			'Internal pricing and market-configuration tooling for research operations. I ship features, stabilize legacy modules, speed up data-heavy rendering, and guard releases with Vitest and Playwright.',
-		tags: ['React', 'Turborepo', 'Testing'],
+			'An internal operations module and an external client portal for a market research company. I build pricing modules and multi-role features, refactor legacy code, and guard every release with unit and end-to-end tests.',
+		tags: ['React', 'Turborepo', 'Playwright'],
 		status: 'Live Project',
+		diagram: true,
 		caseStudy: {
 			challenge:
-				'Legacy pricing modules rendered heavy market data slowly. Form logic grew fragile with every release.',
+				'Legacy pricing screens re-rendered heavy market data in loops, form rules were fragile, and clients needed a portal of their own next to the internal tool.',
 			approach: [
-				'Rebuilt dynamic forms on React Hook Form + Zod for schema-safe validation',
-				'Optimized rendering paths for data-heavy screens across the Turborepo monorepo',
-				'Added Vitest unit coverage and Playwright smoke tests before every release',
+				'Built pricing modules and dynamic multi-value forms on React Hook Form + Zod, so business rules are enforced by typed schemas',
+				'Moved Redux data setup out of the UI layer and cached derived data with useRef and useMemo, which ended the render loops',
+				'Built the client portal from scratch with Vite, Tailwind and shadcn/ui inside the Turborepo monorepo, kept current by polling with TanStack Query',
 			],
 			outcome:
-				'Steady feature delivery on live research tooling. Fewer regressions, faster configuration workflows.',
+				'Every pull request now runs lint, type-check, unit tests with coverage gates, the build and Playwright end-to-end tests in parallel on Bitbucket, with a weekly full end-to-end run and dependency audit.',
 			metrics: [
-				{ label: 'Status', value: 'Live' },
-				{ label: 'Testing', value: 'Vitest + Playwright' },
+				{ label: 'Commits', value: '400+, AI-assisted' },
+				{ label: 'Tests', value: 'Vitest + Playwright' },
 				{ label: 'Repo', value: 'Turborepo' },
 			],
 		},
 	},
 	{
-		index: '02',
+		index: '03',
 		title: 'Formo',
 		type: 'Full-stack Developer / Web3 analytics',
 		year: 'Feb 2025 - Jun 2025',
 		summary:
-			'Web3 analytics and form-building platform tracking growth, user behavior, and token-gated engagement. I built the product UI, a Tailwind + Radix component layer, Supabase data flows, and Paddle access control.',
+			'A Web3 platform for token-gated forms and surveys with real-time analytics dashboards. I built the product on Next.js and Supabase, its event pipelines, a shared Radix + Tailwind component system, payments and token gating.',
 		tags: ['Next.js', 'Supabase', 'Tinybird'],
 		url: 'https://formo.so/',
 		image: '/work/formo.webp',
 		caseStudy: {
 			challenge:
-				'The product needed one reusable UI layer and real-time pipelines serving both Web2 forms and token-gated Web3 campaigns.',
+				'One product had to serve both ordinary forms and token-gated Web3 campaigns, with analytics that update as events arrive.',
 			approach: [
-				'Designed a Tailwind + Radix component library shared across every product surface',
-				'Modeled Supabase schemas and real-time flows for analytics ingestion',
-				'Wired Paddle access control and support automation end to end',
+				'Built Tinybird pipelines that ingest and filter events from the Formo SDK, and pushed live dashboard updates through Supabase Realtime',
+				'Designed one Radix UI + Tailwind component system used across every product surface',
+				'Wrote a Supabase Edge Function for Paddle payment webhooks, and token gating with the Moralis and Helius APIs',
 			],
 			outcome:
-				'Full-stack features shipped to production, tracking growth and behavior for live Web3 campaigns.',
+				'Events flow from the SDK through Tinybird into dashboards that update live, while payments and wallet-based gates run inside the same Supabase backend.',
 			metrics: [
 				{ label: 'Role', value: 'Full-stack' },
 				{ label: 'Data', value: 'Tinybird + Supabase' },
@@ -112,24 +115,25 @@ export const projects: Project[] = [
 		},
 	},
 	{
-		index: '03',
+		index: '04',
 		title: 'Jigger Mixology',
 		type: 'F&B consulting website',
 		year: 'Independent project',
 		summary:
-			'Live service website for an F&B consulting business. I structured the offer, built the responsive Astro interface, and shaped catalogue and project pages so consulting, training, and cafe setup read instantly.',
-		tags: ['Astro', 'Responsive UI', 'Service UX'],
+			'The website of an F&B consulting business. I structured the offer, built the responsive Astro site, and shaped the catalogue and project pages so consulting, training and cafe setup each read at a glance.',
+		tags: ['Astro', 'Responsive UI'],
 		url: 'https://jiggermixology.com/',
 		image: '/work/jigger-mixology.webp',
 		caseStudy: {
 			challenge:
-				'An F&B consultancy needed a fast website that made consulting, training, and cafe-setup services legible in seconds.',
+				'An F&B consultancy needed a fast website that makes consulting, training and cafe-setup services clear within seconds.',
 			approach: [
-				'Structured the information architecture around three core service lines',
-				'Built a responsive Astro interface with catalogue and project showcase',
-				'Tuned page weight for speed on mobile-first traffic',
+				'Organised the site around the three service lines',
+				'Built a responsive Astro site with a catalogue and a project showcase',
+				'Kept pages light for visitors arriving on phones',
 			],
-			outcome: 'A live marketing site turning visitors into service inquiries.',
+			outcome:
+				'Live at jiggermixology.com, scoring 96 for accessibility, 100 for best practices and 92 for SEO in Lighthouse, with almost no layout shift (CLS 0.009 on mobile, Oct 2026).',
 			metrics: [
 				{ label: 'Stack', value: 'Astro' },
 				{ label: 'Type', value: 'Independent' },
@@ -138,24 +142,25 @@ export const projects: Project[] = [
 		},
 	},
 	{
-		index: '04',
+		index: '05',
 		title: 'NYMUSICKR',
 		type: 'Frontend Engineer / Burning Bros',
 		year: 'Aug 2024 - Feb 2025',
 		summary:
-			'Music commerce web app for albums, fan clubs, and events. I delivered SSR-focused Remix UI, localization for multi-market releases, production hotfixes, and legacy migration support.',
-		tags: ['Remix', 'SSR', 'Headless UI'],
+			'A high-traffic web app for selling albums, running fan clubs and organising events. I built server-rendered Remix UI, localization for each market, production hotfixes, and the move off the legacy codebase.',
+		tags: ['Remix', 'SSR'],
 		url: 'https://nymusickr.com/',
 		image: '/work/nymusickr.webp',
 		caseStudy: {
 			challenge:
-				'A music commerce app had to stay fast under SSR while absorbing localization and a legacy migration.',
+				'A music store had to load fast and rank well in search while it was translated for new markets and moved off a legacy codebase.',
 			approach: [
-				'Delivered SSR-focused frontend work in Remix with Headless UI primitives',
-				'Implemented localization flows for multi-market releases',
-				'Shipped production hotfixes and legacy migration support on a Jira/Slack cadence',
+				'Rendered album, fan-club and event pages on the server with Remix',
+				'Built accessible UI on Headless UI primitives and added localization for each market release',
+				'Migrated legacy screens to React + TypeScript and shipped production hotfixes on a Jira and Slack cadence',
 			],
-			outcome: 'Responsive commerce UI shipped reliably across every release cycle.',
+			outcome:
+				'Pages arrive server-rendered for fast first loads and search visibility, translated per market, on a React + TypeScript codebase in place of the legacy one.',
 			metrics: [
 				{ label: 'Stack', value: 'Remix SSR' },
 				{ label: 'Team', value: 'Burning Bros' },
@@ -163,80 +168,41 @@ export const projects: Project[] = [
 			],
 		},
 	},
+];
+
+export interface ArchiveProject {
+	title: string;
+	type: string;
+	year: string;
+	summary: string;
+	tags: string[];
+}
+
+// Earlier work whose products have shut down: listed for the record, kept off the main solar system.
+export const archive: ArchiveProject[] = [
 	{
-		index: '05',
 		title: 'Ubiw',
 		type: 'Frontend Engineer / Web3 DApp',
 		year: 'Jan 2024 - Jul 2024',
 		summary:
-			'Content-sharing DApp built to make Web3 feel like Web2. I explored account abstraction, social login, ZK Email verification, Matrix messaging, and embedded wallets — from prototype to product UI.',
-		tags: ['DApp', 'Particle', 'Matrix'],
-		status: 'Project Shutdown',
-		caseStudy: {
-			challenge:
-				'Make a content-sharing DApp feel like a Web2 app: no seed phrases, no friction, verifiable identities.',
-			approach: [
-				'Explored account abstraction and social login through Particle',
-				'Prototyped ZK Email verification and Matrix-based messaging flows',
-				'Embedded wallets and refined blockchain interaction UX',
-			],
-			outcome: 'R&D frontend that validated Web3 onboarding patterns for Web2 users.',
-			metrics: [
-				{ label: 'Focus', value: 'Account Abstraction' },
-				{ label: 'Auth', value: 'ZK Email' },
-				{ label: 'Status', value: 'Shutdown' },
-			],
-		},
+			'A content-sharing DApp meant to feel like a Web2 app. I prototyped account abstraction and social login with Particle, ZK Email verification, Matrix messaging and embedded wallets.',
+		tags: ['Particle', 'Matrix', 'Account abstraction'],
 	},
 	{
-		index: '06',
 		title: 'Boxx Circle',
 		type: 'Frontend Engineer / Private product',
 		year: 'Sep 2023 - Feb 2024',
 		summary:
-			'Recycling-box ecosystem spanning food-buyer apps, restaurant workflows, and admin tooling. I built reusable React + MUI components, packaged shared UI modules, shipped Capacitor mobile builds, and kept Storybook current.',
+			'A recycling-box service with a buyer app, restaurant workflows and admin tooling. I built shared React + MUI components, shipped Capacitor mobile builds and kept Storybook current.',
 		tags: ['React', 'MUI', 'Storybook'],
-		status: 'Project Shutdown',
-		caseStudy: {
-			challenge:
-				'One ecosystem, three product surfaces — buyer apps, restaurant workflows, admin tooling — each needing consistent UI across web and mobile.',
-			approach: [
-				'Built reusable React + MUI components packaged as shared UI modules',
-				'Shipped Capacitor mobile builds with fully responsive screens',
-				'Maintained Storybook previews and Supabase data integration',
-			],
-			outcome: 'A shared component system keeping three product surfaces visually consistent.',
-			metrics: [
-				{ label: 'Surfaces', value: '3 apps' },
-				{ label: 'Mobile', value: 'Capacitor' },
-				{ label: 'Docs', value: 'Storybook' },
-			],
-		},
 	},
 	{
-		index: '07',
 		title: 'Splitting Me',
 		type: 'Frontend Engineer / Outsource',
 		year: 'Aug 2023 - Sep 2023',
 		summary:
-			'Web3 marketplace flow for NFT, token, and real-estate listings. I adapted React templates into new pages, connected REST APIs, implemented Wagmi wallet login, IPFS media uploads, and NFT minting.',
+			'A one-month outsource job turning React templates into an NFT, token and real-estate marketplace, with Wagmi wallet login, IPFS uploads and NFT minting.',
 		tags: ['React', 'Wagmi', 'IPFS'],
-		status: 'Project Shutdown',
-		caseStudy: {
-			challenge:
-				'A one-month outsource cycle to turn existing React templates into a working NFT, token, and real-estate marketplace.',
-			approach: [
-				'Adapted templates into new marketplace pages wired to REST APIs',
-				'Implemented Wagmi wallet login and IPFS media uploads',
-				'Supported NFT minting flows end to end',
-			],
-			outcome: 'Marketplace MVP delivered inside a one-month outsource cycle.',
-			metrics: [
-				{ label: 'Cycle', value: '1 month' },
-				{ label: 'Auth', value: 'Wagmi wallet' },
-				{ label: 'Media', value: 'IPFS' },
-			],
-		},
 	},
 ];
 

@@ -1,5 +1,6 @@
 ---
-import { profile, projects } from '../data/portfolio';
+import { archive, contactLinks, profile, projects } from '../data/portfolio';
+import DoodleIcon from './DoodleIcon.astro';
 import Cursor from './Cursor.astro';
 import Me from './Me.astro';
 import Meadow from './Meadow.astro';
@@ -21,7 +22,14 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		<p class="me-bubble" data-bubble role="status" aria-live="polite"></p>
 	</div>
 	<div class="layer labels" aria-hidden="true">
-		{projects.map((p) => <span class="planet-label t-label" data-label>{p.title}</span>)}
+		{
+			projects.map((p) => (
+				<span class="planet-label" data-label>
+					<span class="planet-name t-label">{p.title}</span>
+					<span class="planet-tags">{p.tags.join(' · ')}</span>
+				</span>
+			))
+		}
 	</div>
 
 	<canvas class="layer splat" data-splat aria-hidden="true"></canvas>
@@ -83,7 +91,35 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			<a href="/info" data-ink class="pill t-label">Info</a>
 			<a href="/contact" data-ink class="pill pill-solid t-label">Contact</a>
 		</nav>
+		<ul class="quick" aria-label="Get in touch">
+			{
+				contactLinks.map((l) => (
+					<li>
+						<a
+							class="pill icon-pill"
+							href={l.url}
+							target={l.url.startsWith('http') ? '_blank' : undefined}
+							rel="noopener noreferrer"
+							aria-label={l.label === 'Email' ? `Email ${l.url.replace('mailto:', '')}` : l.label}
+							title={l.label}
+						>
+							<DoodleIcon name={l.label} />
+						</a>
+					</li>
+				))
+			}
+			<li>
+				<a class="pill t-label cv-pill" href="/cv/Lu-Phi-Hung-CV.pdf" target="_blank" rel="noopener" download>
+					<DoodleIcon name="cv" />
+					CV
+				</a>
+			</li>
+		</ul>
 	</footer>
+
+	<button type="button" class="pill t-label archive-open" data-open-archive aria-hidden="true" tabindex="-1">
+		Archive · {archive.length}
+	</button>
 
 	<Cursor />
 </main>
@@ -397,6 +433,40 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		outline-offset: 8px;
 	}
 
+	.quick {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
+	.icon-pill {
+		padding: 0.55em;
+	}
+
+	.icon-pill :global(.doodle-icon) {
+		width: 1.15rem;
+		height: 1.15rem;
+	}
+
+	.cv-pill {
+		padding: 0.6em 1em;
+	}
+
+	.archive-open {
+		position: absolute;
+		left: clamp(1rem, 3vw, 2.5rem);
+		bottom: calc(max(1.5rem, env(safe-area-inset-bottom)) + 3.6rem);
+		z-index: 9;
+		opacity: 0;
+		pointer-events: none;
+		transition: opacity 0.4s var(--ease-out);
+	}
+
+	.archive-open[aria-hidden='false'] {
+		opacity: 1;
+		pointer-events: auto;
+	}
+
 	.back-me {
 		position: absolute;
 		left: clamp(1rem, 3vw, 2.5rem);
@@ -416,11 +486,24 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		position: absolute;
 		top: 0;
 		left: 0;
-		font-size: 0.8125rem;
+		display: grid;
+		justify-items: center;
+		gap: 0.1rem;
+		text-align: center;
 		white-space: nowrap;
 		color: var(--color-ink);
 		opacity: 0;
 		transition: color 0.4s var(--ease-out);
+	}
+
+	.planet-name {
+		font-size: 0.8125rem;
+	}
+
+	.planet-tags {
+		font-size: 0.6875rem;
+		font-weight: 600;
+		color: var(--color-ash);
 	}
 
 	.planet-label:global(.is-hover) {
@@ -634,6 +717,22 @@ const period = (year: string) => year.replace(' - ', ' – ');
 
 		.clock {
 			display: none;
+		}
+
+		.quick {
+			transition: opacity 0.4s var(--ease-out);
+		}
+
+		:global(.in-solar) .quick {
+			opacity: 0;
+			visibility: hidden;
+		}
+
+		.archive-open {
+			left: auto;
+			right: 1rem;
+			top: max(1rem, env(safe-area-inset-top));
+			bottom: auto;
 		}
 
 		.holo-title {

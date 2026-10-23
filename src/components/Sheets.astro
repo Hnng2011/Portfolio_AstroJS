@@ -1,5 +1,5 @@
 ---
-import { projects } from '../data/portfolio';
+import { archive, projects } from '../data/portfolio';
 import DoodleIcon from './DoodleIcon.astro';
 import Sketch from './Sketch.astro';
 
@@ -52,8 +52,27 @@ const period = (year: string) => year.replace(' - ', ' – ');
 								)}
 							</div>
 						</div>
-						<div class="case-shot" style="--i: 1">
-							<Sketch kind={i} title={p.title} image={p.image} />
+						<div class="case-shot-wrap" style="--i: 1">
+							<div class="case-shot">
+								<div class="shot-view" data-view="ui">
+									<Sketch kind={i} title={p.title} image={p.image} />
+								</div>
+								{p.diagram && (
+									<div class="shot-view" data-view="arch" hidden>
+										<Sketch kind={8} title={`${p.title} architecture`} />
+									</div>
+								)}
+							</div>
+							{p.diagram && (
+								<div class="shot-tabs" role="group" aria-label="Preview">
+									<button type="button" class="pill t-label" data-tab="ui" aria-pressed="true">
+										Interface
+									</button>
+									<button type="button" class="pill t-label" data-tab="arch" aria-pressed="false">
+										Architecture
+									</button>
+								</div>
+							)}
 						</div>
 					</header>
 
@@ -89,8 +108,68 @@ const period = (year: string) => year.replace(' - ', ' – ');
 	</div>
 </dialog>
 
+<dialog class="sheet sheet-archive" data-sheet="archive" aria-labelledby="archive-title">
+	<div class="panel" data-panel>
+		<button type="button" class="close" data-close aria-label="Close archive">
+			<svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true">
+				<path d="m3 3 10 10M13 3 3 13" fill="none" stroke="currentColor" stroke-width="1.6"></path>
+			</svg>
+		</button>
+		<h2 class="t-sheet" id="archive-title">Archive</h2>
+		<p class="lead">Earlier projects whose products have since shut down.</p>
+		<ol class="archive-list">
+			{
+				archive.map((a) => (
+					<li>
+						<p class="arch-title">{a.title}</p>
+						<p class="meta">
+							{a.type}
+							<span class="dot" aria-hidden="true" />
+							{period(a.year)}
+						</p>
+						<p class="body">{a.summary}</p>
+						<ul class="chips" aria-label="Tools">
+							{a.tags.map((t) => (
+								<li>
+									<DoodleIcon name={t} />
+									{t}
+								</li>
+							))}
+						</ul>
+					</li>
+				))
+			}
+		</ol>
+	</div>
+</dialog>
 
 <style>
+	.sheet-archive .panel {
+		right: 0;
+		border-left: 2.5px solid var(--color-ink);
+	}
+
+	.archive-list {
+		margin-top: 2rem;
+		display: grid;
+		gap: 1.75rem;
+	}
+
+	.archive-list > li {
+		padding-top: 1.25rem;
+		border-top: 2px dashed rgb(23 19 15 / 0.35);
+	}
+
+	.arch-title {
+		font-size: 1.5rem;
+		font-weight: 800;
+		line-height: 1.1;
+	}
+
+	.archive-list .chips {
+		margin-top: 0.9rem;
+	}
+
 	.sheet {
 		position: fixed;
 		inset: 0;
@@ -317,6 +396,27 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		overflow: hidden;
 	}
 
+	.shot-view {
+		width: 100%;
+		height: 100%;
+	}
+
+	.shot-view[data-view='arch'] {
+		background: #fbf7ef;
+	}
+
+	.shot-tabs {
+		margin-top: 1rem;
+		display: flex;
+		justify-content: center;
+		gap: 0.5rem;
+	}
+
+	.shot-tabs [aria-pressed='true'] {
+		background: var(--color-ink);
+		color: var(--color-paper);
+	}
+
 	.sheet-case .t-sheet {
 		font-size: clamp(2.75rem, 6vw, 5rem);
 	}
@@ -388,7 +488,7 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		text-align: right;
 	}
 
-	.sheet-case :is(.case-intro, .case-shot, .case-body section) {
+	.sheet-case :is(.case-intro, .case-shot-wrap, .case-body section) {
 		opacity: 0;
 		translate: 0 1.25rem;
 		transition:
@@ -396,7 +496,7 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			translate 0.7s var(--ease-out) calc(var(--i) * 70ms + 80ms);
 	}
 
-	.sheet-case:global(.is-open) :is(.case-intro, .case-shot, .case-body section) {
+	.sheet-case:global(.is-open) :is(.case-intro, .case-shot-wrap, .case-body section) {
 		opacity: 1;
 		translate: 0 0;
 	}
@@ -420,13 +520,17 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			min-height: 0;
 		}
 
-		.case-shot {
+		.case-shot-wrap {
 			justify-self: end;
 			width: min(100%, 48vh * 1.6);
 		}
 
+		.shot-tabs {
+			margin-top: 1.4vh;
+		}
+
 		.sheet-case .t-sheet {
-			font-size: clamp(2.25rem, 8vh, 4.5rem);
+			font-size: clamp(2.25rem, min(8vh, 5.4vw), 4.5rem);
 		}
 
 		.sheet-case .meta {
@@ -475,7 +579,7 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			grid-template-columns: 1fr;
 		}
 
-		.case-shot {
+		.case-shot-wrap {
 			order: -1;
 		}
 
@@ -499,3 +603,16 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		}
 	}
 </style>
+
+<script>
+	document.querySelectorAll<HTMLElement>('.case-shot-wrap').forEach((wrap) => {
+		const tabs = [...wrap.querySelectorAll<HTMLButtonElement>('[data-tab]')];
+		const views = [...wrap.querySelectorAll<HTMLElement>('[data-view]')];
+		tabs.forEach((tab) =>
+			tab.addEventListener('click', () => {
+				for (const t of tabs) t.setAttribute('aria-pressed', String(t === tab));
+				for (const v of views) v.hidden = v.dataset.view !== tab.dataset.tab;
+			}),
+		);
+	});
+</script>

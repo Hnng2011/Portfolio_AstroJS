@@ -696,7 +696,7 @@ export class Solar {
 			if (!label) continue;
 			const look = LOOKS[b.i % LOOKS.length];
 			const lw = (this.labelW[b.i] ||= label.offsetWidth || 80);
-			const lh = 22;
+			const lh = 36;
 			const top = b.y + b.r * (look.ring ? 1.1 : 1) + 10;
 			const lx = Math.min(this.w - lw / 2 - 10, Math.max(lw / 2 + 10, b.x));
 			const box = [lx - lw / 2 - 4, top + 3, lx + lw / 2 + 4, top + lh - 3];
