@@ -161,7 +161,9 @@ function setHolo(on: boolean) {
 
 const sheets = {
 	case: document.querySelector<HTMLDialogElement>('[data-sheet="case"]')!,
+	archive: document.querySelector<HTMLDialogElement>('[data-sheet="archive"]')!,
 };
+const archiveButton = stage.querySelector<HTMLButtonElement>('[data-open-archive]')!;
 
 function setCursorMode(mode: 'plain' | 'label', label = '') {
 	doodle.label(mode === 'label' ? label : '');
@@ -180,8 +182,20 @@ function showSheet(dialog: HTMLDialogElement) {
 	if (finePointer) dialog.append(cursor);
 }
 
-function openSheet(name: keyof typeof sheets, k = 0) {
-	const dialog = sheets[name];
+function openArchive() {
+	const dialog = sheets.archive;
+	const panel = dialog.querySelector<HTMLElement>('[data-panel]')!;
+	showSheet(dialog);
+	const from = narrow.matches ? { yPercent: 100 } : { xPercent: 100 };
+	gsap.fromTo(
+		panel,
+		{ ...from, opacity: reduced ? 0 : 1 },
+		{ xPercent: 0, yPercent: 0, opacity: 1, duration: reduced ? 0.2 : 0.85, ease: 'expo.out' },
+	);
+}
+
+function openSheet(_name: 'case', k = 0) {
+	const dialog = sheets.case;
 	const panel = dialog.querySelector<HTMLElement>('[data-panel]')!;
 	dialog.querySelectorAll<HTMLElement>('[data-case]').forEach((a, i) => (a.hidden = i !== k));
 	dialog.setAttribute('aria-labelledby', `case-title-${k}`);
@@ -224,7 +238,7 @@ function closeSheet(dialog: HTMLDialogElement) {
 		});
 		return;
 	}
-	const to = narrow.matches ? { yPercent: 100 } : { xPercent: -100 };
+	const to = narrow.matches ? { yPercent: 100 } : { xPercent: 100 };
 	gsap.to(panel, {
 		...(reduced ? { opacity: 0 } : to),
 		duration: reduced ? 0.15 : 0.45,
@@ -247,6 +261,7 @@ Object.values(sheets).forEach((dialog) => {
 cubeButton.addEventListener('click', () => zoomTo(1));
 talkButton.addEventListener('click', () => say(nextLine()));
 backMe.addEventListener('click', () => zoomTo(0));
+archiveButton.addEventListener('click', openArchive);
 screens.forEach((s, i) => s.addEventListener('click', () => openSheet('case', i)));
 back.addEventListener('click', unfocus);
 picks.forEach((b, i) => {
@@ -634,7 +649,10 @@ function frame(now: number) {
 	if (showBack !== (backMe.getAttribute('aria-hidden') === 'false')) {
 		backMe.setAttribute('aria-hidden', String(!showBack));
 		backMe.tabIndex = showBack ? 0 : -1;
+		archiveButton.setAttribute('aria-hidden', String(!showBack));
+		archiveButton.tabIndex = showBack ? 0 : -1;
 	}
+	if (stage.classList.contains('in-solar') !== solarMode) stage.classList.toggle('in-solar', solarMode);
 	if (meFront.inert !== solarMode) {
 		meFront.inert = solarMode;
 		cubeButton.tabIndex = solarMode ? -1 : 0;
@@ -666,7 +684,8 @@ function frame(now: number) {
 			if (over === cubeButton) setCursorMode('label', 'Open');
 			else if (over === talkButton) setCursorMode('label', 'Say hi');
 			else if (over?.matches('[data-holo-screen]')) setCursorMode('label', 'Open');
-			else if (!over && !doodle.magnet) setCursorMode(state.hover >= 0 ? 'label' : 'plain', state.hover >= 0 ? 'View' : '');
+			else if (!over && !doodle.magnet)
+				setCursorMode(state.hover >= 0 ? 'label' : 'plain', state.hover >= 0 ? 'View' : '');
 		}
 	}
 	if (state.hover >= 0) state.hoverShown = state.hover;
