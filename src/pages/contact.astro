@@ -49,7 +49,7 @@ const topics = [
 							topics.map((t, k) => (
 								<label class="topic">
 									<input type="radio" name="topic" value={t.subject} checked={k === 0} />
-									<span>{t.label}</span>
+									<span class="pill">{t.label}</span>
 								</label>
 							))
 						}
@@ -265,17 +265,9 @@ const topics = [
 		text-transform: uppercase;
 	}
 
-	.topic span {
-		display: inline-block;
-		padding: 0.35em 0.85em;
-		border: 1.5px solid var(--color-ink);
-		border-radius: 1.7em 1.35em 1.8em 1.25em / 1.35em 1.8em 1.25em 1.7em;
+	.topic .pill {
+		padding: 0.45em 0.95em;
 		font-size: var(--text-small);
-		font-weight: 700;
-		cursor: pointer;
-		transition:
-			background-color 0.3s var(--ease-out),
-			color 0.3s var(--ease-out);
 	}
 
 	.topic input {
@@ -284,12 +276,12 @@ const topics = [
 		pointer-events: none;
 	}
 
-	.topic input:checked + span {
+	.topic input:checked + .pill {
 		background: var(--color-ink);
 		color: var(--color-paper);
 	}
 
-	.topic input:focus-visible + span {
+	.topic input:focus-visible + .pill {
 		outline: 2px solid var(--color-ink);
 		outline-offset: 3px;
 	}

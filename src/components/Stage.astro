@@ -30,6 +30,10 @@ const period = (year: string) => year.replace(' - ', ' – ');
 				</span>
 			))
 		}
+		<span class="planet-label" data-sun-label style="--i: 0">
+			<span class="planet-name t-label">Archive</span>
+			<span class="planet-tags">{archive.length} earlier projects</span>
+		</span>
 	</div>
 
 	<canvas class="layer splat" data-splat aria-hidden="true"></canvas>
@@ -86,37 +90,38 @@ const period = (year: string) => year.replace(' - ', ' – ');
 	</ul>
 
 	<footer class="corner corner-bottom" data-hud style="--d: 0.4s">
-		<p class="clock">Ho Chi Minh City <span data-clock>--:--</span></p>
-		<nav class="flex items-center gap-2" aria-label="Site">
-			<a href="/info" data-ink class="pill t-label">Info</a>
-			<a href="/contact" data-ink class="pill pill-solid t-label">Contact</a>
-		</nav>
-		<ul class="quick" aria-label="Get in touch">
-			{
-				contactLinks
-					.filter((l) => l.label !== 'Email')
-					.map((l) => (
-					<li>
-						<a
-							class="pill icon-pill"
-							href={l.url}
-							target="_blank"
-							rel="noopener noreferrer"
-							aria-label={l.label}
-							title={l.label}
-						>
-							<DoodleIcon name={l.label} />
-						</a>
-					</li>
-				))
-			}
-			<li>
-				<a class="pill t-label cv-pill" href="/cv/Lu-Phi-Hung-CV.pdf" target="_blank" rel="noopener" download>
-					<DoodleIcon name="cv" />
-					CV
-				</a>
-			</li>
-		</ul>
+		<div class="hud-row">
+			<ul class="quick" aria-label="Elsewhere">
+				{
+					contactLinks
+						.filter((l) => l.label !== 'Email')
+						.map((l) => (
+							<li>
+								<a
+									class="pill icon-pill"
+									href={l.url}
+									target="_blank"
+									rel="noopener noreferrer"
+									aria-label={l.label}
+									title={l.label}
+								>
+									<DoodleIcon name={l.label} />
+								</a>
+							</li>
+						))
+				}
+				<li>
+					<a class="pill t-label cv-pill" href="/cv/Lu-Phi-Hung-CV.pdf" target="_blank" rel="noopener" download>
+						<DoodleIcon name="cv" />
+						CV
+					</a>
+				</li>
+			</ul>
+			<nav class="flex items-center gap-2" aria-label="Site">
+				<a href="/info" data-ink class="pill t-label">Info</a>
+				<a href="/contact" data-ink class="pill pill-solid t-label">Contact</a>
+			</nav>
+		</div>
 	</footer>
 
 	<p class="fling-hint" data-fling-hint aria-hidden="true">
@@ -126,9 +131,13 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		psst… drag a planet and let go
 	</p>
 
-	<button type="button" class="pill t-label archive-open" data-open-archive aria-hidden="true" tabindex="-1">
-		Archive · {archive.length}
-	</button>
+	<button
+		type="button"
+		class="sun-button"
+		data-open-archive
+		aria-label={`Archive: ${archive.length} earlier projects`}
+		aria-hidden="true"
+		tabindex="-1"></button>
 
 	<Cursor />
 </main>
@@ -442,6 +451,12 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		outline-offset: 8px;
 	}
 
+	.hud-row {
+		display: flex;
+		align-items: center;
+		gap: 0.4rem;
+	}
+
 	.quick {
 		display: flex;
 		align-items: center;
@@ -461,19 +476,19 @@ const period = (year: string) => year.replace(' - ', ' – ');
 		padding: 0.6em 1em;
 	}
 
-	.archive-open {
+	/* Keyboard handle for the sun, which opens the Archive; the pointer goes through to the canvas. */
+	.sun-button {
 		position: absolute;
-		left: clamp(1rem, 3vw, 2.5rem);
-		bottom: calc(max(1.5rem, env(safe-area-inset-bottom)) + 3.6rem);
+		top: 0;
+		left: 0;
 		z-index: 9;
-		opacity: 0;
+		border-radius: 50%;
 		pointer-events: none;
-		transition: opacity 0.4s var(--ease-out);
 	}
 
-	.archive-open[aria-hidden='false'] {
-		opacity: 1;
-		pointer-events: auto;
+	.sun-button:focus-visible {
+		outline: 3px solid var(--color-ink);
+		outline-offset: 6px;
 	}
 
 	.back-me {
@@ -597,16 +612,6 @@ const period = (year: string) => year.replace(' - ', ' – ');
 
 	.role li:first-child {
 		color: var(--color-ink);
-	}
-
-	.clock {
-		font-size: var(--text-small);
-		line-height: 1.5;
-		color: var(--color-dim);
-	}
-
-	.clock span {
-		color: var(--color-ash);
 	}
 
 	.picks button {
@@ -771,24 +776,26 @@ const period = (year: string) => year.replace(' - ', ' – ');
 			font-size: var(--text-label);
 		}
 
-		.clock {
-			display: none;
-		}
-
 		.quick {
 			transition: opacity 0.4s var(--ease-out);
 		}
 
 		:global(.in-solar) .quick {
-			opacity: 0;
-			visibility: hidden;
+			display: none;
 		}
 
-		.archive-open {
-			left: auto;
-			right: 1rem;
-			top: max(1rem, env(safe-area-inset-top));
-			bottom: auto;
+		.hud-row,
+		.quick {
+			gap: 0.3rem;
+		}
+
+		.hud-row :global(.pill) {
+			padding: 0.7em 1em;
+		}
+
+		.icon-pill,
+		.hud-row .icon-pill {
+			padding: 0.5em;
 		}
 
 		.fling-hint {

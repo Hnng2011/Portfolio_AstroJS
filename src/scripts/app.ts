@@ -80,7 +80,6 @@ const walk = {
 };
 const cursor = stage.querySelector<HTMLElement>('.cursor')!;
 const doodle = new DoodleCursor(cursor);
-const clock = stage.querySelector<HTMLElement>('[data-clock]')!;
 
 const state = {
 	yaw: 0,
@@ -114,16 +113,6 @@ function zoomTo(v: number) {
 const intro = { v: reduced ? 1 : 0 };
 
 bindInkLinks({ color: '#f2a541' });
-
-const clockFmt = new Intl.DateTimeFormat('en-GB', {
-	timeZone: 'Asia/Ho_Chi_Minh',
-	hour: '2-digit',
-	minute: '2-digit',
-	hour12: false,
-});
-const tickClock = () => (clock.textContent = clockFmt.format(new Date()));
-tickClock();
-setInterval(tickClock, 15000);
 
 function focusPlanet(k: number) {
 	k = wrap(k);
@@ -164,7 +153,8 @@ const sheets = {
 	case: document.querySelector<HTMLDialogElement>('[data-sheet="case"]')!,
 	archive: document.querySelector<HTMLDialogElement>('[data-sheet="archive"]')!,
 };
-const archiveButton = stage.querySelector<HTMLButtonElement>('[data-open-archive]')!;
+const sunButton = stage.querySelector<HTMLButtonElement>('[data-open-archive]')!;
+const sunLabel = stage.querySelector<HTMLElement>('[data-sun-label]')!;
 
 function setCursorMode(mode: 'plain' | 'label', label = '') {
 	doodle.label(mode === 'label' ? label : '');
@@ -305,7 +295,7 @@ Object.values(sheets).forEach((dialog) => {
 cubeButton.addEventListener('click', () => zoomTo(1));
 talkButton.addEventListener('click', () => say(nextLine()));
 backMe.addEventListener('click', () => zoomTo(0));
-archiveButton.addEventListener('click', openArchive);
+sunButton.addEventListener('click', openArchive);
 screens.forEach((s, i) => s.addEventListener('click', () => openSheet('case', i)));
 back.addEventListener('click', unfocus);
 picks.forEach((b, i) => {
@@ -378,6 +368,7 @@ const drag = {
 	on: false,
 	id: -1,
 	planet: -1,
+	sun: false,
 	startX: 0,
 	lastX: 0,
 	lastY: 0,
@@ -397,9 +388,11 @@ stage.addEventListener('pointerdown', (e) => {
 	drag.moved = 0;
 	drag.speed = 0;
 	drag.planet = -1;
+	drag.sun = false;
 	if (solar && inSolar() && state.focus < 0) {
 		const k = solar.pick(e.clientX, e.clientY);
 		if (k >= 0 && solar.grab(k, e.clientX, e.clientY)) drag.planet = k;
+		else drag.sun = solar.overSun(e.clientX, e.clientY);
 	}
 	stage.setPointerCapture(e.pointerId);
 });
@@ -455,6 +448,11 @@ function endDrag(e: PointerEvent) {
 		return;
 	}
 	if (!inSolar()) return;
+	if (drag.sun && drag.moved < 6 && e.type === 'pointerup') {
+		drag.sun = false;
+		openArchive();
+		return;
+	}
 	if (drag.moved < 6 && e.type === 'pointerup') {
 		const k = solar ? solar.pick(e.clientX, e.clientY, state.focus) : -1;
 		if (k >= 0) focusPlanet(k);
@@ -477,6 +475,9 @@ stage.addEventListener('pointerleave', () => {
 });
 
 let solar: Solar | null = null;
+let sunHover = false;
+let sunHoverAmt = 0;
+let sunBox = '';
 let flung = false;
 let inkStart = 0;
 let entering = false;
@@ -719,8 +720,8 @@ function frame(now: number) {
 	if (showBack !== (backMe.getAttribute('aria-hidden') === 'false')) {
 		backMe.setAttribute('aria-hidden', String(!showBack));
 		backMe.tabIndex = showBack ? 0 : -1;
-		archiveButton.setAttribute('aria-hidden', String(!showBack));
-		archiveButton.tabIndex = showBack ? 0 : -1;
+		sunButton.setAttribute('aria-hidden', String(!showBack));
+		sunButton.tabIndex = showBack ? 0 : -1;
 	}
 	if (stage.classList.contains('in-solar') !== solarMode) stage.classList.toggle('in-solar', solarMode);
 	const nowEntering = state.zoomTarget === 1 && state.zoom > 0.72;
@@ -756,8 +757,11 @@ function frame(now: number) {
 				'a, button',
 			);
 			state.hover = over || !solarMode ? -1 : solar.pick(state.pointer.x, state.pointer.y, state.focus);
+			sunHover =
+				!over && solarMode && state.focus < 0 && state.hover < 0 && solar.overSun(state.pointer.x, state.pointer.y);
 			state.pointer.moved = false;
-			if (over === cubeButton) setCursorMode('label', 'Open');
+			if (sunHover) setCursorMode('label', 'Archive');
+			else if (over === cubeButton) setCursorMode('label', 'Open');
 			else if (over === talkButton) setCursorMode('label', 'Say hi');
 			else if (over?.matches('[data-holo-screen]')) setCursorMode('label', 'Open');
 			else if (!over && !doodle.magnet)
@@ -765,6 +769,8 @@ function frame(now: number) {
 		}
 	}
 	if (state.hover >= 0) state.hoverShown = state.hover;
+	if (!solarMode || state.focus >= 0 || state.sheetOpen || !state.pointer.inside) sunHover = false;
+	sunHoverAmt += ((sunHover && !reduced ? 1 : 0) - sunHoverAmt) * ease(sunHover ? 8 : 5, dt);
 	const hoverGoal = state.hover >= 0 && !reduced ? 1 : 0;
 	state.hoverAmt += (hoverGoal - state.hoverAmt) * ease(hoverGoal ? 4.5 : 2.6, dt);
 
@@ -790,9 +796,19 @@ function frame(now: number) {
 				view: zoomView(),
 				labels: solarMode ? 1 : 0,
 				ink: reduced || inkAge > 2.4 ? -1 : inkAge,
+				sunHover: sunHoverAmt,
 			},
 			now,
 		);
+	}
+	if (solar && solarMode) {
+		const d = solar.sunDisc;
+		const box = `${Math.round(d.x - d.r)},${Math.round(d.y - d.r)},${Math.round(d.r * 2)}`;
+		if (box !== sunBox) {
+			sunBox = box;
+			sunButton.style.transform = `translate3d(${Math.round(d.x - d.r)}px, ${Math.round(d.y - d.r)}px, 0)`;
+			sunButton.style.width = sunButton.style.height = `${Math.round(d.r * 2)}px`;
+		}
 	}
 	placeHolo();
 	splat.draw(now);
@@ -811,7 +827,7 @@ document.addEventListener('visibilitychange', () => {
 });
 
 function start() {
-	solar = new Solar(solarCanvas, n, labels);
+	solar = new Solar(solarCanvas, n, labels, sunLabel);
 	solar.calm = reduced;
 	solar.setQuality(TIERS[perf.tier]);
 	layout();
