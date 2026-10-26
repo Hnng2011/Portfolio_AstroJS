@@ -341,15 +341,19 @@ export function bindInkLinks(options: Omit<InkOptions, 'onCovered' | 'originX'>)
 }
 
 function drainInk() {
-	const root = document.documentElement;
 	let color = '';
 	try {
 		color = sessionStorage.getItem('ink') ?? '';
 		sessionStorage.removeItem('ink');
 	} catch {}
-	if (!color) return;
+	if (color) drain(color);
+}
+
+// The screen covered in ink of `color` drains clear, the ink sliding off past the foot: how a page arrives through
+// the ink, and how the loading sheet goes (src/lib/loader.ts).
+export function drain(color: string) {
 	const { canvas, ctx, W, H } = inkCanvas('300', 'none');
-	root.classList.remove('ink-arrive');
+	document.documentElement.classList.remove('ink-arrive');
 	ctx.fillStyle = color;
 	if (reduced()) {
 		canvas.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 220, fill: 'forwards' }).finished.then(() => canvas.remove());

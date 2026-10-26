@@ -14,6 +14,9 @@ export interface Foot extends Point {
 	// Toe angle in degrees (side view only) and how far the foot is off the ground (front and back).
 	roll: number;
 	lift: number;
+	// Side view: the leg drawn this much longer or shorter than its own length, for a foot on ground nearer or
+	// further off than him, so a step into the distance foreshortens the leg instead of bending the knee.
+	reach?: number;
 }
 
 export interface Pose {
@@ -84,6 +87,19 @@ const RIG: Record<View, { shoulders: [Point, Point]; hips: [Point, Point]; neck:
 		neck: { x: 10, y: -336 },
 	},
 };
+
+/** Hip to ankle when he stands. */
+export const LEG = ANKLE - front.hips[0].y;
+
+// The side shoe from its ankle (Hung.astro): toe 41 ahead, heel 20 behind, sole 18 below. A rolled foot pivots on
+// whichever end is down, so the ankle moves to keep that end where it was instead of pushing it into the ground.
+const SHOE = { toe: 41, heel: 20, sole: 18 };
+function rolled(f: Foot): Point {
+	const a = (f.roll * Math.PI) / 180;
+	const px = a > 0 ? SHOE.toe : -SHOE.heel;
+	const py = SHOE.sole;
+	return { x: f.x + px - (px * Math.cos(a) - py * Math.sin(a)), y: f.y + py - (px * Math.sin(a) + py * Math.cos(a)) };
+}
 
 export function rest(view: View = 'front'): Pose {
 	const side = view === 'side';
@@ -238,12 +254,14 @@ export function solve(p: Pose): Solved {
 	const side = p.body === 'side';
 	// The hips ride the bob, and in a long side-on stride they sink until both feet are within a leg's reach,
 	// the dip a real step has; the chest also folds forward when he ducks and sways with the lean.
+	const ankles = p.feet.map((f) => (side ? rolled(f) : { x: f.x, y: f.y - f.lift }));
+	const scale = p.feet.map((f) => (side ? (f.reach ?? 1) : 1));
 	let bob = p.bob;
 	if (side) {
-		const reach = LIMB.thigh + LIMB.shin - 3;
 		rig.hips.forEach((h, i) => {
-			const dx = p.feet[i].x - (h.x + p.lean * 2);
-			if (Math.abs(dx) < reach) bob = Math.max(bob, p.feet[i].y - Math.sqrt(reach * reach - dx * dx) - h.y);
+			const reach = (LIMB.thigh + LIMB.shin) * scale[i] - 3;
+			const dx = ankles[i].x - (h.x + p.lean * 2);
+			if (Math.abs(dx) < reach) bob = Math.max(bob, ankles[i].y - Math.sqrt(reach * reach - dx * dx) - h.y);
 		});
 	}
 	const hip = { x: p.lean * 2, y: bob };
@@ -268,11 +286,11 @@ export function solve(p: Pose): Solved {
 	const legs = rig.hips.map((h0, i) => {
 		const h = { x: h0.x + hip.x, y: h0.y + hip.y };
 		const f = p.feet[i];
-		const ankle = { x: f.x, y: f.y - (side ? 0 : f.lift) };
+		const ankle = ankles[i];
 		let knee: Point;
 		let end = ankle;
 		if (side) {
-			({ j: knee, end } = ik(h, ankle, LIMB.thigh, LIMB.shin, 1));
+			({ j: knee, end } = ik(h, ankle, LIMB.thigh * scale[i], LIMB.shin * scale[i], 1));
 		} else {
 			// Seen from the front a knee comes towards you: the leg shortens and the knee kicks out a little.
 			knee = lerp(h, ankle, 0.52);

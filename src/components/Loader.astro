@@ -1,0 +1,242 @@
+---
+// The loading sheet, on the first page load of a visit: a sheet of the rocket's amber ink with a count, and a little
+// rocket drawing its smoke trail across as the page's things come in: the letters (Shantell Sans), the page's files,
+// then the page's own setup (src/lib/loader.ts; in Safari, its drawings baked). Full, the rocket flies off and the
+// sheet drains away as ink, the way a page arrives from another (src/lib/ink.ts). Later loads in the visit find all
+// of it in the browser's cache and skip it (`.warm`, from the layout's head script).
+import { profile } from '../data/portfolio';
+
+// What the caption says it is doing: one line for each thing waited on, in order, then the last as it goes.
+const steps = ['Inking the letters', 'Drawing the doodles', 'Fueling the rocket', 'Liftoff!'];
+// The smoke trail, start to end; the rocket's tail rides its tip.
+const TRAIL = 'M8 40C70 28 120 50 190 38S300 30 352 38';
+---
+
+<div class="loader" data-loader data-steps={steps.join('|')} aria-hidden="true">
+	<div class="loader-in">
+		<p class="loader-count"><span data-loader-count>0</span><small>%</small></p>
+		<svg class="loader-trail" viewBox="0 0 400 64" fill="none" stroke-linecap="round" stroke-linejoin="round">
+			<g class="loader-ink">
+				<!-- Room for the ink's wobble round the thin trail (the filter's region is its box and 5% more). -->
+				<rect x="-20" y="0" width="440" height="64" stroke="none" />
+				<path class="loader-track" d={TRAIL} />
+				<path class="loader-smoke" d={TRAIL} data-loader-smoke />
+			</g>
+			<g data-loader-rocket transform="translate(8 40)">
+				<g class="loader-rocket">
+					<g class="loader-ink">
+						<rect x="-26" y="-28" width="78" height="56" stroke="none" />
+						<path class="loader-flame" d="M2 -4.5C-5 -5-11 -2-16 0C-11 2-5 5 2 4.5Z" />
+						<path class="loader-fin" d="M8 -8.5C5 -15 0 -18-4 -18.5C-2 -13 0 -10 3 -7.5Z" />
+						<path class="loader-fin" d="M8 8.5C5 15 0 18-4 18.5C-2 13 0 10 3 7.5Z" />
+						<path class="loader-hull" d="M2 -8C14 -12 30 -10 42 0C30 10 14 12 2 8C0 3 0 -3 2 -8Z" />
+						<circle class="loader-port" cx="23" cy="0" r="4.2" />
+					</g>
+				</g>
+			</g>
+		</svg>
+		<p class="loader-step t-label" data-loader-step>{steps[0]}</p>
+	</div>
+	<p class="loader-sign t-label">{profile.name} · {profile.role}</p>
+</div>
+
+<script is:inline>
+	(() => {
+		const root = document.documentElement;
+		const sheet = document.querySelector('[data-loader]');
+		if (!sheet) return;
+		if (root.classList.contains('warm')) return sheet.remove();
+		// A quick load still reads as a count; however long things take, the sheet is full after LATEST_MS.
+		const MIN_MS = 900;
+		const LATEST_MS = 6000;
+		const steps = sheet.dataset.steps.split('|');
+		const count = sheet.querySelector('[data-loader-count]');
+		const step = sheet.querySelector('[data-loader-step]');
+		const smoke = sheet.querySelector('[data-loader-smoke]');
+		const rocket = sheet.querySelector('[data-loader-rocket]');
+		const L = smoke.getTotalLength();
+		smoke.style.strokeDasharray = `${L} ${L + 2}`;
+
+		// What it waits on, each with its share of the count: the letters (their stylesheet, which the layout fetches
+		// without holding up the first paint, then the face), the page's files (the load event), and the page's own setup
+		// (`.is-started`, from src/lib/loader.ts).
+		const shares = [3, 2, 3];
+		const total = shares.reduce((a, b) => a + b);
+		const done = [false, false, false];
+		const css = document.querySelector('link[data-fonts]');
+		const cssIn = new Promise((ok) => {
+			const check = () => (!css || css.sheet || css.dataset.failed != null ? ok() : setTimeout(check, 50));
+			check();
+		});
+		const fonts = document.fonts
+			? cssIn.then(() => document.fonts.load('800 1em "Shantell Sans"')).then(() => document.fonts.ready)
+			: Promise.resolve();
+		fonts.then(
+			() => (done[0] = true),
+			() => (done[0] = true),
+		);
+		if (document.readyState === 'complete') done[1] = true;
+		else addEventListener('load', () => (done[1] = true), { once: true });
+
+		// The count, the smoke drawn up to it, and the rocket at its tip, nosing along the trail.
+		const draw = (p) => {
+			count.textContent = String(Math.round(p * 100));
+			smoke.style.strokeDashoffset = String(L * (1 - p));
+			const at = smoke.getPointAtLength(p * L);
+			const a = smoke.getPointAtLength(Math.max(0, p * L - 4));
+			const b = smoke.getPointAtLength(Math.min(L, p * L + 4));
+			const deg = (Math.atan2(b.y - a.y, b.x - a.x) * 180) / Math.PI;
+			rocket.setAttribute('transform', `translate(${at.x.toFixed(2)} ${at.y.toFixed(2)}) rotate(${deg.toFixed(1)})`);
+		};
+		draw(0);
+
+		const t0 = performance.now();
+		let last = t0;
+		let shown = 0;
+		let line = 0;
+		const tick = (now) => {
+			// A long frame (the page setting itself up) doesn't make the count leap ahead.
+			const dt = Math.min(1 / 30, (now - last) / 1000);
+			last = now;
+			done[2] ||= root.classList.contains('is-started');
+			const late = now - t0 > LATEST_MS;
+			let aim = late ? 1 : shares.reduce((sum, s, i) => sum + (done[i] ? s : 0), 0) / total;
+			// Between arrivals it edges on toward the rest, so a slow file never reads as stuck.
+			if (aim < 1) aim += (1 - aim) * 0.5 * (1 - Math.exp(-(now - t0) / 3000));
+			aim = Math.min(aim, (now - t0) / MIN_MS);
+			shown += (aim - shown) * (1 - Math.exp(-dt * 6));
+			if (aim >= 1 && shown > 0.995) shown = 1;
+			draw(shown);
+			const pending = done.indexOf(false);
+			const next = shown === 1 ? steps.length - 1 : late || pending < 0 ? steps.length - 2 : pending;
+			if (next !== line) step.textContent = steps[(line = next)];
+			if (shown < 1) return void requestAnimationFrame(tick);
+			root.classList.add('is-loaded');
+			dispatchEvent(new Event('loader:full'));
+		};
+		requestAnimationFrame(tick);
+	})();
+</script>
+
+<style>
+	.loader {
+		display: none;
+		position: fixed;
+		inset: 0;
+		z-index: 250;
+		place-items: center;
+		background: var(--color-amber);
+		color: var(--color-ink);
+	}
+
+	:global(.js:not(.warm)) .loader {
+		display: grid;
+	}
+
+	/* Gone with the page shown, should its scripts never take it away. */
+	:global(.js.is-ready) .loader {
+		display: none;
+	}
+
+	:global(:root.has-cursor) .loader {
+		cursor: progress;
+	}
+
+	.loader-in {
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		width: min(80vw, 25rem);
+		transition: opacity 0.25s var(--ease-in) 0.2s;
+	}
+
+	.loader-count {
+		font-size: clamp(5rem, 18vw, 9rem);
+		font-weight: 800;
+		letter-spacing: -0.01em;
+		line-height: 1;
+		font-variation-settings: 'INFM' 100;
+		filter: var(--ink);
+		animation: var(--ink-boil);
+	}
+
+	.loader-count small {
+		margin-left: 0.06em;
+		font-size: 0.38em;
+		font-weight: 700;
+		vertical-align: 0.95em;
+	}
+
+	.loader-trail {
+		width: 100%;
+		height: auto;
+		overflow: visible;
+	}
+
+	.loader-ink {
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	.loader-track {
+		stroke: var(--color-ink);
+		stroke-opacity: 0.3;
+		stroke-width: 2;
+		stroke-dasharray: 1 8;
+	}
+
+	.loader-smoke {
+		stroke: var(--color-ink);
+		stroke-width: 3.2;
+	}
+
+	.loader-rocket {
+		stroke: var(--color-ink);
+		stroke-width: 2.2;
+		transition: transform 0.45s var(--ease-in);
+	}
+
+	.loader-hull,
+	.loader-flame {
+		fill: #fbf7ef;
+	}
+
+	.loader-fin {
+		fill: var(--color-coral);
+	}
+
+	.loader-port {
+		fill: var(--color-blue);
+	}
+
+	.loader-flame {
+		transform-box: fill-box;
+		transform-origin: right center;
+		animation: loader-flicker 0.16s linear infinite alternate;
+	}
+
+	@keyframes loader-flicker {
+		to {
+			transform: scale(0.6, 0.8);
+		}
+	}
+
+	.loader-step {
+		margin-top: 0.75rem;
+	}
+
+	.loader-sign {
+		position: absolute;
+		inset: auto 1rem max(1.5rem, env(safe-area-inset-bottom));
+		text-align: center;
+	}
+
+	/* Full: the rocket flies off and the count and caption go after it, then the sheet drains (src/lib/loader.ts). */
+	:global(.is-loaded) .loader-rocket {
+		transform: translateX(180px);
+	}
+
+	:global(.is-loaded) .loader-in {
+		opacity: 0;
+	}
+</style>

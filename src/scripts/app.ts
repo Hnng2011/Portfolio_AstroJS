@@ -1,9 +1,10 @@
 import { hobbies, projects } from '../data/portfolio';
-import { bake } from '../lib/bake';
+import { bake, bakeDone } from '../lib/bake';
 import { Flyers } from '../lib/flyers';
 import { DoodleCursor } from '../lib/cursor';
 import { bindInkLinks } from '../lib/ink';
 import { Launch, type Stop } from '../lib/launch';
+import { onShown, ready } from '../lib/loader';
 import { Solar, type SolarView } from '../lib/solar';
 import { Splat } from '../lib/splat';
 
@@ -897,21 +898,24 @@ function start() {
 		launch.actor.greet(2);
 		say(place === 'moon' ? OFF_DUTY : 'Welcome back!');
 	};
-	root.classList.add('is-ready');
-	// He says hello once the page has settled, then, if nobody has touched anything, how to see the work.
-	let touched = false;
-	for (const type of ['wheel', 'pointerdown', 'keydown']) addEventListener(type, () => (touched = true), { once: true, passive: true });
-	window.setTimeout(() => {
-		if (launch.phase !== 'ground' || launch.place !== 'meadow' || talkUntil) return;
-		line = 0;
-		launch.actor.greet(3);
-		say(LINES[0]);
-	}, reduced ? 400 : 1300);
-	window.setTimeout(() => {
-		if (touched || launch.phase !== 'ground' || launch.place !== 'meadow' || talkUntil) return;
-		line = 2;
-		say(LINES[2]);
-	}, reduced ? 3400 : 4600);
+	// Shown once the loading sheet has gone, with the drawings baked (src/lib/loader.ts).
+	ready(bakeDone());
+	// He says hello once the page is shown and has settled, then, if nobody has touched anything, how to see the work.
+	onShown(() => {
+		let touched = false;
+		for (const type of ['wheel', 'pointerdown', 'keydown']) addEventListener(type, () => (touched = true), { once: true, passive: true });
+		window.setTimeout(() => {
+			if (launch.phase !== 'ground' || launch.place !== 'meadow' || talkUntil) return;
+			line = 0;
+			launch.actor.greet(3);
+			say(LINES[0]);
+		}, reduced ? 400 : 1300);
+		window.setTimeout(() => {
+			if (touched || launch.phase !== 'ground' || launch.place !== 'meadow' || talkUntil) return;
+			line = 2;
+			say(LINES[2]);
+		}, reduced ? 3400 : 4600);
+	});
 	last = performance.now();
 	raf = requestAnimationFrame(frame);
 }
