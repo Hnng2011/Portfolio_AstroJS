@@ -1,0 +1,427 @@
+---
+// His hobbies around his room in the moon base. Each is a doodle you can point at (it jitters and its tag
+// comes up) and click (he walks over, it plays, and he tells you about it). Some hobbies are two things
+// (the map and the suitcase, the beach photo and the surfboard). Placed like the furniture in Base.astro.
+import { hobbies } from '../data/portfolio';
+
+const INK = '#17130f';
+const CREAM = '#fbf7ef';
+const frames = [0, 1, 2];
+
+// One entry per thing: which hobby it belongs to, where it stands (Base.astro's --dx/--dy/--s) and its size.
+// The map and the photo hang above his head so he never stands in front of them.
+const things = [
+	{ key: 'map', hobby: 'travel', dx: -150, dy: 520, s: 0.75, w: 300, h: 200 },
+	{ key: 'board', hobby: 'beach', dx: -262, dy: 90, s: 0.85, w: 120, h: 330 },
+	{ key: 'case', hobby: 'travel', dx: -132, dy: 74, s: 0.9, w: 200, h: 170 },
+	{ key: 'photo', hobby: 'beach', dx: 610, dy: 500, s: 0.85, w: 190, h: 150 },
+	{ key: 'monitor', hobby: 'gaming', dx: 300, dy: 268, s: 0.85, w: 220, h: 180 },
+	{ key: 'desk', hobby: 'gear', dx: 300, dy: 252, s: 0.85, w: 300, h: 74 },
+	{ key: 'laptop', hobby: 'code', dx: 490, dy: 262, s: 0.85, w: 200, h: 140 },
+] as const;
+const about = Object.fromEntries(hobbies.map((h) => [h.id, h]));
+
+// A 65% keyboard seen from the front edge of the desk: three rows of thirteen and a bottom row with its
+// spacebar, a few caps in colour.
+const keys = [
+	...[0, 1, 2].flatMap((row) =>
+		Array.from({ length: 13 }, (_, col) => ({ x: -106 + col * 15.6 + row * 3, y: -52 + row * 9, w: 12 })),
+	),
+	...[-100, -84, -68].map((x) => ({ x, y: -25, w: 12 })),
+	{ x: -52, y: -25, w: 84 },
+	...[36, 52, 68].map((x) => ({ x, y: -25, w: 12 })),
+].map((k, i) => ({ ...k, i, fill: i === 0 ? '#ef8f6f' : i === 38 ? '#5fb3a3' : k.w > 12 ? '#f2a541' : CREAM }));
+
+// The routes on the map: pinned places and the string between them.
+const pins = [
+	[-96, -128],
+	[-40, -150],
+	[18, -116],
+	[70, -140],
+	[40, -78],
+];
+---
+
+<svg class="hobby-defs" width="0" height="0" focusable="false" aria-hidden="true">
+	<defs>
+		<g id="thing-map" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-140 -196L-48 -186L48 -196L140 -186V-10L48 -20L-48 -10L-140 -20Z" fill="#f3ecdc" stroke-width="3" />
+			<path d="M-48 -186V-10M48 -196V-20" fill="none" stroke-width="1.6" opacity="0.4" />
+			<path d="M-120 -150q20-22 46-12t28 22-20 30-40 4-14-44zM-30 -170q26-12 44 2t-4 30-36 6-4-38zM20 -120q30-10 54 4t20 26-30 18-40-14-4-34zM60 -160q20-8 36 4t-6 18-26 2-4-24zM10 -70q16-6 28 4t-6 18-20 0-2-22z" fill="#a8cc93" stroke-width="2.2" />
+			<path d={`M${pins.map(([x, y]) => `${x} ${y}`).join('L')}`} fill="none" stroke="#da251d" stroke-width="1.8" stroke-dasharray="5 4" />
+			{pins.map(([x, y]) => (
+				<g>
+					<circle cx={x} cy={y - 8} r="6" fill="#da251d" stroke-width="2" />
+					<path d={`M${x} ${y - 2}v6`} fill="none" stroke-width="2" />
+				</g>
+			))}
+			<g transform="rotate(-8 -116 -40)">
+				<rect x="-140" y="-70" width="50" height="58" fill={CREAM} stroke-width="2.4" />
+				<rect x="-134" y="-64" width="38" height="36" fill="#7aa6d9" stroke="none" />
+				<path d="M-134 -40l12-12 10 8 8-6 8 10v12h-38z" fill="#8fbf7f" stroke="none" />
+			</g>
+			<g transform="rotate(10 118 -44)">
+				<rect x="94" y="-74" width="50" height="58" fill={CREAM} stroke-width="2.4" />
+				<rect x="100" y="-68" width="38" height="36" fill="#f2a541" stroke="none" />
+				<circle cx="126" cy="-58" r="6" fill="#ef8f6f" stroke="none" />
+			</g>
+			<path d="M-14 -200h28" fill="none" stroke="#f2a541" stroke-width="9" opacity="0.85" />
+		</g>
+
+		<g id="thing-case" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-28 -128V-146H28V-128" fill="none" stroke-width="8" />
+			<path d="M-28 -128V-146H28V-128" fill="none" stroke="#8a5512" stroke-width="3" />
+			<rect x="-86" y="-130" width="172" height="118" rx="16" fill="#c08a5a" stroke-width="3.2" />
+			<path d="M-42 -130V-12M42 -130V-12" fill="none" stroke="#8a5512" stroke-width="12" />
+			<path d="M-86 -94H86" fill="none" stroke-width="2.2" opacity="0.6" />
+			<path d="M-66 -12v8M66 -12v8" fill="none" stroke-width="6" />
+			<g transform="rotate(-10 -64 -60)">
+				<rect x="-78" y="-72" width="30" height="20" fill="#da251d" stroke-width="2" />
+				<path d="M-63 -67l2 5h5l-4 3 1.6 5-4.6-3-4.6 3 1.6-5-4-3h5z" fill="#ffde00" stroke="none" />
+			</g>
+			<circle cx="14" cy="-58" r="16" fill="#7aa6d9" stroke-width="2.2" />
+			<path d="M6 -56l18 -8-6 14-4-5z" fill={CREAM} stroke-width="1.6" />
+			<rect x="54" y="-90" width="26" height="22" rx="3" fill="#f2a541" stroke-width="2" transform="rotate(8 67 -79)" />
+		</g>
+
+		<g id="thing-photo" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<rect x="-90" y="-146" width="180" height="136" fill="#a8743f" stroke-width="3" />
+			<rect x="-76" y="-132" width="152" height="108" fill="#bfe0ee" stroke-width="2.4" />
+			<circle cx="44" cy="-108" r="12" fill="#f2a541" stroke-width="2" />
+			<path d="M-76 -64q20-8 38 0t38 0 38 0 38 0V-46H-76Z" fill="#5f9fd0" stroke-width="2" />
+			<path d="M-76 -46q60-10 152 0V-24H-76Z" fill="#f1dca9" stroke-width="2" />
+			<path d="M-46 -46q2-30 10-52M-36 -98q-16-4-26 6M-36 -98q14-8 26-2M-36 -98q-4-14-16-18" fill="none" stroke-width="2.4" />
+			<path d="M-60 -84q14 2 24 -2M10 -80q10 -2 18 0" fill="none" stroke="#fff" stroke-width="2" opacity="0.6" />
+			<path d="M-6 -150l10 -18 10 18" fill="none" stroke-width="2" />
+		</g>
+
+		<g id="thing-board" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-6 -324C34 -300 46 -150 30 -10C26 0 -26 0 -30 -10C-46 -150-44 -300-6 -324Z" fill="#5fb3a3" stroke-width="3.2" transform="rotate(8 0 -6)" />
+			<path d="M-2 -316C-4 -230 2 -100 0 -6" fill="none" stroke={CREAM} stroke-width="8" transform="rotate(8 0 -6)" />
+			<path d="M-2 -316C-4 -230 2 -100 0 -6" fill="none" stroke-width="1.6" opacity="0.4" transform="rotate(8 0 -6)" />
+			<path d="M-56 -6q4-16 16-14 10 2 10 14zM34 -4q4-16 16-14 10 2 10 14z" fill="#ef8f6f" stroke-width="2.2" />
+			<path d="M-46 -16q6 6 12 0M44 -14q6 6 12 0" fill="none" stroke-width="1.8" />
+		</g>
+
+		<g id="thing-monitor" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-12 -40V-18H12V-40" fill="#8a8178" stroke-width="2.6" />
+			<path d="M-44 -4Q0 -26 44 -4Z" fill="#8a8178" stroke-width="2.6" />
+			<rect x="-104" y="-176" width="208" height="138" rx="10" fill="#3d3731" stroke-width="3.2" />
+			<rect x="-94" y="-166" width="188" height="116" rx="5" fill="#26201c" stroke="none" />
+			<rect x="56" y="-158" width="30" height="30" rx="3" fill="none" stroke="#5fb3a3" stroke-width="2" />
+			<circle cx="68" cy="-142" r="2.6" fill="#ef8f6f" stroke="none" />
+			<path d="M-84 -62h56" fill="none" stroke="#5fb3a3" stroke-width="5" />
+			<path d="M-84 -62h56" fill="none" stroke="#8fbf7f" stroke-width="5" stroke-dasharray="40 100" />
+			<path d="M40 -62h12M58 -62h12M76 -62h12" fill="none" stroke="#f2a541" stroke-width="5" />
+		</g>
+
+		<g id="thing-desk" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-140 -64H132L144 -6H-150Z" fill="#3d3731" stroke-width="3" />
+			<path d="M-134 -58H126L136 -12H-142Z" fill="none" stroke="#8a8178" stroke-width="1.6" stroke-dasharray="5 6" />
+			<path d="M-114 -58H82L90 -16H-122Z" fill="#d6cdbf" stroke-width="2.8" />
+			<ellipse cx="114" cy="-34" rx="14" ry="20" fill={CREAM} stroke-width="2.6" />
+			<path d="M114 -52V-40M104 -40Q114 -35 124 -40" fill="none" stroke-width="1.8" />
+		</g>
+
+		<g id="thing-laptop" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-88 -14H88L100 -2H-100Z" fill="#d6cdbf" stroke-width="2.8" />
+			<path d="M-80 -16L-72 -136H72L80 -16Z" fill="#3d3731" stroke-width="3" />
+			<path d="M-70 -24L-64 -126H64L70 -24Z" fill="#26201c" stroke="none" />
+			<path d="M-16 -8h32" fill="none" stroke-width="2" />
+		</g>
+	</defs>
+</svg>
+
+{
+	things.map(({ key, hobby, dx, dy, s, w, h }) => {
+		const { title, note } = about[hobby];
+		return (
+			<button
+				type="button"
+				class="hobby at"
+				data-hobby={hobby}
+				data-thing={key}
+				style={`--dx: ${dx}; --dy: ${dy}; --s: ${s}; --w: ${w}; --h: ${h}`}
+				aria-label={`${title}: ${note}`}
+			>
+				<span class="hobby-label" aria-hidden="true">
+					<strong>{title}</strong>
+					<span>{note}</span>
+				</span>
+				<span class="hobby-art" aria-hidden="true">
+					{frames.map((n) => (
+						<svg class="h-boil" data-bake style={`--f: ${n}`} viewBox={`${-w / 2} ${-h} ${w} ${h + 16}`}>
+							<use href={`#thing-${key}`} filter={`url(#doodle-frame-${n + 1})`} />
+						</svg>
+					))}
+					<svg class="hobby-hit" viewBox={`${-w / 2} ${-h} ${w} ${h + 16}`}>
+						<use class="hit" href={`#thing-${key}`} />
+						{key === 'monitor' && (
+							<g class="act-screen" stroke-linecap="round">
+								<g class="aim" stroke="#ef8f6f" stroke-width="3" fill="none">
+									<circle cx="0" cy="-110" r="17" />
+									<path d="M0 -134v11M0 -97v11M-24 -110h11M13 -110h11" />
+								</g>
+								<text class="gg" x="0" y="-96" text-anchor="middle" fill="#f2a541" font-family="Shantell Sans, sans-serif" font-size="40" font-weight="800">GG</text>
+							</g>
+						)}
+						{key === 'desk' && (
+							<g stroke={INK} stroke-width="1.3">
+								{keys.map((k) => (
+									<rect class="key" style={`--i: ${k.i}`} x={k.x} y={k.y} width={k.w} height="7.4" rx="1.8" fill={k.fill} />
+								))}
+								<text class="clack" x="-12" y="-74" text-anchor="middle" fill={INK} stroke="none" font-family="Shantell Sans, sans-serif" font-size="20" font-weight="800">clack!</text>
+							</g>
+						)}
+						{key === 'laptop' && (
+							<g fill="none" stroke-width="2.6" stroke-linecap="round">
+								<path class="wave" d="M-52 -50C-40 -76-26 -26-12 -50S16 -76 30 -50 44 -34 50 -46" stroke="#5fb3a3" />
+								<path class="wave" d="M-52 -72C-40 -96-26 -50-12 -72S16 -96 30 -72 44 -56 50 -68" stroke="#f2a541" />
+								<path class="wave" d="M-52 -94C-40 -116-26 -72-12 -94S16 -116 30 -94 44 -80 50 -90" stroke="#ef8f6f" />
+								<circle cx="38" cy="-104" r="7" stroke="#b49ad6" />
+							</g>
+						)}
+						{key === 'case' && (
+							<g class="act-plane" stroke={INK} stroke-width="2.2" stroke-linejoin="round">
+								<path d="M-14 -142l34 -12-12 30-6-10z" fill={CREAM} />
+								<path d="M2 -134l18 -20" fill="none" />
+							</g>
+						)}
+					</svg>
+				</span>
+			</button>
+		);
+	})
+}
+
+<style>
+	.hobby-defs {
+		position: absolute;
+	}
+
+	.hobby {
+		pointer-events: none;
+	}
+
+	.hobby-art {
+		position: relative;
+		display: block;
+		width: 100%;
+		height: 100%;
+		pointer-events: none;
+	}
+
+	/* The three inked copies (canvases once src/lib/bake.ts has drawn them), and over them the thing again, unseen,
+	   to take the click on the drawing itself, with what plays on it. */
+	.hobby-art > :global(*) {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+	}
+
+	.hobby-hit > :global(*) {
+		pointer-events: visiblePainted;
+	}
+
+	.hit {
+		opacity: 0;
+	}
+
+	/* What plays on a thing is drawn over its neighbours at times; only the thing itself takes the click. */
+	.hobby-hit .act-screen,
+	.hobby-hit .act-plane,
+	.hobby-hit .clack {
+		pointer-events: none;
+	}
+
+	/* The same cheap boil as the room: three inked copies, only which one shows changes. */
+	.h-boil {
+		animation: hobby-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.h-boil + .h-boil {
+		opacity: 0;
+	}
+
+	@keyframes hobby-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	/* Pointing at one: it jitters like a drawing being nudged, and its tag comes up. */
+	.hobby:hover .hobby-art,
+	.hobby:focus-visible .hobby-art {
+		animation: hobby-nudge 0.25s steps(1) infinite;
+	}
+
+	@keyframes hobby-nudge {
+		0% {
+			rotate: -1.6deg;
+		}
+		50% {
+			rotate: 1.2deg;
+		}
+	}
+
+	.hobby-label {
+		position: absolute;
+		left: 50%;
+		bottom: calc(100% + 0.4rem);
+		isolation: isolate;
+		display: grid;
+		gap: 0.1rem;
+		width: max-content;
+		max-width: 15rem;
+		padding: 0.45rem 0.75rem 0.5rem;
+		border-radius: 255px 18px 225px 18px / 18px 225px 18px 255px;
+		color: var(--color-ink);
+		font-size: var(--text-small);
+		line-height: 1.3;
+		text-align: center;
+		translate: -50% 0.4rem;
+		opacity: 0;
+		pointer-events: none;
+		transition:
+			opacity 0.2s var(--ease-out),
+			translate 0.3s var(--ease-out);
+	}
+
+	/* The tag's paper and inked edge boil underneath; its words stay sharp. */
+	.hobby-label::before {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: -1;
+		border: 2px solid var(--color-ink);
+		border-radius: inherit;
+		background: #fbf7ef;
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	.hobby-label strong {
+		font-size: var(--text-label);
+		letter-spacing: 0.04em;
+		text-transform: uppercase;
+	}
+
+	/* The tag is for pointing; once he is over there and talking, his bubble says it instead. */
+	.hobby:hover:not(:global(.is-playing)) .hobby-label,
+	.hobby:focus-visible:not(:global(.is-playing)) .hobby-label {
+		opacity: 1;
+		translate: -50% 0;
+	}
+
+	.hobby:focus-visible {
+		outline: none;
+	}
+
+	.hobby:focus-visible .hobby-art {
+		outline: 2px dashed var(--color-amber-deep);
+		outline-offset: 6px;
+		border-radius: 12px;
+	}
+
+	/* What each thing does when he comes over to it. */
+	.act-plane {
+		opacity: 0;
+	}
+
+	.hobby:global(.is-playing) .act-plane {
+		animation: plane-off 2.2s var(--ease-in-out);
+	}
+
+	@keyframes plane-off {
+		0% {
+			opacity: 1;
+			translate: 0 30px;
+		}
+		60% {
+			opacity: 1;
+			translate: 110px -120px;
+			rotate: 12deg;
+		}
+		100% {
+			opacity: 0;
+			translate: 200px -190px;
+			rotate: 20deg;
+		}
+	}
+
+	.key {
+		transform-box: fill-box;
+	}
+
+	.hobby:global(.is-playing) .key {
+		animation: key-press 0.5s var(--ease-out) calc(var(--i) * 0.022s) 2;
+	}
+
+	@keyframes key-press {
+		40% {
+			translate: 0 2px;
+			filter: brightness(0.85);
+		}
+	}
+
+	.clack,
+	.gg {
+		opacity: 0;
+	}
+
+	.hobby:global(.is-playing) .clack {
+		animation: flash 1.6s steps(1);
+	}
+
+	.hobby:global(.is-playing) .gg {
+		animation: flash 2s steps(1);
+	}
+
+	.hobby:global(.is-playing) .aim {
+		animation: flash 2s steps(1) reverse;
+	}
+
+	@keyframes flash {
+		0%,
+		100% {
+			opacity: 0;
+		}
+		10%,
+		70% {
+			opacity: 1;
+		}
+	}
+
+	.wave {
+		stroke-dasharray: 140;
+	}
+
+	.hobby:global(.is-playing) .wave {
+		animation: draw 1.6s var(--ease-in-out);
+	}
+
+	@keyframes draw {
+		from {
+			stroke-dashoffset: 140;
+		}
+		to {
+			stroke-dashoffset: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.h-boil,
+		.hobby:hover .hobby-art,
+		.hobby:focus-visible .hobby-art,
+		.hobby:global(.is-playing) * {
+			animation: none;
+		}
+	}
+</style>

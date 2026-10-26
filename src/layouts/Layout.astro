@@ -31,6 +31,8 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 		<title>{title}</title>
 		<script is:inline>
 			document.documentElement.classList.add('js');
+			// Hide the system pointer from the first paint; the doodle cursor (src/lib/cursor.ts) replaces it.
+			if (matchMedia('(hover: hover) and (pointer: fine)').matches) document.documentElement.classList.add('has-cursor');
 			try {
 				const ink = sessionStorage.getItem('ink');
 				if (ink) {

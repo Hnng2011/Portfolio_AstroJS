@@ -1,4 +1,5 @@
 import { Actor } from '../lib/actor';
+import { bake } from '../lib/bake';
 import { DoodleCursor } from '../lib/cursor';
 import { HungDom } from '../lib/hung';
 import { Flyers } from '../lib/flyers';
@@ -36,6 +37,8 @@ const size = () => {
 };
 size();
 addEventListener('resize', size);
+// The meadow boils from canvases in Safari (see src/lib/bake.ts).
+bake();
 
 let last = performance.now();
 const loop = (now: number) => {

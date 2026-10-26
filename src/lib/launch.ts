@@ -8,6 +8,9 @@ import { Actor, Face } from './actor';
 import { FaceDom, HungDom, rest, type Pose } from './hung';
 
 export type Phase = 'ground' | 'up' | 'space' | 'down';
+// The two grounds the rocket stands on: the meadow (home) and the off-duty moon past the work.
+export type Place = 'meadow' | 'moon';
+export type Stop = Place | 'space';
 
 // The rocket's door, stairs, porthole and nozzle in its own units (the character's, at his full size).
 export const ROCKET = {
@@ -41,6 +44,9 @@ interface Step {
 	// Side steps roll the foot from heel to toe and swing the arms; flat steps (front, back, stairs) lift it.
 	side: boolean;
 }
+
+// A side-on step barely clears the floor: the roll from heel to toe does the rest. Lift it higher and he marches.
+const STRIDE_LIFT = 10;
 
 interface RocketPose {
 	x: number;
@@ -110,6 +116,23 @@ const VEIL: [number, number][] = [
 	[75, -170],
 ];
 
+// On the moon he never sets foot outside: a docking tube runs out from the base to the rocket and the camera
+// goes in through the dome's window to his room, where he walks in from the airlock (and back out again).
+const MOON_IN = {
+	tube: [1.85, 2.25],
+	portOff: [2.25, 2.4],
+	zoom: [2.35, 3.15],
+	room: [2.75, 3.15],
+	walk: [3.15, 4.29],
+	face: [4.29, 4.39],
+	end: 4.44,
+};
+const MOON_OUT = { walk: [0.1, 1.24], gone: 1.29, zoom: [1.29, 2.09], room: [1.29, 1.69], tube: [2.09, 2.44] };
+// How far the camera pushes in through the window before the room fills the screen.
+const ZOOM = 7;
+// The airlock in his room, in his units from his spot (Base.astro), and how far back it stands.
+const AIRLOCK = { dx: -360, dy: 96, k: 0.85 };
+
 // How big he is at the foot of the rocket, which is further from the camera.
 const FAR = 0.42;
 
@@ -133,21 +156,27 @@ export interface LaunchEls {
 	smoke: SVGSVGElement;
 	ground: HTMLElement[];
 	sky: HTMLElement[];
+	moon: HTMLElement;
+	base: HTMLElement;
 }
 
 type Styled = Element & ElementCSSInlineStyle;
 
 export class Launch {
 	phase: Phase = 'ground';
+	// The ground he is on, or the one this trip leaves from or lands on.
+	place: Place = 'meadow';
 	readonly actor: Actor;
-	// How far the solar system sits from its resting place (px): a screen and a bit above on the meadow.
-	sysOffset = -1e4;
+	// How far the solar system sits from its resting place (px): a screen and a bit above the meadow, a
+	// screen and a bit to the left of the moon.
+	sysX = 0;
+	sysY = -1e4;
 	// 0 on the meadow, 1 in space.
 	progress = 0;
 	intro = 0;
 	// Seconds since the camera reached the system on this trip, for its pen pass; below 0 otherwise.
 	inkAge = -1;
-	onHome: (() => void) | null = null;
+	onHome: ((place: Place) => void) | null = null;
 
 	private dom: HungDom;
 	private portFace: FaceDom;
@@ -164,6 +193,10 @@ export class Launch {
 	private F = { x: 0, y: 0 };
 	private R = { x: 0, y: 0 };
 	private P = 1;
+	private Q = 1;
+	private dome = { x: 0, y: 0 };
+	private fold = 1;
+	private outpost: { el: HTMLElement; tube: SVGGElement; body: SVGRectElement; folds: SVGPathElement };
 	private steps: Step[] = [];
 	private start: [Plant, Plant] = [
 		{ x: 0, y: 0, k: 1 },
@@ -179,6 +212,17 @@ export class Launch {
 	private shake = { x: 0, y: 0 };
 	private last: Record<string, string> = {};
 	private shown = true;
+	// Where he stands, as px from his spot (F), and the stroll taking him somewhere else, if any.
+	private spot = 0;
+	private stroll: { t: number; end: number; flip: boolean; to: number; done?: () => void } | null = null;
+	// Where the room's airlock is on screen.
+	private get airlock() {
+		return { x: this.F.x + AIRLOCK.dx * this.U * this.fold, y: this.F.y - AIRLOCK.dy * this.U, k: AIRLOCK.k };
+	}
+
+	private get downEnd() {
+		return this.place === 'moon' ? MOON_IN.end : DOWN.end;
+	}
 	private idleDt = 1;
 	private headAt = { x: 0, y: 0, s: 1 };
 
@@ -197,6 +241,13 @@ export class Launch {
 				svg.querySelector<SVGGElement>(`[data-${k}]`)!,
 			]),
 		);
+		const out = els.moon.querySelector<HTMLElement>('[data-outpost]')!;
+		this.outpost = {
+			el: out,
+			tube: out.querySelector<SVGGElement>('[data-tube]')!,
+			body: out.querySelector<SVGRectElement>('[data-tube-body]')!,
+			folds: out.querySelector<SVGPathElement>('[data-tube-folds]')!,
+		};
 		this.puffs = [...els.smoke.querySelectorAll<SVGGElement>('[data-puff]')].map((el) => ({
 			el,
 			born: 0,
@@ -216,9 +267,10 @@ export class Launch {
 		this.h = h;
 		const narrow = w < 768;
 		this.U = (narrow ? Math.min(h * 0.36, w * 0.8) : Math.min(h * 0.56, w * 0.4)) / 480;
-		this.F = { x: w * (narrow ? 0.25 : 0.42), y: h * (narrow ? 0.9 : 0.955) };
+		this.F = { x: w * (narrow ? 0.28 : 0.42), y: h * (narrow ? 0.9 : 0.955) };
 		this.R = { x: w * (narrow ? 0.68 : 0.64), y: h * 0.79 };
 		this.P = h * 1.15;
+		this.Q = w * 1.3;
 		const U = this.U;
 		const size = (el: HTMLElement, bw: number, bh: number) => {
 			el.style.width = `${bw * U}px`;
@@ -229,6 +281,21 @@ export class Launch {
 		size(this.els.pad, 400, 40);
 		this.els.rocket.style.transformOrigin = `${200 * U}px ${600 * U}px`;
 		this.els.smoke.setAttribute('viewBox', `0 0 ${w} ${h}`);
+		// The base stands left of the pad, its tube reaching the rocket's hull; the room is laid out round his spot.
+		this.dome = { x: this.R.x - (narrow ? 250 : 400) * U, y: this.R.y };
+		const out = this.outpost;
+		out.el.style.left = `${this.dome.x - 300 * U}px`;
+		out.el.style.top = `${this.dome.y - 330 * U}px`;
+		out.el.style.width = `${760 * U}px`;
+		out.el.style.height = `${350 * U}px`;
+		const reach = Math.max(20, (this.R.x - 96 * U - this.dome.x) / U - 190);
+		out.body.setAttribute('width', reach.toFixed(1));
+		out.folds.setAttribute('d', Array.from({ length: Math.floor(reach / 14) }, (_, i) => `M${(198 + i * 14).toFixed(1)} -194v68`).join(''));
+		this.fold = narrow ? 0.5 : 1;
+		const base = this.els.base;
+		base.style.setProperty('--u', `${U}px`);
+		base.style.setProperty('--fx', `${this.F.x}px`);
+		base.style.setProperty('--fy', `${this.F.y}px`);
 		this.last = {};
 		if (this.busy) this.plan();
 	}
@@ -241,10 +308,43 @@ export class Launch {
 		return this.phase === 'up' || this.phase === 'down';
 	}
 
-	go(to: 0 | 1) {
+	go(to: Stop) {
 		if (this.busy) return this.hurry();
-		if (to === 1 && this.phase === 'ground') this.begin('up');
-		else if (to === 0 && this.phase === 'space') this.begin('down');
+		if (to === 'space' && this.phase === 'ground') this.begin('up');
+		else if (to !== 'space' && this.phase === 'space') {
+			this.place = to;
+			this.begin('down');
+		}
+	}
+
+	// Walks side-on to a spot on the floor at screen x, then faces the camera.
+	strollTo(x: number, done?: () => void) {
+		if (this.phase !== 'ground' || this.stroll) return;
+		const from = this.F.x + this.spot;
+		const dist = x - from;
+		if (this.calm || Math.abs(dist) < 8) {
+			this.spot = x - this.F.x;
+			done?.();
+			return;
+		}
+		const U = this.U;
+		const y = this.F.y;
+		const n = Math.max(2, Math.round(Math.abs(dist) / (100 * U)));
+		const beat = 0.38;
+		const lift = STRIDE_LIFT;
+		const at = (f: number, side = 0): Plant => ({ x: from + dist * f + side * 23 * U, y, k: 1 });
+		const steps: Step[] = [];
+		const t0 = 0.12;
+		for (let i = 1; i <= n; i++) {
+			steps.push({ foot: (i % 2) as 0 | 1, to: at(i / n), t0: t0 + (i - 1) * beat, t1: t0 + i * beat, lift, side: true });
+		}
+		const end = t0 + n * beat;
+		const last = steps[steps.length - 1].foot;
+		steps.push({ foot: (1 - last) as 0 | 1, to: at(1, last === 0 ? 1 : -1), t0: end - 0.05, t1: end + 0.14, lift: 12, side: false });
+		steps[steps.length - 2].to = at(1, last === 0 ? -1 : 1);
+		this.start = [at(0, -1), at(0, 1)];
+		this.steps = steps;
+		this.stroll = { t: 0, end: end + 0.2, flip: dist < 0, to: x - this.F.x, done };
 	}
 
 	// A second ask during a trip: get on with it.
@@ -253,29 +353,52 @@ export class Launch {
 	}
 
 	private begin(phase: 'up' | 'down') {
+		// A stroll cut short by a trip ends where it was heading; a trip down lands him back on his spot.
+		if (this.stroll) this.spot = this.stroll.to;
+		this.stroll = null;
+		if (phase === 'down') this.spot = 0;
 		this.phase = phase;
-		this.t = this.calm ? (phase === 'up' ? UP.end : DOWN.end) : 0;
+		this.t = this.calm ? (phase === 'up' ? UP.end : this.downEnd) : 0;
 		this.speed = 1;
 		this.plan();
 	}
 
 	// Footsteps for this trip, in screen px, each plant with the depth scale he has there.
 	private plan() {
-		const { F, R, U } = this;
+		const { R, U } = this;
+		const F = { x: this.F.x + this.spot, y: this.F.y };
 		const along = (f: number, side = 0): Plant => {
 			const k = mix(1, FAR, f);
 			return { x: mix(F.x, R.x, f) + side * 23 * U * k, y: mix(F.y, R.y, f), k };
 		};
 		const tread = (y: number, side: number, k = FAR): Plant => ({ x: R.x + side * 23 * U * k, y: R.y + y * U, k });
 		const steps: Step[] = [];
-		const add = (foot: 0 | 1, to: Plant, [t0, t1]: number[], lift: number, side: boolean) =>
-			steps.push({ foot, to, t0, t1, lift, side });
+		const add = (foot: 0 | 1, to: Plant, [t0, t1]: number[], lift: number, side: boolean) => steps.push({ foot, to, t0, t1, lift, side });
 		const split = ([a, b]: number[], n: number) => Array.from({ length: n }, (_, i) => [a + ((b - a) * i) / n, a + ((b - a) * (i + 1)) / n]);
 		const [sill, high, low] = [...ROCKET.treads].reverse();
+		if (this.place === 'moon') {
+			const lock = this.airlock;
+			const room = (f: number, side = 0): Plant => {
+				const k = mix(1, lock.k, f);
+				return { x: mix(F.x, lock.x, f) + side * 23 * U * k, y: mix(F.y, lock.y, f), k };
+			};
+			const [w0, w1] = this.phase === 'up' ? MOON_OUT.walk : MOON_IN.walk;
+			const walk = split([w0, w1], 3);
+			if (this.phase === 'up') {
+				this.start = [room(0, -1), room(0, 1)];
+				[1 / 3, 2 / 3, 1].forEach((f, i) => add(i % 2 ? 1 : 0, room(f), walk[i], STRIDE_LIFT, true));
+			} else {
+				this.start = [room(1), room(1)];
+				[2 / 3, 1 / 3, 0].forEach((f, i) => add(i % 2 ? 1 : 0, room(f, i === 2 ? -1 : 0), walk[i], STRIDE_LIFT, true));
+				add(1, room(0, 1), [w1 - 0.04, MOON_IN.face[1]], 12, false);
+			}
+			this.steps = steps;
+			return;
+		}
 		if (this.phase === 'up') {
 			this.start = [along(0, -1), along(0, 1)];
-			const walk = split(UP.walk, 4);
-			[0.25, 0.5, 0.75, 1].forEach((f, i) => add(i % 2 ? 0 : 1, along(f, i === 3 ? -1 : 0), walk[i], 30, true));
+			const walk = split(UP.walk, 3);
+			[1 / 3, 2 / 3, 1].forEach((f, i) => add(i % 2 ? 1 : 0, along(f, i === 2 ? -1 : 0), walk[i], STRIDE_LIFT, true));
 			// Square up at the foot of the stairs: the back foot comes alongside as he turns his back.
 			add(1, along(1, 1), UP.face, 14, false);
 			const climb = split(UP.climb, 3);
@@ -291,9 +414,9 @@ export class Launch {
 			add(0, tread(low, -1), down[2], 38, false);
 			add(1, along(1), down[3], 30, false);
 			const walk = split(DOWN.walk, 3);
-			add(0, along(2 / 3), walk[0], 30, true);
-			add(1, along(1 / 3), walk[1], 30, true);
-			add(0, along(0, -1), walk[2], 30, true);
+			add(0, along(2 / 3), walk[0], STRIDE_LIFT, true);
+			add(1, along(1 / 3), walk[1], STRIDE_LIFT, true);
+			add(0, along(0, -1), walk[2], STRIDE_LIFT, true);
 			// Square up to face the camera: the last foot comes alongside.
 			add(1, along(0, 1), [DOWN.walk[1] - 0.04, DOWN.face[1]], 14, false);
 		}
@@ -305,6 +428,9 @@ export class Launch {
 			{ ...this.start[0], lift: 0, roll: 0 },
 			{ ...this.start[1], lift: 0, roll: 0 },
 		];
+		// Where each foot would be at an even pace: a swinging foot eases off and lands, but the body over them
+		// keeps going, or he lurches forward and stops at every step.
+		const pace = feet.map((f) => f.x);
 		let bob = 0;
 		let swing = 0;
 		for (const st of this.steps) {
@@ -312,34 +438,35 @@ export class Launch {
 			const f = feet[st.foot];
 			if (t >= st.t1) {
 				Object.assign(f, st.to, { lift: 0, roll: 0 });
+				pace[st.foot] = st.to.x;
 				if (st.side) swing = st.foot === 1 ? 1 : -1;
 				continue;
 			}
 			const u = (t - st.t0) / (st.t1 - st.t0);
 			const e = easeInOut(u);
+			pace[st.foot] = mix(f.x, st.to.x, st.side ? u : e);
 			f.x = mix(f.x, st.to.x, e);
 			f.y = mix(f.y, st.to.y, e);
 			f.k = mix(f.k, st.to.k, e);
 			f.lift = Math.sin(Math.PI * u) * st.lift;
 			if (st.side) {
 				// Toe-off, swing, heel strike.
-				f.roll = u < 0.3 ? 26 * (u / 0.3) : u < 0.85 ? mix(26, -14, (u - 0.3) / 0.55) : mix(-14, 0, (u - 0.85) / 0.15);
+				f.roll = u < 0.3 ? 18 * (u / 0.3) : u < 0.85 ? mix(18, -10, (u - 0.3) / 0.55) : mix(-10, 0, (u - 0.85) / 0.15);
 				swing = (st.foot === 1 ? 1 : -1) * (2 * e - 1);
 				bob = -Math.sin(Math.PI * u) * 8 + pulse(u, 0.85, 1) * 3;
 			} else {
 				bob = -Math.sin(Math.PI * u) * 5;
 			}
 		}
-		return { feet, bob, swing };
+		return { feet, bob, swing, mid: (pace[0] + pace[1]) / 2 };
 	}
 
 	// Puts the figure over its feet and writes the feet into his own units.
 	private stand(p: Pose, t: number) {
-		const { feet, bob, swing } = this.feetAt(t);
+		const { feet, bob, swing, mid: x } = this.feetAt(t);
 		const k = (feet[0].k + feet[1].k) / 2;
 		const lo = Math.max(feet[0].y, feet[1].y);
 		const hi = Math.min(feet[0].y, feet[1].y);
-		const x = (feet[0].x + feet[1].x) / 2;
 		const y = p.body === 'side' ? (lo + hi) / 2 : mix(lo, hi, 0.35);
 		const s = this.U * k;
 		const dir = p.body === 'side' && p.flip ? -1 : 1;
@@ -356,8 +483,8 @@ export class Launch {
 		// Arms swing against the legs: the near arm goes forward with the far leg.
 		if (p.body === 'side') {
 			p.hands = [
-				{ x: 4 + swing * 26, y: -164 + Math.abs(swing) * -4 },
-				{ x: 8 - swing * 30, y: -166 + Math.abs(swing) * -5 },
+				{ x: 4 + swing * 20, y: -164 + Math.abs(swing) * -3 },
+				{ x: 8 - swing * 24, y: -166 + Math.abs(swing) * -4 },
 			];
 			p.lean = 0.35;
 		}
@@ -368,6 +495,7 @@ export class Launch {
 		const p = this.actor.pose;
 		const face = this.actor.face;
 		face.update(0);
+		if (this.place === 'moon') return this.roomPose(p, t, up);
 		p.wrist = [0, 0];
 		p.open = [false, false];
 		p.over = [false, false];
@@ -405,6 +533,80 @@ export class Launch {
 		if (p.body === 'side' && (up ? t < UP.walk[0] || t > UP.walk[1] : t < DOWN.walk[0] || t > DOWN.walk[1])) {
 			p.feet = rest('side').feet;
 			p.hands = rest('side').hands;
+		}
+		return at;
+	}
+
+	// Walking between his spot and the airlock in his room: side on, head first, squaring up at the end.
+	private roomPose(p: Pose, t: number, up: boolean) {
+		const face = this.actor.face;
+		const [w0, w1] = up ? MOON_OUT.walk : MOON_IN.walk;
+		p.wrist = [0, 0];
+		p.open = [false, false];
+		p.over = [false, false];
+		p.tilt = 0;
+		p.duck = 0;
+		p.mouth = 'smile';
+		p.blink = face.blink;
+		p.lookX = face.lookX;
+		p.lookY = face.lookY;
+		p.flip = this.airlock.x < this.F.x + this.spot ? up : !up;
+		const turning = up ? t < w0 - 0.04 : t > w1 + 0.02;
+		p.head = turning ? 'front' : 'side';
+		p.body = up ? (t < w0 ? 'front' : 'side') : t > w1 + 0.05 ? 'front' : 'side';
+		p.lean = p.body === 'side' ? 0.35 : 0;
+		if (p.body !== 'side') {
+			p.hands = [
+				{ x: -62, y: -164 },
+				{ x: 62, y: -164 },
+			];
+		}
+		const at = this.stand(p, t);
+		if (p.body === 'side' && (t < w0 || t > w1)) {
+			p.feet = rest('side').feet;
+			p.hands = rest('side').hands;
+		}
+		return at;
+	}
+
+	private strollPose(dt: number) {
+		const st = this.stroll!;
+		st.t += dt;
+		const p = this.actor.pose;
+		const face = this.actor.face;
+		face.update(dt);
+		const t = st.t;
+		// Head first, then the body; and square up to the camera at the end.
+		p.head = t < 0.04 || t > st.end - 0.1 ? 'front' : 'side';
+		p.body = t < 0.08 || t > st.end - 0.06 ? 'front' : 'side';
+		p.flip = st.flip;
+		p.wrist = [0, 0];
+		p.open = [false, false];
+		p.over = [false, false];
+		p.tilt = 0;
+		p.lean = 0;
+		p.duck = 0;
+		p.mouth = face.mouth;
+		p.blink = face.blink;
+		p.lookX = face.lookX;
+		p.lookY = face.lookY;
+		if (p.body !== 'side') {
+			p.hands = [
+				{ x: -62, y: -164 },
+				{ x: 62, y: -164 },
+			];
+		}
+		const at = this.stand(p, Math.min(t, st.end));
+		if (p.body === 'side' && t < 0.12) {
+			p.feet = rest('side').feet;
+			p.hands = rest('side').hands;
+		}
+		this.dom.apply(p);
+		if (t >= st.end) {
+			this.spot = st.to;
+			this.stroll = null;
+			this.idleDt = 1;
+			st.done?.();
 		}
 		return at;
 	}
@@ -453,6 +655,22 @@ export class Launch {
 		});
 		if (this.phase === 'ground') return base;
 		if (this.phase === 'space') return this.corner();
+		if (this.place === 'moon') {
+			// To and from the moon the rocket flies sideways across the screen while the camera pans with it.
+			const { w, h } = this;
+			const over = { x: R.x, y: h * 0.6, angle: 0, scale: 1 };
+			if (this.phase === 'down') {
+				const cruise = { x: w * 0.3, y: h * 0.42, angle: 84, scale: 1 };
+				let p = blend(this.corner(), cruise, easeInOut(seg(t, 0, 0.5)));
+				p = blend(p, over, easeInOut(seg(t, 0.8, 1.25)));
+				const hop = Math.sin(Math.PI * seg(t, DOWN.touch, DOWN.touch + 0.5)) * 16 * this.U;
+				return { ...p, y: mix(p.y, R.y, easeOut(seg(t, 1.1, DOWN.touch))) - hop };
+			}
+			const back = { x: w * 0.62, y: h * 0.42, angle: -84, scale: 1 };
+			let p = { ...base, y: mix(R.y, over.y, easeIn(seg(t, UP.lift[0], UP.lift[0] + 0.7) ** 0.8)) };
+			p = blend(p, back, easeInOut(seg(t, UP.lift[0] + 0.5, UP.lift[0] + 1)));
+			return blend(p, this.corner(), easeInOut(seg(t, UP.arrive[0] + 0.1, UP.arrive[1])));
+		}
 		if (this.phase === 'up') {
 			const lift = easeIn(seg(t, UP.lift[0], UP.lift[1]) ** 0.8);
 			const rising = { ...base, y: mix(R.y, this.hover().y, lift) };
@@ -460,6 +678,24 @@ export class Launch {
 		}
 		const stood = blend(this.corner(), this.hover(), easeInOut(seg(t, DOWN.stand[0], DOWN.stand[1])));
 		return { ...stood, y: mix(stood.y, R.y, easeOut(seg(t, DOWN.descend[0], DOWN.descend[1]))) };
+	}
+
+	// How far the camera has pushed into the base, how much of his room shows, and how far the tube is out.
+	private baseView(t: number) {
+		if (this.place !== 'moon' || this.phase === 'space') return { zoom: 1, room: 0, tube: 0 };
+		if (this.phase === 'ground') return { zoom: ZOOM, room: 1, tube: 1 };
+		if (this.phase === 'down') {
+			return {
+				zoom: mix(1, ZOOM, easeIn(seg(t, MOON_IN.zoom[0], MOON_IN.zoom[1]))),
+				room: easeOut(seg(t, MOON_IN.room[0], MOON_IN.room[1])),
+				tube: easeInOut(seg(t, MOON_IN.tube[0], MOON_IN.tube[1])),
+			};
+		}
+		return {
+			zoom: mix(ZOOM, 1, easeOut(seg(t, MOON_OUT.zoom[0], MOON_OUT.zoom[1]))),
+			room: 1 - easeIn(seg(t, MOON_OUT.room[0], MOON_OUT.room[1])),
+			tube: 1 - easeInOut(seg(t, MOON_OUT.tube[0], MOON_OUT.tube[1])),
+		};
 	}
 
 	// Cartoon squash and stretch: it squats before it leaps, stretches as it accelerates, squashes on landing.
@@ -546,11 +782,12 @@ export class Launch {
 		}
 	}
 
-	private set(key: string, el: Styled, prop: 'transform' | 'opacity' | 'clip' | 'lit' | 'attr', value: string) {
+	private set(key: string, el: Styled, prop: 'transform' | 'opacity' | 'shown' | 'clip' | 'lit' | 'attr', value: string) {
 		if (this.last[key] === value) return;
 		this.last[key] = value;
 		if (prop === 'transform') el.style.transform = value;
 		else if (prop === 'opacity') el.style.opacity = value;
+		else if (prop === 'shown') el.style.visibility = value;
 		else if (prop === 'clip') el.style.clipPath = value;
 		else if (prop === 'lit') el.style.setProperty('--lit', value);
 		else el.setAttribute('transform', value);
@@ -561,17 +798,16 @@ export class Launch {
 		this.clock += dt;
 		if (this.busy) this.t += dt * this.speed;
 		if (this.phase === 'up' && this.t >= UP.end) this.phase = 'space';
-		else if (this.phase === 'down' && this.t >= DOWN.end) {
+		else if (this.phase === 'down' && this.t >= this.downEnd) {
 			this.phase = 'ground';
-			this.onHome?.();
+			this.onHome?.(this.place);
 		}
 		const t = this.t;
 		const phase = this.phase;
 		const { U } = this;
 
 		const cam = this.camAt(t);
-		this.sysOffset = cam - this.P;
-		this.progress = phase === 'space' ? 1 : phase === 'up' ? clamp(t / UP.end) : phase === 'down' ? 1 - clamp(t / DOWN.end) : 0;
+		this.progress = phase === 'space' ? 1 : phase === 'up' ? clamp(t / UP.end) : phase === 'down' ? 1 - clamp(t / this.downEnd) : 0;
 		// The planets grow in the first time he gets there; the pen pass re-inks them on every arrival.
 		if (phase === 'up' && t > UP.cam[0] + 0.5 && this.arriveAt < 0) this.arriveAt = this.clock;
 		if (phase === 'down' || phase === 'ground') this.arriveAt = -1;
@@ -586,21 +822,45 @@ export class Launch {
 			this.shake = { x: (Math.random() * 2 - 1) * amp, y: (Math.random() * 2 - 1) * amp };
 		}
 		const { x: sx, y: sy } = this.shake;
-		const world = `translate3d(${sx.toFixed(1)}px, ${(cam + sy).toFixed(1)}px, 0)`;
+		// The meadow is below space, the moon off to the right of it; only the ground in play moves.
+		const onMoon = this.place === 'moon';
+		const lift = cam / this.P;
+		const meadowY = onMoon ? this.P : cam;
+		const moonX = onMoon ? lift * this.Q : this.Q;
+		const ground = onMoon ? { x: moonX, y: 0 } : { x: 0, y: meadowY };
+		this.sysX = onMoon ? -(1 - lift) * this.Q : 0;
+		this.sysY = onMoon ? 0 : cam - this.P;
+		const world = `translate3d(${sx.toFixed(1)}px, ${(meadowY + sy).toFixed(1)}px, 0)`;
 		this.els.ground.forEach((el, i) => {
 			this.set(`g${i}`, el, 'transform', world);
-			this.set(`gv${i}`, el, 'opacity', cam > this.h * 1.05 ? '0' : '1');
+			this.set(`gv${i}`, el, 'opacity', meadowY > this.h * 1.05 ? '0' : '1');
 		});
 		// The clouds are nearer the rocket's path than the meadow is, so they rush past faster.
-		const sky = `translate3d(${sx.toFixed(1)}px, ${(cam * 1.35 + sy).toFixed(1)}px, 0)`;
+		const sky = `translate3d(${sx.toFixed(1)}px, ${(meadowY * 1.35 + sy).toFixed(1)}px, 0)`;
 		this.els.sky.forEach((el, i) => {
 			this.set(`s${i}`, el, 'transform', sky);
-			this.set(`sv${i}`, el, 'opacity', cam > this.h * 0.8 ? '0' : '1');
+			this.set(`sv${i}`, el, 'opacity', meadowY > this.h * 0.8 ? '0' : '1');
 		});
-		this.set('smoke', this.els.smoke as unknown as Styled, 'transform', world);
-		this.set('pad', this.els.pad, 'transform', `translate3d(${(this.R.x - 200 * U + sx).toFixed(1)}px, ${(this.R.y - 20 * U + cam + sy).toFixed(1)}px, 0)`);
+		// Into the base: the camera pushes in through the dome's window and his room opens out of it.
+		const view = this.baseView(t);
+		const W = { x: this.dome.x, y: this.dome.y - 110 * U };
+		const push = view.zoom === 1 ? '' : `translate(${W.x.toFixed(1)}px, ${W.y.toFixed(1)}px) scale(${view.zoom.toFixed(3)}) translate(${(-W.x).toFixed(1)}px, ${(-W.y).toFixed(1)}px) `;
+		const outside = view.room < 1;
+		this.set('moon', this.els.moon, 'transform', `${push}translate3d(${(moonX + sx).toFixed(1)}px, ${sy.toFixed(1)}px, 0)`);
+		this.set('moonOn', this.els.moon, 'shown', moonX < this.w * 1.02 && outside ? 'visible' : 'hidden');
+		this.set('tube', this.outpost.tube as unknown as Styled, 'attr', `translate(190 0) scale(${Math.max(0.001, view.tube).toFixed(3)} 1) translate(-190 0)`);
+		const grow = mix(0.3, 1, view.room);
+		this.set('base', this.els.base, 'transform', `translate(${W.x.toFixed(1)}px, ${W.y.toFixed(1)}px) scale(${grow.toFixed(3)}) translate(${(-W.x).toFixed(1)}px, ${(-W.y).toFixed(1)}px)`);
+		this.set('baseFade', this.els.base, 'opacity', view.room.toFixed(3));
+		this.set('baseOn', this.els.base, 'shown', view.room > 0 ? 'visible' : 'hidden');
+		this.set('smoke', this.els.smoke as unknown as Styled, 'transform', `${push}translate3d(${(ground.x + sx).toFixed(1)}px, ${(ground.y + sy).toFixed(1)}px, 0)`);
+		if (this.last.dust !== String(onMoon)) {
+			this.last.dust = String(onMoon);
+			this.els.smoke.classList.toggle('is-dust', onMoon);
+		}
+		this.set('pad', this.els.pad, 'transform', `translate3d(${(this.R.x - 200 * U + sx).toFixed(1)}px, ${(this.R.y - 20 * U + meadowY + sy).toFixed(1)}px, 0)`);
 
-		this.drawRocket(t, now, amp, cam, sx, sy);
+		this.drawRocket(t, now, amp, ground, sx, sy, view.zoom, W, outside);
 		this.drawCabin(t, dt, pointer);
 		if (!this.calm) {
 			this.spawnDebt += this.smokeRate(t) * dt;
@@ -609,10 +869,20 @@ export class Launch {
 			if (n > 0) this.spawn(now, n);
 			this.drawSmoke(now, dt);
 		}
-		this.drawFigure(t, dt, cam, sx, sy, pointer);
+		this.drawFigure(t, dt, ground, sx, sy, pointer);
 	}
 
-	private drawRocket(t: number, now: number, amp: number, cam: number, sx: number, sy: number) {
+	private drawRocket(
+		t: number,
+		now: number,
+		amp: number,
+		ground: { x: number; y: number },
+		sx: number,
+		sy: number,
+		zoom: number,
+		W: { x: number; y: number },
+		outside: boolean,
+	) {
 		const { U } = this;
 		const rp = this.rocketAt(t);
 		const cruise = this.phase === 'space' && !this.calm;
@@ -621,14 +891,26 @@ export class Launch {
 		// On the pad it rides the camera with the meadow; in the air its pose is already in screen space.
 		const onPad = this.phase === 'ground' || (this.phase === 'up' && t < UP.lift[0]) || (this.phase === 'down' && t > DOWN.touch);
 		const jitter = amp > 0 ? (Math.random() - 0.5) * amp * 0.6 : 0;
-		const x = rp.x - 200 * U + sx + jitter;
-		const y = rp.y - 600 * U + (onPad ? cam : 0) + sy + bobY;
+		// Its foot on screen, pushed in with the camera when it goes into the base.
+		const bx = W.x + (rp.x + (onPad ? ground.x : 0) + sx + jitter - W.x) * zoom;
+		const by = W.y + (rp.y + (onPad ? ground.y : 0) + sy + bobY - W.y) * zoom;
+		const x = bx - 200 * U;
+		const y = by - 600 * U;
 		const st = this.stretch(t);
+		const k = rp.scale * zoom;
+		// Pushed in past it, it is off the screen; and while the camera moves in or out its rough ink edge is
+		// left off, since filtering it that big costs whole frames.
+		this.set('rocketOn', this.els.rocket, 'shown', outside && bx - 200 * U * k < this.w ? 'visible' : 'hidden');
+		const zoomed = zoom > 1.02;
+		if (this.last.zoomed !== String(zoomed)) {
+			this.last.zoomed = String(zoomed);
+			this.els.rocket.classList.toggle('is-zoomed', zoomed);
+		}
 		this.set(
 			'rocket',
 			this.els.rocket,
 			'transform',
-			`translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${(rp.angle + bobA).toFixed(2)}deg) scale(${(rp.scale * (1 - st * 0.6)).toFixed(3)}, ${(rp.scale * (1 + st)).toFixed(3)})`,
+			`translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${(rp.angle + bobA).toFixed(2)}deg) scale(${(k * (1 - st * 0.6)).toFixed(3)}, ${(k * (1 + st)).toFixed(3)})`,
 		);
 		const flying = !onPad && this.phase !== 'ground';
 		if (this.last.flying !== String(flying)) {
@@ -671,6 +953,13 @@ export class Launch {
 			door = easeInOut(seg(t, DOWN.door[0], DOWN.door[1])) * (1 - easeInOut(seg(t, DOWN.doorShut[0], DOWN.doorShut[1])));
 			face = 1 - seg(t, DOWN.portOff[0], DOWN.portOff[1]);
 		}
+		// Docked to the base there are no stairs to put down: he goes through the tube.
+		if (this.place === 'moon') {
+			door = 0;
+			stairs = 0;
+			if (this.phase === 'down') face = 1 - seg(t, MOON_IN.portOff[0], MOON_IN.portOff[1]);
+			if (this.phase === 'ground') face = 0;
+		}
 		const { port, door: D } = ROCKET;
 		this.set('door', this.parts['door-panel'], 'attr', `translate(${(-(D.x1 - D.x0 + 4) * door).toFixed(1)} 0)`);
 		this.set('stairs', this.parts.stairs, 'attr', `translate(0 ${D.sill}) scale(1 ${Math.max(0.001, stairs).toFixed(3)}) translate(0 ${-D.sill})`);
@@ -700,20 +989,39 @@ export class Launch {
 		return { x: rp.x + L * Math.sin(a), y: rp.y - L * Math.cos(a) };
 	}
 
-	private drawFigure(t: number, dt: number, cam: number, sx: number, sy: number, pointer: { x: number; y: number } | null) {
+	private drawFigure(
+		t: number,
+		dt: number,
+		ground: { x: number; y: number },
+		sx: number,
+		sy: number,
+		pointer: { x: number; y: number } | null,
+	) {
 		const { U } = this;
 		const el = this.els.hung;
-		let at = { x: this.F.x, y: this.F.y, k: 1 };
+		let at = { x: this.F.x + this.spot, y: this.F.y, k: 1 };
 		let show = true;
 		let lit = 1;
 		let clip = 'none';
-		if (this.phase === 'ground') {
+		let fade = 1;
+		if (this.phase === 'ground' && this.stroll) {
+			at = this.strollPose(dt);
+		} else if (this.phase === 'ground') {
 			if (pointer) this.actor.lookAt((pointer.x - this.headAt.x) / 520, (pointer.y - this.headAt.y) / 420);
 			// Standing about he is drawn at 30 fps: plenty for breath and blinks, and half the repaints.
 			this.idleDt += dt;
 			if (this.idleDt >= 1 / 31) {
 				this.dom.apply(this.actor.update(this.idleDt));
 				this.idleDt = 0;
+			}
+		} else if (this.place === 'moon' && (this.phase === 'up' || this.phase === 'down')) {
+			// In the room he walks out of (or in from) the airlock, fading where its doorway swallows him.
+			const up = this.phase === 'up';
+			show = up ? t < MOON_OUT.gone : t >= MOON_IN.room[1];
+			if (show) {
+				at = this.rigPose(t, up);
+				this.dom.apply(this.actor.pose);
+				fade = up ? 1 - seg(t, MOON_OUT.gone - 0.18, MOON_OUT.gone) : seg(t, MOON_IN.walk[0], MOON_IN.walk[0] + 0.18);
 			}
 		} else if (this.phase === 'up') {
 			show = t < UP.enter[1];
@@ -740,10 +1048,16 @@ export class Launch {
 		}
 		if (!show) return;
 		const s = U * at.k;
-		this.set('hung', el, 'transform', `translate3d(${(at.x - 150 * s + sx).toFixed(1)}px, ${(at.y - 500 * s + cam + sy).toFixed(1)}px, 0) scale(${at.k.toFixed(3)})`);
+		this.set(
+			'hung',
+			el,
+			'transform',
+			`translate3d(${(at.x - 150 * s + ground.x + sx).toFixed(1)}px, ${(at.y - 500 * s + ground.y + sy).toFixed(1)}px, 0) scale(${at.k.toFixed(3)})`,
+		);
 		this.set('lit', el, 'lit', lit.toFixed(2));
 		this.set('clip', el, 'clip', clip);
-		this.headAt = { x: at.x, y: at.y - 486 * s + cam, s };
+		this.set('fade', el, 'opacity', fade.toFixed(2));
+		this.headAt = { x: at.x + ground.x, y: at.y - 486 * s + ground.y, s };
 	}
 
 	// Top of his head on screen, for the speech bubble.

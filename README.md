@@ -2,7 +2,7 @@
 
 Portfolio cá nhân của Phi Hung, Frontend Engineer tập trung vào React, Next.js, TypeScript, Tailwind CSS, Web3 product UI và các giao diện sản phẩm responsive.
 
-Website là một màn hình duy nhất (không cuộn trang) theo phong cách Doodle, vẽ mực tay trên giấy. Trang chủ: nhân vật đứng cạnh tên lửa trên đồng cỏ; cuộn xuống (hoặc bấm tên lửa) thì nhân vật lên tàu và bay vào một hệ mặt trời, mỗi project là một hành tinh vẽ tay riêng; cuộn ngược lên thì tàu bay về và đáp xuống. Trong hệ: kéo ngang để xoay (cuộn không xoay hệ), bấm hành tinh để đưa nó ra trước và "ném mực" mở khung xem trước, bấm khung để đọc case study.
+Website là một màn hình duy nhất (không cuộn trang) theo phong cách Doodle, vẽ mực tay trên giấy. Trang chủ: nhân vật đứng cạnh tên lửa trên đồng cỏ; cuộn xuống (hoặc bấm tên lửa) thì nhân vật lên tàu và bay vào một hệ mặt trời, mỗi project là một hành tinh vẽ tay riêng; cuộn ngược lên thì tàu bay về và đáp xuống. Cuộn tiếp từ hệ mặt trời thì bay sang mặt trăng nghỉ phép: tàu cập căn cứ bằng ống nối, camera vào qua cửa sổ mái vòm, nhân vật đi vào phòng của mình, nơi bày các sở thích (bấm vào món nào thì nhân vật kể về sở thích đó). Trong hệ: kéo ngang để xoay (cuộn không xoay hệ), bấm hành tinh để đưa nó ra trước và "ném mực" mở khung xem trước, bấm khung để đọc case study.
 
 ## Tech Stack
 
@@ -19,11 +19,13 @@ Website là một màn hình duy nhất (không cuộn trang) theo phong cách D
 ├── src/
 │   ├── components/         Stage (màn hình chính), Hung / HeadFront / HungArm (nhân vật), Rocket (tên lửa),
 │   │                       MeWave (nhân vật trang Info), Meadow (bãi cỏ, bướm ong),
+│   │                       Moon (mặt trăng và căn cứ), Base + Hobbies (phòng trong căn cứ và đồ sở thích),
 │   │                       Sheets (case study), Sketch (hình sơ project), SiteNav, Cursor, DoodleIcon
-│   ├── data/portfolio.ts   Nội dung: project, kinh nghiệm, kỹ năng, liên hệ
+│   ├── data/portfolio.ts   Nội dung: project, kinh nghiệm, kỹ năng, liên hệ, sở thích (hobbies)
 │   ├── lib/                hung (rig nhân vật: khớp, IK), actor (thở, chớp mắt, nhìn theo chuột, vẫy tay),
 │   │                       launch (lên tàu, phóng, bay vào hệ, đáp), solar (hệ mặt trời), splat (mực văng),
-│   │                       ink (đổ mực chuyển trang), flyers (bướm ong), cursor
+│   │                       ink (đổ mực chuyển trang), flyers (bướm ong), cursor,
+│   │                       bake (Safari: vẽ sẵn mỗi bản nét mực sôi ra canvas, để khỏi chạy lại bộ lọc SVG)
 │   ├── scripts/            app.ts (trang chủ: chuyến bay, hệ mặt trời, FPS), page.ts (info, contact)
 │   ├── pages/              index (màn hình chính), info, contact
 │   └── styles/global.css   Design tokens (Tailwind v4 @theme)

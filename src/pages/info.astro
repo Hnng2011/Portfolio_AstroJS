@@ -15,7 +15,7 @@ const frames = [0, 1, 2];
 
 <Layout title="Info — Phi Hung" page="info">
 	<main class="scene">
-		<SiteNav current="info" brand={false} />
+		<SiteNav current="info" />
 		<div class="info">
 			<section class="about" aria-labelledby="about-title">
 				{frames.map((n) => <span class="boil" style={`--f: ${n}; --frame: url(#doodle-frame-${n + 1})`} aria-hidden="true" />)}

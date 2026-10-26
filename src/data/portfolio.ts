@@ -284,3 +284,15 @@ export const contactLinks = [
 	{ label: 'LinkedIn', url: 'https://www.linkedin.com/in/lu-h%C3%B9ng-081320214' },
 	{ label: 'Email', url: 'mailto:luphihung111@gmail.com' },
 ];
+
+// What he does off duty, set out in his room in the moon base past the work: the owner's own list
+// (2026-10-23). `line` is what he says about it when you click it.
+export const hobbies = [
+	{ id: 'travel', title: 'Travel', note: 'Going somewhere new', line: 'I love travelling: new places, new food, new people.' },
+	{ id: 'beach', title: 'The beach', note: 'Days by the sea', line: 'The beach is where I recharge. Sun, sea, sand.' },
+	{ id: 'gaming', title: 'Gaming', note: 'League of Legends and Valorant', line: 'After work I play League of Legends and Valorant.' },
+	{ id: 'gear', title: 'Desk gear', note: 'Mechanical keyboards, mice and mousepads', line: "I'm into desk gear: mechanical keyboards, mice and mousepads." },
+	{ id: 'code', title: 'Creative coding', note: 'Code that draws', line: 'I love creative coding, the kind of code that drew this site.' },
+] as const;
+
+export type HobbyId = (typeof hobbies)[number]['id'];

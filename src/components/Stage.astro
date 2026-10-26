@@ -4,6 +4,8 @@ import DoodleIcon from './DoodleIcon.astro';
 import Cursor from './Cursor.astro';
 import Hung from './Hung.astro';
 import Meadow from './Meadow.astro';
+import Base from './Base.astro';
+import Moon from './Moon.astro';
 import Rocket from './Rocket.astro';
 import Sketch from './Sketch.astro';
 
@@ -35,6 +37,7 @@ const puffs = Array.from({ length: 26 }, () => {
 
 <main id="stage" class="stage" data-stage>
 	<Meadow />
+	<Moon />
 	<div class="pad" data-pad aria-hidden="true">
 		<svg viewBox="-200 -20 400 40" fill="none" stroke="#17130f" stroke-width="3" stroke-linejoin="round">
 			<path d="M-176 -6H176L190 6H-190Z" fill="#d9d1c3" />
@@ -56,6 +59,7 @@ const puffs = Array.from({ length: 26 }, () => {
 			))
 		}
 	</svg>
+	<Base />
 	<button type="button" class="hung" data-hung-button aria-label="Say hi to Phi Hung">
 		<svg class="hung-art" viewBox="-150 -500 300 520" aria-hidden="true">
 			<Hung />
@@ -125,6 +129,18 @@ const puffs = Array.from({ length: 26 }, () => {
 			<path d="M13 8H3m4-4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"></path>
 		</svg>
 		Fly home
+	</button>
+	<button type="button" class="pill t-label off-duty" data-off-duty aria-hidden="true" tabindex="-1">
+		Off duty
+		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+			<path d="M3 8h10M9 4l4 4-4 4" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+		</svg>
+	</button>
+	<button type="button" class="pill t-label back-work" data-back-work aria-hidden="true" tabindex="-1">
+		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
+			<path d="M13 8H3m4-4L3 8l4 4" fill="none" stroke="currentColor" stroke-width="1.4"></path>
+		</svg>
+		Back to work
 	</button>
 	<button type="button" class="pill t-label holo-back" data-holo-back aria-hidden="true" tabindex="-1">
 		<svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true">
@@ -307,6 +323,10 @@ const puffs = Array.from({ length: 26 }, () => {
 		filter: url(#doodle-rough) brightness(var(--lit, 1));
 	}
 
+	.rocket:global(.is-zoomed) :global(.rocket-art) {
+		filter: brightness(var(--lit, 1));
+	}
+
 	.rocket {
 		z-index: 4;
 	}
@@ -315,6 +335,12 @@ const puffs = Array.from({ length: 26 }, () => {
 		z-index: 5;
 		pointer-events: none;
 		overflow: visible;
+		transform-origin: 0 0;
+	}
+
+	/* Moon dust is greyer than the meadow's smoke. */
+	.smoke:global(.is-dust) {
+		fill: #ddd6c8;
 	}
 
 	.hung {
@@ -383,6 +409,17 @@ const puffs = Array.from({ length: 26 }, () => {
 		filter: var(--ink);
 	}
 
+	/* Hanging to his left, the balloon is drawn the other way round so its tail still points at him. */
+	.say:global(.is-left) .me-bubble {
+		left: auto;
+		right: 0;
+		transform-origin: 100% 100%;
+	}
+
+	.say:global(.is-left) .me-bubble::before {
+		scale: -1 1;
+	}
+
 	/* Only a bubble that is up boils. */
 	.me-bubble:global(.is-on) {
 		animation: var(--ink-boil-inside);
@@ -436,7 +473,9 @@ const puffs = Array.from({ length: 26 }, () => {
 		outline-offset: 6px;
 	}
 
-	.back-me {
+	.back-me,
+	.back-work,
+	.off-duty {
 		position: absolute;
 		left: clamp(1rem, 3vw, 2.5rem);
 		bottom: max(1.5rem, env(safe-area-inset-bottom));
@@ -446,7 +485,15 @@ const puffs = Array.from({ length: 26 }, () => {
 		transition: opacity 0.4s var(--ease-out);
 	}
 
-	.back-me[aria-hidden='false'] {
+	/* On to the moon from the bottom-right corner of space, which the cruising rocket leaves free. */
+	.off-duty {
+		left: auto;
+		right: clamp(1rem, 3vw, 2.5rem);
+	}
+
+	.back-me[aria-hidden='false'],
+	.back-work[aria-hidden='false'],
+	.off-duty[aria-hidden='false'] {
 		opacity: 1;
 		pointer-events: auto;
 	}
@@ -663,6 +710,10 @@ const puffs = Array.from({ length: 26 }, () => {
 	.picks button:not(:focus-visible)::after,
 	.back-me[aria-hidden='true']::before,
 	.back-me[aria-hidden='true']::after,
+	.back-work[aria-hidden='true']::before,
+	.back-work[aria-hidden='true']::after,
+	.off-duty[aria-hidden='true']::before,
+	.off-duty[aria-hidden='true']::after,
 	.holo-back[aria-hidden='true']::before,
 	.holo-back[aria-hidden='true']::after {
 		animation: none;
@@ -913,7 +964,8 @@ const puffs = Array.from({ length: 26 }, () => {
 			transition: opacity 0.4s var(--ease-out);
 		}
 
-		:global(.in-solar) .quick {
+		:global(.in-solar) .quick,
+		:global(.on-moon) .quick {
 			display: none;
 		}
 
@@ -948,9 +1000,21 @@ const puffs = Array.from({ length: 26 }, () => {
 			transform-origin: 0.7rem 100%;
 		}
 
-		.back-me {
+		.say:global(.is-left) .me-bubble {
+			right: -0.7rem;
+			transform-origin: calc(100% - 0.7rem) 100%;
+		}
+
+		.back-me,
+		.back-work {
 			left: 1rem;
 			bottom: max(1rem, env(safe-area-inset-bottom));
+		}
+
+		/* Above the Info/Contact row, which sits at the bottom on phones. */
+		.off-duty {
+			right: 1rem;
+			bottom: calc(max(1rem, env(safe-area-inset-bottom)) + 3.4rem);
 		}
 
 		.holo-back {
