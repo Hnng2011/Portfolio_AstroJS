@@ -5,7 +5,7 @@
 // squashy touchdown, and he climbs out and walks back to his spot. Everything is a function of the time into
 // a trip, so a trip can be hurried and every frame is reproducible.
 import { Actor, Face } from './actor';
-import { FaceDom, HungDom, rest, type Pose } from './hung';
+import { FaceDom, HungDom, LEG, rest, type Pose } from './hung';
 
 export type Phase = 'ground' | 'up' | 'space' | 'down';
 // The two grounds the rocket stands on: the meadow (home) and the off-duty moon past the work.
@@ -45,8 +45,25 @@ interface Step {
 	side: boolean;
 }
 
-// A side-on step barely clears the floor: the roll from heel to toe does the rest. Lift it higher and he marches.
-const STRIDE_LIFT = 10;
+// A side-on step: how far apart his feet are as one lands, in his own units, and how high the swinging foot clears
+// the floor. The foot comes up behind him as the knee folds early in the swing; lifted later, under him, it would
+// raise the knee in front and he would march.
+const STRIDE = 120;
+const STRIDE_LIFT = 26;
+// The share of a side-on step the back foot stays down, its heel rising, while the front one takes his weight.
+const HEEL_OFF = 0.16;
+// Of the rise between his feet on a walk into the distance, the share left for his knees; the rest foreshortens
+// the far leg (Foot.reach), or every step would read as one up a stair.
+const SLOPE = 0.35;
+
+// Where to plant the side-on steps of a walk whose depth scale runs from 1 to `k` over `px` across: evenly in his
+// own units, so a step further off is shorter on screen (he is smaller there), and as many as keep each near a
+// STRIDE. Each is the fraction of the way it lands at.
+function strides(px: number, U: number, k: number) {
+	const len = (px / U) * (k === 1 ? 1 : Math.log(1 / k) / (1 - k));
+	const n = clamp(Math.round(len / STRIDE), 2, 6);
+	return Array.from({ length: n }, (_, i) => (k === 1 ? (i + 1) / n : (1 - k ** ((i + 1) / n)) / (1 - k)));
+}
 
 interface RocketPose {
 	x: number;
@@ -58,22 +75,22 @@ interface RocketPose {
 // Up and down, in seconds from the start of the trip.
 const UP = {
 	turn: [0, 0.16],
-	walk: [0.16, 1.04],
-	face: [1.04, 1.14],
-	climb: [1.14, 1.68],
-	enter: [1.68, 1.92],
-	doorOpen: [0.5, 0.85],
-	doorShut: [1.88, 2.12],
-	stairs: [2.02, 2.34],
-	port: [2.08, 2.36],
-	thumb: [2.28, 2.46],
-	thumbDown: [2.95, 3.1],
-	ignite: [2.6, 3.05],
-	squat: [2.92, 3.1],
-	lift: [3.05, 4.15],
-	cam: [3.24, 4.15],
-	arrive: [3.95, 4.7],
-	end: 4.7,
+	walk: [0.16, 1.4],
+	face: [1.4, 1.5],
+	climb: [1.5, 2.04],
+	enter: [2.04, 2.28],
+	doorOpen: [0.86, 1.21],
+	doorShut: [2.24, 2.48],
+	stairs: [2.38, 2.7],
+	port: [2.44, 2.72],
+	thumb: [2.64, 2.82],
+	thumbDown: [3.31, 3.46],
+	ignite: [2.96, 3.41],
+	squat: [3.28, 3.46],
+	lift: [3.41, 4.51],
+	cam: [3.6, 4.51],
+	arrive: [4.31, 5.06],
+	end: 5.06,
 };
 
 const OUT = 2.16;
@@ -89,10 +106,10 @@ const DOWN = {
 	door: [1.9, 2.16],
 	stairsDown: [OUT, OUT + 0.74],
 	turn: [OUT + 0.74, OUT + 0.84],
-	walk: [OUT + 0.84, OUT + 1.72],
-	face: [OUT + 1.72, OUT + 1.82],
+	walk: [OUT + 0.84, OUT + 2.08],
+	face: [OUT + 2.08, OUT + 2.18],
 	doorShut: [OUT + 0.9, OUT + 1.16],
-	end: OUT + 1.86,
+	end: OUT + 2.22,
 };
 
 // A sparse grid over the hull and nose (rocket units) for veilPoints().
@@ -329,7 +346,7 @@ export class Launch {
 		}
 		const U = this.U;
 		const y = this.F.y;
-		const n = Math.max(2, Math.round(Math.abs(dist) / (100 * U)));
+		const n = Math.max(2, Math.round(Math.abs(dist) / (STRIDE * U)));
 		const beat = 0.38;
 		const lift = STRIDE_LIFT;
 		const at = (f: number, side = 0): Plant => ({ x: from + dist * f + side * 23 * U, y, k: 1 });
@@ -376,36 +393,51 @@ export class Launch {
 		const add = (foot: 0 | 1, to: Plant, [t0, t1]: number[], lift: number, side: boolean) => steps.push({ foot, to, t0, t1, lift, side });
 		const split = ([a, b]: number[], n: number) => Array.from({ length: n }, (_, i) => [a + ((b - a) * i) / n, a + ((b - a) * (i + 1)) / n]);
 		const [sill, high, low] = [...ROCKET.treads].reverse();
+		// Feet alternate from the left one (0, the far foot side on); a foot finishing a walk lands to its own side,
+		// and the other comes alongside to square up.
+		const sideOf = (foot: 0 | 1) => (foot === 0 ? -1 : 1);
+		const walkTo = (path: (f: number, side?: number) => Plant, at: number[], span: number[], last: 'gone' | 'square') => {
+			const walk = split(span, at.length);
+			at.forEach((f, i) => {
+				const foot = (i % 2) as 0 | 1;
+				add(foot, path(f, last === 'square' && i === at.length - 1 ? sideOf(foot) : 0), walk[i], STRIDE_LIFT, true);
+			});
+			return ((at.length - 1) % 2 ? 0 : 1) as 0 | 1;
+		};
+		// The way back: the same plants in reverse, ending where the walk out started.
+		const back = (at: number[]) => [...at.slice(0, -1).reverse(), 0];
 		if (this.place === 'moon') {
 			const lock = this.airlock;
 			const room = (f: number, side = 0): Plant => {
 				const k = mix(1, lock.k, f);
 				return { x: mix(F.x, lock.x, f) + side * 23 * U * k, y: mix(F.y, lock.y, f), k };
 			};
-			const [w0, w1] = this.phase === 'up' ? MOON_OUT.walk : MOON_IN.walk;
-			const walk = split([w0, w1], 3);
+			const at = strides(Math.abs(lock.x - F.x), U, lock.k);
 			if (this.phase === 'up') {
 				this.start = [room(0, -1), room(0, 1)];
-				[1 / 3, 2 / 3, 1].forEach((f, i) => add(i % 2 ? 1 : 0, room(f), walk[i], STRIDE_LIFT, true));
+				walkTo(room, at, MOON_OUT.walk, 'gone');
 			} else {
 				this.start = [room(1), room(1)];
-				[2 / 3, 1 / 3, 0].forEach((f, i) => add(i % 2 ? 1 : 0, room(f, i === 2 ? -1 : 0), walk[i], STRIDE_LIFT, true));
-				add(1, room(0, 1), [w1 - 0.04, MOON_IN.face[1]], 12, false);
+				const other = walkTo(room, back(at), MOON_IN.walk, 'square');
+				add(other, room(0, sideOf(other)), [MOON_IN.walk[1] - 0.04, MOON_IN.face[1]], 12, false);
 			}
 			this.steps = steps;
 			return;
 		}
+		const at = strides(Math.abs(R.x - F.x), U, FAR);
 		if (this.phase === 'up') {
 			this.start = [along(0, -1), along(0, 1)];
-			const walk = split(UP.walk, 3);
-			[1 / 3, 2 / 3, 1].forEach((f, i) => add(i % 2 ? 1 : 0, along(f, i === 2 ? -1 : 0), walk[i], STRIDE_LIFT, true));
-			// Square up at the foot of the stairs: the back foot comes alongside as he turns his back.
-			add(1, along(1, 1), UP.face, 14, false);
+			// Square up at the foot of the stairs: the back foot comes alongside as he turns his back; the other one
+			// takes the first stair.
+			const other = walkTo(along, at, UP.walk, 'square');
+			add(other, along(1, sideOf(other)), UP.face, 14, false);
+			const a = (1 - other) as 0 | 1;
+			const b = other;
 			const climb = split(UP.climb, 3);
-			add(0, tread(low, -1), climb[0], 44, false);
-			add(1, tread(high, 1), climb[1], 44, false);
-			add(0, tread(sill, -1), climb[2], 44, false);
-			add(1, tread(sill - 8, 0.6, FAR * 0.9), UP.enter, 30, false);
+			add(a, tread(low, sideOf(a)), climb[0], 44, false);
+			add(b, tread(high, sideOf(b)), climb[1], 44, false);
+			add(a, tread(sill, sideOf(a)), climb[2], 44, false);
+			add(b, tread(sill - 8, 0.6 * sideOf(b), FAR * 0.9), UP.enter, 30, false);
 		} else {
 			this.start = [tread(sill - 8, -0.6, FAR * 0.9), tread(sill - 8, 0.6, FAR * 0.9)];
 			const down = split(DOWN.stairsDown, 4);
@@ -413,12 +445,9 @@ export class Launch {
 			add(1, tread(high, 1), down[1], 38, false);
 			add(0, tread(low, -1), down[2], 38, false);
 			add(1, along(1), down[3], 30, false);
-			const walk = split(DOWN.walk, 3);
-			add(0, along(2 / 3), walk[0], STRIDE_LIFT, true);
-			add(1, along(1 / 3), walk[1], STRIDE_LIFT, true);
-			add(0, along(0, -1), walk[2], STRIDE_LIFT, true);
 			// Square up to face the camera: the last foot comes alongside.
-			add(1, along(0, 1), [DOWN.walk[1] - 0.04, DOWN.face[1]], 14, false);
+			const other = walkTo(along, back(at), DOWN.walk, 'square');
+			add(other, along(0, sideOf(other)), [DOWN.walk[1] - 0.04, DOWN.face[1]], 14, false);
 		}
 		this.steps = steps;
 	}
@@ -430,7 +459,7 @@ export class Launch {
 		];
 		// Where each foot would be at an even pace: a swinging foot eases off and lands, but the body over them
 		// keeps going, or he lurches forward and stops at every step.
-		const pace = feet.map((f) => f.x);
+		const pace = feet.map((f) => ({ x: f.x, y: f.y }));
 		let bob = 0;
 		let swing = 0;
 		for (const st of this.steps) {
@@ -438,54 +467,66 @@ export class Launch {
 			const f = feet[st.foot];
 			if (t >= st.t1) {
 				Object.assign(f, st.to, { lift: 0, roll: 0 });
-				pace[st.foot] = st.to.x;
+				pace[st.foot] = { x: st.to.x, y: st.to.y };
 				if (st.side) swing = st.foot === 1 ? 1 : -1;
 				continue;
 			}
 			const u = (t - st.t0) / (st.t1 - st.t0);
-			const e = easeInOut(u);
-			pace[st.foot] = mix(f.x, st.to.x, st.side ? u : e);
-			f.x = mix(f.x, st.to.x, e);
-			f.y = mix(f.y, st.to.y, e);
-			f.k = mix(f.k, st.to.k, e);
-			f.lift = Math.sin(Math.PI * u) * st.lift;
 			if (st.side) {
-				// Toe-off, swing, heel strike.
-				f.roll = u < 0.3 ? 18 * (u / 0.3) : u < 0.85 ? mix(18, -10, (u - 0.3) / 0.55) : mix(-10, 0, (u - 0.85) / 0.15);
-				swing = (st.foot === 1 ? 1 : -1) * (2 * e - 1);
-				bob = -Math.sin(Math.PI * u) * 8 + pulse(u, 0.85, 1) * 3;
+				pace[st.foot] = { x: mix(f.x, st.to.x, u), y: mix(f.y, st.to.y, u) };
+				// The heel comes up while the front foot takes his weight; toe-off, the foot swings through with the
+				// knee folding early, the heel strikes with the toes up, and the foot slaps flat.
+				const s = seg(u, HEEL_OFF, 1);
+				const e = easeInOut(s);
+				// A short step (the first, from standing) barely lifts the foot: it is ahead of him by mid-swing.
+				const travel = Math.abs(st.to.x - f.x) / (this.U * f.k);
+				f.x = mix(f.x, st.to.x, e);
+				f.y = mix(f.y, st.to.y, e);
+				f.k = mix(f.k, st.to.k, e);
+				f.lift = Math.sin(Math.PI * seg(s, 0, 0.88) ** 0.7) * st.lift * clamp(travel / (2 * STRIDE), 0.45, 1);
+				f.roll =
+					u < HEEL_OFF ? 22 * (u / HEEL_OFF) : s < 0.25 ? 22 : s < 0.8 ? mix(22, -14, (s - 0.25) / 0.55) : s < 0.88 ? -14 : mix(-14, 0, (s - 0.88) / 0.12);
+				// The hips dip as the feet part (hung.ts); the arms reach the end of their swing as the heel lands.
+				swing = (st.foot === 1 ? 1 : -1) * (2 * easeInOut(u) - 1);
 			} else {
+				const e = easeInOut(u);
+				pace[st.foot] = { x: mix(f.x, st.to.x, e), y: mix(f.y, st.to.y, e) };
+				f.x = mix(f.x, st.to.x, e);
+				f.y = mix(f.y, st.to.y, e);
+				f.k = mix(f.k, st.to.k, e);
+				f.lift = Math.sin(Math.PI * u) * st.lift;
 				bob = -Math.sin(Math.PI * u) * 5;
 			}
 		}
-		return { feet, bob, swing, mid: (pace[0] + pace[1]) / 2 };
+		return { feet, bob, swing, mid: (pace[0].x + pace[1].x) / 2, ground: (pace[0].y + pace[1].y) / 2 };
 	}
 
 	// Puts the figure over its feet and writes the feet into his own units.
 	private stand(p: Pose, t: number) {
-		const { feet, bob, swing, mid: x } = this.feetAt(t);
+		const { feet, bob, swing, mid: x, ground } = this.feetAt(t);
 		const k = (feet[0].k + feet[1].k) / 2;
+		const side = p.body === 'side';
 		const lo = Math.max(feet[0].y, feet[1].y);
 		const hi = Math.min(feet[0].y, feet[1].y);
-		const y = p.body === 'side' ? (lo + hi) / 2 : mix(lo, hi, 0.35);
+		const y = side ? ground : mix(lo, hi, 0.35);
 		const s = this.U * k;
-		const dir = p.body === 'side' && p.flip ? -1 : 1;
+		const dir = side && p.flip ? -1 : 1;
 		p.bob = bob;
 		feet.forEach((f, i) => {
-			const side = p.body === 'side';
+			const dy = (f.y - y) / s;
 			p.feet[i] = {
 				x: ((f.x - x) / s) * dir,
-				y: (f.y - y) / s - 18 - (side ? f.lift : 0),
+				y: dy - 18 - (side ? f.lift : 0),
 				roll: side ? f.roll : 0,
 				lift: side ? 0 : f.lift,
+				// A foot up the screen from him is on ground further off, not on a step.
+				reach: side ? 1 + ((1 - SLOPE) * dy) / LEG : 1,
 			};
 		});
-		// Arms swing against the legs: the near arm goes forward with the far leg.
-		if (p.body === 'side') {
-			p.hands = [
-				{ x: 4 + swing * 20, y: -164 + Math.abs(swing) * -3 },
-				{ x: 8 - swing * 24, y: -166 + Math.abs(swing) * -4 },
-			];
+		// Arms swing against the legs, the near arm forward with the far leg, each hand rising as it comes forward.
+		if (side) {
+			const arm = (x0: number, y0: number, reach: number, a: number) => ({ x: x0 + a * reach, y: y0 - Math.abs(a) * (a > 0 ? 14 : 4) });
+			p.hands = [arm(4, -164, 30, swing), arm(8, -166, 38, -swing)];
 			p.lean = 0.35;
 		}
 		return { x, y, k };
