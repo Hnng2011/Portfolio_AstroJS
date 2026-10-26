@@ -432,8 +432,8 @@ a {
 }
 
 @media (hover: hover) and (pointer: fine) {
-	body.has-cursor,
-	body.has-cursor * {
+	:root.has-cursor,
+	:root.has-cursor * {
 		cursor: none;
 	}
 }

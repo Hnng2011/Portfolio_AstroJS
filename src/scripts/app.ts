@@ -1,8 +1,9 @@
-import { projects } from '../data/portfolio';
+import { hobbies, projects } from '../data/portfolio';
+import { bake } from '../lib/bake';
 import { Flyers } from '../lib/flyers';
 import { DoodleCursor } from '../lib/cursor';
 import { bindInkLinks } from '../lib/ink';
-import { Launch } from '../lib/launch';
+import { Launch, type Stop } from '../lib/launch';
 import { Solar, type SolarView } from '../lib/solar';
 import { Splat } from '../lib/splat';
 
@@ -27,6 +28,8 @@ const rocketButton = stage.querySelector<HTMLButtonElement>('[data-rocket]')!;
 const hungButton = stage.querySelector<HTMLButtonElement>('[data-hung-button]')!;
 const sayBox = stage.querySelector<HTMLElement>('[data-say]')!;
 const backMe = stage.querySelector<HTMLButtonElement>('[data-back-me]')!;
+const offDuty = stage.querySelector<HTMLButtonElement>('[data-off-duty]')!;
+const backToWork = stage.querySelector<HTMLButtonElement>('[data-back-work]')!;
 const flingHint = stage.querySelector<HTMLElement>('[data-fling-hint]')!;
 const bubble = stage.querySelector<HTMLElement>('[data-bubble]')!;
 const LINES = [
@@ -34,6 +37,7 @@ const LINES = [
 	'I build product UI with React, Next.js and TypeScript.',
 	'My work is up there. Scroll and we fly!',
 ];
+const OFF_DUTY = 'My room on the moon. Click around: this is what I do for fun.';
 let line = -1;
 const nextLine = () => {
 	let k = Math.floor(Math.random() * LINES.length);
@@ -43,8 +47,10 @@ const nextLine = () => {
 };
 let talkUntil = 0;
 
+let bubbleW = 0;
 function say(text: string) {
 	bubble.textContent = text;
+	bubbleW = bubble.offsetWidth;
 	bubble.classList.remove('is-on');
 	void bubble.offsetWidth;
 	bubble.classList.add('is-on');
@@ -66,6 +72,8 @@ const launch = new Launch(
 		smoke: stage.querySelector<SVGSVGElement>('[data-smoke]')!,
 		ground: [...stage.querySelectorAll<HTMLElement>('[data-meadow], [data-flyers]')],
 		sky: [...stage.querySelectorAll<HTMLElement>('[data-clouds]')],
+		moon: stage.querySelector<HTMLElement>('[data-moon]')!,
+		base: stage.querySelector<HTMLElement>('[data-base]')!,
 	},
 	reduced,
 );
@@ -90,12 +98,13 @@ const state = {
 };
 const inSolar = () => launch.inSpace;
 
-// Up to the work, or home to the meadow; a second ask during a trip hurries it along.
-function fly(v: 0 | 1) {
+// Up to the work, home to the meadow, or on to the off-duty moon; a second ask during a trip hurries it along.
+function fly(to: Stop) {
 	hush();
-	if (v === 0) unfocus();
-	launch.go(v);
+	if (to !== 'space') unfocus();
+	launch.go(to);
 }
+const onMoon = () => launch.phase === 'ground' && launch.place === 'moon';
 
 bindInkLinks({ color: '#f2a541' });
 
@@ -292,7 +301,7 @@ Object.values(sheets).forEach((dialog) => {
 let swallowClick = false;
 rocketButton.addEventListener('click', () => {
 	if (swallowClick) return;
-	fly(launch.inSpace ? 0 : 1);
+	fly(launch.inSpace ? 'meadow' : 'space');
 });
 hungButton.addEventListener('click', () => {
 	if (swallowClick || launch.phase !== 'ground') return;
@@ -300,7 +309,55 @@ hungButton.addEventListener('click', () => {
 	if (line === 0) launch.actor.greet(2);
 	say(text);
 });
-backMe.addEventListener('click', () => fly(0));
+backMe.addEventListener('click', () => fly('meadow'));
+
+// In his room on the moon: click a thing and he walks over to it, it plays, and he tells you about that hobby.
+const props = [...stage.querySelectorAll<HTMLButtonElement>('[data-hobby]')];
+const arts = props.map((p) => p.querySelector<HTMLElement>('.hobby-art')!);
+
+// Where to stand for a thing: as near it as he can get without standing in front of it, and covering as
+// little of the other things as possible.
+function standFor(target: number) {
+	const head = launch.head();
+	const half = 64 * head.s;
+	// Things hung higher than his head are never in his way.
+	const top = head.y + 8 * head.s;
+	const boxes = arts.map((a) => a.getBoundingClientRect());
+	const goal = boxes[target];
+	const mid = goal.left + goal.width / 2;
+	let best = head.x;
+	let cost = Infinity;
+	for (let x = half + 8; x <= innerWidth - half - 8; x += 6) {
+		let c = Math.abs(x - mid) + Math.abs(x - head.x) * 0.15;
+		boxes.forEach((b, i) => {
+			if (b.bottom < top) return;
+			const cover = Math.min(x + half, b.right) - Math.max(x - half, b.left);
+			if (cover > 0) c += i === target ? 1e6 : cover * 4;
+		});
+		if (c < cost) [cost, best] = [c, x];
+	}
+	return best;
+}
+
+props.forEach((prop, i) => {
+	const hobby = hobbies.find((h) => h.id === prop.dataset.hobby)!;
+	prop.addEventListener('click', () => {
+		if (!onMoon()) return;
+		hush();
+		launch.strollTo(standFor(i), () => {
+			const r = arts[i].getBoundingClientRect();
+			const head = launch.head();
+			launch.actor.lookAt((r.left + r.width / 2 - head.x) / 300, (r.top + r.height / 2 - head.y) / 300);
+			prop.classList.remove('is-playing');
+			void prop.offsetWidth;
+			prop.classList.add('is-playing');
+			window.setTimeout(() => prop.classList.remove('is-playing'), 2600);
+			say(hobby.line);
+		});
+	});
+});
+offDuty.addEventListener('click', () => fly('moon'));
+backToWork.addEventListener('click', () => fly('space'));
 sunButton.addEventListener('click', openArchive);
 screens.forEach((s, i) => s.addEventListener('click', () => openSheet('case', i)));
 back.addEventListener('click', unfocus);
@@ -308,7 +365,7 @@ picks.forEach((b, i) => {
 	// Tabbing to a project from the meadow flies there first, in a hurry.
 	b.addEventListener('focus', () => {
 		if (!inSolar()) {
-			fly(1);
+			fly('space');
 			launch.hurry();
 		}
 		focusPlanet(i);
@@ -345,26 +402,20 @@ addEventListener(
 			if (fresh) launch.hurry();
 			return;
 		}
-		if (!inSolar()) {
-			// Down the page is up to the work, after a little travel so a stray tick does not launch him.
-			wheel.sum += vertical ? d : 0;
-			if (wheel.sum > 40 && !wheel.spent) {
-				wheel.spent = true;
-				fly(1);
-			}
-			return;
-		}
-		if (state.focus >= 0) {
+		// The trip reads like a page: down from the meadow to the work and on to the moon, back up the same way.
+		// A little travel first, so a stray tick does not set him off. Scrolling never spins the system.
+		if (!vertical) return;
+		if (inSolar() && state.focus >= 0) {
 			if (Math.abs(d) > 12) stepFocus(Math.sign(d));
 			return;
 		}
-		// Back up the page flies home. Scrolling never spins the system; dragging does.
-		if (vertical && d < 0) {
-			wheel.sum += d;
-			if (wheel.sum < -60 && !wheel.spent) {
-				wheel.spent = true;
-				fly(0);
-			}
+		wheel.sum += d;
+		if (wheel.spent || Math.abs(wheel.sum) < (inSolar() ? 60 : 40)) return;
+		const down = wheel.sum > 0;
+		const to: Stop | null = inSolar() ? (down ? 'moon' : 'meadow') : onMoon() ? (down ? null : 'space') : down ? 'space' : null;
+		if (to) {
+			wheel.spent = true;
+			fly(to);
 		}
 	},
 	{ passive: true },
@@ -378,11 +429,23 @@ addEventListener('keydown', (e) => {
 		if (next || prev || e.key === 'Escape') launch.hurry();
 		return;
 	}
-	if (!inSolar()) {
-		if (next) {
+	if (onMoon()) {
+		if (prev || e.key === 'Escape' || e.key === 'PageUp') {
 			e.preventDefault();
-			fly(1);
+			fly('space');
 		}
+		return;
+	}
+	if (!inSolar()) {
+		if (next || e.key === 'PageDown') {
+			e.preventDefault();
+			fly('space');
+		}
+		return;
+	}
+	if (e.key === 'PageDown' || e.key === 'PageUp') {
+		e.preventDefault();
+		fly(e.key === 'PageDown' ? 'moon' : 'meadow');
 		return;
 	}
 	if (next || prev) {
@@ -392,7 +455,7 @@ addEventListener('keydown', (e) => {
 	} else if (e.key === 'Escape' && state.focus >= 0) {
 		unfocus();
 	} else if (e.key === 'Escape') {
-		fly(0);
+		fly('meadow');
 	} else if (e.key === 'Enter' && state.focus >= 0 && !(e.target as HTMLElement).closest('a, button')) {
 		e.preventDefault();
 		openSheet('case', state.focus);
@@ -460,21 +523,24 @@ stage.addEventListener('pointermove', (e) => {
 		if (drag.moved > 6) setCursorMode('label', 'Whee!');
 		return;
 	}
-	// Swipe up on the meadow to launch, down in space to fly home.
+	// Swipes work like scrolling: up goes on (meadow to work to moon), down comes back.
 	const pullX = e.clientX - drag.startX;
 	const pullY = e.clientY - drag.startY;
 	const upright = Math.abs(pullY) > Math.abs(pullX) * 1.4;
 	if (!inSolar()) {
-		if (!drag.fired && upright && pullY < -60 && !launch.busy) {
-			drag.fired = true;
-			fly(1);
+		if (!drag.fired && upright && !launch.busy && Math.abs(pullY) > 60) {
+			const to: Stop | null = onMoon() ? (pullY > 0 ? 'space' : null) : pullY < 0 ? 'space' : null;
+			if (to) {
+				drag.fired = true;
+				fly(to);
+			}
 		}
 		return;
 	}
 	if (state.focus >= 0) return;
-	if (!drag.fired && upright && pullY > 80) {
+	if (!drag.fired && upright && Math.abs(pullY) > 80) {
 		drag.fired = true;
-		fly(0);
+		fly(pullY > 0 ? 'meadow' : 'moon');
 		return;
 	}
 	// Only a sideways drag turns the system; an up-and-down swipe is a scroll, and scrolls don't spin it.
@@ -530,10 +596,12 @@ function endDrag(e: PointerEvent) {
 }
 stage.addEventListener('pointerup', endDrag);
 stage.addEventListener('pointercancel', endDrag);
-stage.addEventListener('pointerleave', () => {
+stage.addEventListener('pointerleave', (e) => {
 	state.pointer.inside = false;
 	state.hover = -1;
-	if (!state.sheetOpen) cursor.classList.remove('is-on');
+	// The doodle goes only when the pointer leaves the window, not when the ink poured on the way to another
+	// page covers the stage; that page picks the doodle up where it was.
+	if (!state.sheetOpen && !e.relatedTarget) cursor.classList.remove('is-on');
 });
 
 let solar: Solar | null = null;
@@ -545,10 +613,10 @@ const splat = new Splat(splatCanvas);
 
 // The system hangs a screen above the meadow; the camera brings it down as the rocket climbs.
 function tripView(): SolarView | null {
-	if (!solar || launch.sysOffset === 0) return null;
+	if (!solar || (launch.sysX === 0 && launch.sysY === 0)) return null;
 	const w = innerWidth;
 	const h = innerHeight;
-	return { cx: w / 2, cy: solar.centerY + launch.sysOffset, s: 1, clip: { x: 0, y: 0, w, h, r: 0 } };
+	return { cx: w / 2 + launch.sysX, cy: solar.centerY + launch.sysY, s: 1, clip: { x: 0, y: 0, w, h, r: 0 } };
 }
 
 function layout() {
@@ -643,11 +711,17 @@ let sayAt = '';
 function placeSay() {
 	if (talkUntil && performance.now() > talkUntil) hush();
 	const head = launch.head();
-	const x = Math.round(head.x + (narrow.matches ? 0 : 46 * head.s));
+	// It hangs off to his right (from his head on phones), or to his left when there is no room on the right;
+	// either way it is kept on the screen.
+	const pad = 12;
+	const gap = narrow.matches ? 0 : 46 * head.s;
+	const left = head.x + gap + bubbleW + pad > innerWidth;
+	const x = Math.round(left ? Math.max(bubbleW + pad, head.x - gap) : Math.min(innerWidth - bubbleW - pad, head.x + gap));
 	const y = Math.round(head.y - 12 * head.s);
-	const key = `${x},${y}`;
+	const key = `${x},${y},${left}`;
 	if (key === sayAt) return;
 	sayAt = key;
+	sayBox.classList.toggle('is-left', left);
 	sayBox.style.transform = `translate3d(${x}px, ${y}px, 0)`;
 }
 
@@ -695,10 +769,16 @@ function frame(now: number) {
 	const solarMode = inSolar();
 	const showBack = solarMode && state.focus < 0;
 	if (showBack !== (backMe.getAttribute('aria-hidden') === 'false')) {
-		backMe.setAttribute('aria-hidden', String(!showBack));
-		backMe.tabIndex = showBack ? 0 : -1;
-		sunButton.setAttribute('aria-hidden', String(!showBack));
-		sunButton.tabIndex = showBack ? 0 : -1;
+		for (const el of [backMe, sunButton, offDuty]) {
+			el.setAttribute('aria-hidden', String(!showBack));
+			el.tabIndex = showBack ? 0 : -1;
+		}
+	}
+	const moonHere = onMoon();
+	if (moonHere !== (backToWork.getAttribute('aria-hidden') === 'false')) {
+		backToWork.setAttribute('aria-hidden', String(!moonHere));
+		backToWork.tabIndex = moonHere ? 0 : -1;
+		stage.classList.toggle('on-moon', moonHere);
 	}
 	if (stage.classList.contains('in-solar') !== solarMode) stage.classList.toggle('in-solar', solarMode);
 	const inkAge = launch.inkAge;
@@ -706,12 +786,12 @@ function frame(now: number) {
 	if (flingHint.classList.contains('is-on') !== hint) flingHint.classList.toggle('is-on', hint);
 	if (rocketButton.dataset.phase !== launch.phase) {
 		rocketButton.dataset.phase = launch.phase;
-		rocketButton.setAttribute('aria-label', launch.inSpace ? 'Fly home' : 'Fly to my work');
+		rocketButton.setAttribute('aria-label', launch.inSpace ? 'Fly home' : onMoon() ? 'Back to my work' : 'Fly to my work');
 		hungButton.inert = launch.phase !== 'ground';
 		setCursorMode('plain');
 	}
 
-	if (launch.progress < 1 && !reduced) {
+	if (launch.progress < 1 && launch.place === 'meadow' && !reduced) {
 		flyers.update(now / 1000);
 	}
 
@@ -734,8 +814,9 @@ function frame(now: number) {
 				!over && solarMode && state.focus < 0 && state.hover < 0 && solar.overSun(state.pointer.x, state.pointer.y);
 			state.pointer.moved = false;
 			if (sunHover) setCursorMode('label', 'Archive');
-			else if (over === rocketButton) setCursorMode('label', launch.inSpace ? 'Fly home' : 'Launch');
+			else if (over === rocketButton) setCursorMode('label', launch.inSpace ? 'Fly home' : onMoon() ? 'Back to work' : 'Launch');
 			else if (over === hungButton) setCursorMode('label', 'Say hi');
+			else if (over?.matches('[data-hobby]')) setCursorMode('label', 'Play');
 			else if (over?.matches('[data-holo-screen]')) setCursorMode('label', 'Open');
 			else if (!over && !doodle.magnet)
 				setCursorMode(state.hover >= 0 ? 'label' : 'plain', state.hover >= 0 ? 'View' : '');
@@ -754,7 +835,7 @@ function frame(now: number) {
 	state.leanY += (ly - state.leanY) * ease(2, dt);
 
 	// The system is drawn only once the camera is near enough to see it.
-	const sysVisible = launch.sysOffset > -innerHeight * 1.2;
+	const sysVisible = launch.sysY > -innerHeight * 1.2 && launch.sysX > -innerWidth * 1.25;
 	if (solar && (sysVisible || solarDrawn)) {
 		solarDrawn = sysVisible;
 		const swing = inkAge >= 0 && inkAge < 1.8 ? 0.5 * (1 - inkAge / 1.8) ** 2 : 0;
@@ -809,23 +890,25 @@ function start() {
 	solar.calm = reduced;
 	solar.setQuality(TIERS[perf.tier]);
 	layout();
+	// The boiling drawings, each copy drawn once into a canvas (for Safari) now that they have their sizes.
+	bake(stage);
 
-	launch.onHome = () => {
+	launch.onHome = (place) => {
 		launch.actor.greet(2);
-		say('Welcome back!');
+		say(place === 'moon' ? OFF_DUTY : 'Welcome back!');
 	};
 	root.classList.add('is-ready');
 	// He says hello once the page has settled, then, if nobody has touched anything, how to see the work.
 	let touched = false;
 	for (const type of ['wheel', 'pointerdown', 'keydown']) addEventListener(type, () => (touched = true), { once: true, passive: true });
 	window.setTimeout(() => {
-		if (launch.phase !== 'ground' || talkUntil) return;
+		if (launch.phase !== 'ground' || launch.place !== 'meadow' || talkUntil) return;
 		line = 0;
 		launch.actor.greet(3);
 		say(LINES[0]);
 	}, reduced ? 400 : 1300);
 	window.setTimeout(() => {
-		if (touched || launch.phase !== 'ground' || talkUntil) return;
+		if (touched || launch.phase !== 'ground' || launch.place !== 'meadow' || talkUntil) return;
 		line = 2;
 		say(LINES[2]);
 	}, reduced ? 3400 : 4600);

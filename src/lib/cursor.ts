@@ -22,7 +22,22 @@ export class DoodleCursor {
 		this.text = el.querySelector<HTMLElement>('[data-cursor-label]')!;
 		this.arrow = el.querySelector<SVGPathElement>('[data-cursor-arrow]')!;
 		if (!this.enabled) return;
-		document.body.classList.add('has-cursor');
+		document.documentElement.classList.add('has-cursor');
+		// A page opened from a link picks the doodle up where the pointer was, so it shows before the mouse moves.
+		try {
+			const at = JSON.parse(sessionStorage.getItem('cursor') ?? 'null');
+			if (at) {
+				this.x = at.x;
+				this.y = at.y;
+				el.classList.add('is-on');
+			}
+		} catch {}
+		addEventListener('pagehide', () => {
+			try {
+				if (el.classList.contains('is-on')) sessionStorage.setItem('cursor', JSON.stringify({ x: this.x, y: this.y }));
+				else sessionStorage.removeItem('cursor');
+			} catch {}
+		});
 		addEventListener('pointerdown', () => el.classList.add('is-down'));
 		addEventListener('pointerup', () => el.classList.remove('is-down'));
 		addEventListener('pointermove', (e) => {

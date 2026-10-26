@@ -1,0 +1,206 @@
+---
+// Inside the moon base: his off-duty room under the dome. The walls, floor and window are a backdrop; the
+// furniture and his hobbies stand on the floor around his spot, in his own units, so they keep their size
+// next to him on any screen. src/lib/launch.ts brings the room in through the dome's window and sets --u
+// (px per unit), --fx and --fy (his spot).
+import Hobbies from './Hobbies.astro';
+
+const INK = '#17130f';
+const WALL = '#ece6da';
+const PANEL = '#e2dbcd';
+const METAL = '#d6cdbf';
+const frames = [0, 1, 2];
+const f = (v: number) => v.toFixed(1);
+
+// The dome's ribs, curving from the crown down to the floor line, with rivets along them.
+const spread = [-0.9, -0.62, -0.34, 0, 0.34, 0.62, 0.9];
+const ribs = spread.map((k) => `M800 30Q${f(800 + k * 700)} 120 ${f(800 + k * 820)} 745`);
+const rivets = spread.flatMap((k) =>
+	[0.35, 0.6, 0.85].map((t) => ({
+		x: (1 - t) ** 2 * 800 + 2 * (1 - t) * t * (800 + k * 700) + t * t * (800 + k * 820),
+		y: (1 - t) ** 2 * 30 + 2 * (1 - t) * t * 120 + t * t * 745,
+	})),
+);
+---
+
+<div class="base" data-base aria-hidden="true">
+	<svg class="base-defs" width="0" height="0" focusable="false">
+		<defs>
+			<clipPath id="base-window"><circle cx="0" cy="-112" r="96" /></clipPath>
+			<g id="base-room" stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+				<rect x="-200" y="-100" width="2000" height="1100" fill={WALL} stroke="none" />
+				<path d="M-200 745V420Q-100 30 800 30Q1700 30 1800 420V745Z" fill={PANEL} stroke="none" />
+				{ribs.map((d) => <path d={d} fill="none" stroke-width="2" opacity="0.5" />)}
+				<path d="M-200 400Q800 300 1800 400M-200 600Q800 540 1800 600" fill="none" stroke-width="1.6" opacity="0.35" />
+				{rivets.map(({ x, y }) => <circle cx={f(x)} cy={f(y)} r="2.4" fill={INK} stroke="none" opacity="0.35" />)}
+				<path d="M560 80h480" fill="none" stroke="#f2a541" stroke-width="10" />
+				<path d="M560 80h480" fill="none" stroke-width="2" opacity="0.5" />
+				<path d="M600 92l-30 60M800 92v66M1000 92l30 60" fill="none" stroke="#f2a541" stroke-width="2" opacity="0.35" stroke-dasharray="6 10" />
+
+				<path d="M-200 745H1800V1000H-200Z" fill="#d9d1c3" stroke="none" />
+				<path d="M-200 745H1800" fill="none" stroke-width="3" />
+				<path d="M-200 752H1800" fill="none" stroke-width="1.4" opacity="0.4" />
+				{[-600, -200, 200, 600, 1000, 1400, 1800, 2200].map((x) => <path d={`M${f(800 + (x - 800) * 0.42)} 745L${f(x)} 1000`} fill="none" stroke-width="1.6" opacity="0.35" />)}
+				<path d="M-200 820H1800M-200 920H1800" fill="none" stroke-width="1.4" opacity="0.3" />
+			</g>
+		</defs>
+	</svg>
+
+	{
+		frames.map((n) => (
+			<svg class="base-boil" data-bake style={`--f: ${n}`} viewBox="0 0 1600 900" preserveAspectRatio="xMidYMax slice">
+				<use href="#base-room" filter={`url(#doodle-frame-${n + 1})`} />
+			</svg>
+		))
+	}
+
+	<!-- Fixed furniture: the window with the Earth in it, the airlock he comes in by, a plant, the rug, the desk
+	     and its chair. -->
+	<svg class="at thing" style="--dx: 300; --dy: 470; --w: 230; --h: 224; --s: 0.85" viewBox="-115 -224 230 240">
+		<g stroke={INK} stroke-linecap="round" stroke-linejoin="round">
+			<circle cx="0" cy="-112" r="112" fill={METAL} stroke-width="3.4" />
+			<circle cx="0" cy="-112" r="96" fill="#e4e8ee" stroke-width="3" />
+			<g clip-path="url(#base-window)">
+				<circle cx="36" cy="-142" r="40" fill="#7aa6d9" stroke-width="2.6" />
+				<path d="M10 -150c6-8 16-6 18 0s-4 12 2 16-4 10-12 6-14-12-8-22zM40 -168c8-3 18 2 20 8s-6 7-12 5-11-8-8-13z" fill="#8fbf7f" stroke-width="2" />
+				<path d="M-64 -182h8M-60 -186v8M-40 -52h6M-37 -55v6M70 -62h8M74 -66v8" fill="none" stroke-width="1.8" opacity="0.5" />
+				<path d="M-80 -172q20-40 64-52" fill="none" stroke="#fff" stroke-width="8" opacity="0.6" />
+			</g>
+			{Array.from({ length: 10 }, (_, k) => {
+				const a = (k / 10) * Math.PI * 2;
+				return <circle cx={f(Math.cos(a) * 104)} cy={f(-112 + Math.sin(a) * 104)} r="2.8" fill={INK} stroke="none" />;
+			})}
+		</g>
+	</svg>
+	<svg class="at thing" style="--dx: -360; --dy: 96; --w: 230; --h: 360; --s: 0.85" viewBox="-115 -360 230 376">
+		<g stroke={INK} stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-104 0V-280Q-104 -350 0 -350Q104 -350 104 -280V0Z" fill={METAL} />
+			<path d="M-84 0V-268Q-84 -326 0 -326Q84 -326 84 -268V0Z" fill="#c9c0b2" />
+			<circle cx="0" cy="-250" r="34" fill="#e4e8ee" />
+			<path d="M-20 -270q12 -14 30 -14" fill="none" stroke="#fff" stroke-width="5" opacity="0.7" />
+			<circle cx="0" cy="-130" r="28" fill="none" stroke-width="6" />
+			<path d="M0 -158V-102M-28 -130H28" fill="none" stroke-width="4" />
+			<path d="M-104 0h208" fill="none" stroke-width="10" />
+			<path d="M-92 0l16 -10M-60 0l16 -10M-28 0l16 -10M4 0l16 -10M36 0l16 -10M68 0l16 -10" fill="none" stroke="#f2a541" stroke-width="4" />
+		</g>
+	</svg>
+	<svg class="at thing" style="--dx: 730; --dy: 70; --w: 110; --h: 210; --s: 0.9" viewBox="-55 -210 110 226">
+		<g stroke={INK} stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-34 0L-40 -66H40L34 0Z" fill="#7aa6d9" />
+			<path d="M-40 -66H40" fill="none" stroke-width="6" />
+			<path d="M0 -66C-4 -120-40 -150-46 -190C-20 -176-6 -140 0 -110C4 -150 24 -186 50 -200C44 -160 14 -120 0 -66Z" fill="#8fbf7f" />
+			<path d="M-2 -70C-20 -100-34 -120-50 -128M2 -80C18 -110 30 -130 44 -150" fill="none" stroke-width="2" opacity="0.5" />
+		</g>
+	</svg>
+	<svg class="at thing" style="--dx: 0; --dy: -8; --w: 560; --h: 70; --s: 1" viewBox="-280 -70 560 86">
+		<g stroke={INK} stroke-width="3" stroke-linecap="round">
+			<ellipse cx="0" cy="-26" rx="268" ry="34" fill="#ef8f6f" />
+			<ellipse cx="0" cy="-26" rx="214" ry="24" fill="none" stroke={WALL} stroke-width="8" />
+			<ellipse cx="0" cy="-26" rx="150" ry="16" fill="none" stroke="#5fb3a3" stroke-width="8" />
+		</g>
+	</svg>
+	<svg class="at thing" style="--dx: 330; --dy: 96; --w: 600; --h: 250; --s: 0.85" viewBox="-300 -250 600 266">
+		<g stroke={INK} stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-270 -196H270L290 -176H-290Z" fill="#c08a5a" />
+			<path d="M-290 -176H290V-160H-290Z" fill="#a8743f" />
+			<path d="M-266 -160V0M266 -160V0M-246 -160V-8M246 -160V-8" fill="none" stroke-width="7" />
+			<path d="M-266 -160V0M266 -160V0" fill="none" stroke={METAL} stroke-width="2" />
+			<rect x="120" y="-150" width="120" height="96" rx="6" fill="#a8743f" />
+			<path d="M120 -102h120M170 -128h20M170 -80h20" fill="none" stroke-width="2.4" />
+			<path d="M-180 -196l40 -6M60 -196l50 -6" fill="none" stroke-width="1.6" opacity="0.4" />
+		</g>
+	</svg>
+	<svg class="at thing" style="--dx: 150; --dy: 40; --w: 170; --h: 270; --s: 0.9" viewBox="-85 -270 170 286">
+		<g stroke={INK} stroke-width="3" stroke-linecap="round" stroke-linejoin="round">
+			<path d="M-46 -260Q-56 -170-40 -120H40Q56 -170 46 -260Q0 -276-46 -260Z" fill="#3d3731" />
+			<path d="M-30 -240Q0 -250 30 -240V-150H-30Z" fill="#ef8f6f" />
+			<path d="M-56 -120H56L50 -96H-50Z" fill="#3d3731" />
+			<path d="M0 -96V-36M-50 -16L0 -36L50 -16M-64 -150v40M64 -150v40" fill="none" stroke-width="6" />
+			<circle cx="-50" cy="-10" r="7" fill={METAL} />
+			<circle cx="50" cy="-10" r="7" fill={METAL} />
+			<circle cx="0" cy="-6" r="7" fill={METAL} />
+		</g>
+	</svg>
+
+	<Hobbies />
+</div>
+
+<style>
+	/* Out of sight until the camera comes in through the dome's window; launch.ts fades and scales it. */
+	.base {
+		position: absolute;
+		inset: 0;
+		z-index: 5;
+		overflow: hidden;
+		pointer-events: none;
+		visibility: hidden;
+		opacity: 0;
+		transform-origin: 0 0;
+		background: #ece6da;
+	}
+
+	.base-defs {
+		position: absolute;
+	}
+
+	.base-boil {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		animation: room-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.base-boil + .base-boil {
+		opacity: 0;
+	}
+
+	@keyframes room-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	/* Anything standing in the room: --dx units across from his spot, its foot --dy units further back
+	   (up the screen), drawn --s times his scale because it is that much further from the camera. Phones
+	   fold the room in round him (--fold) and shrink it a little (--shrink). */
+	.base {
+		--fold: 1;
+		--shrink: 1;
+	}
+
+	.base :global(.at) {
+		position: absolute;
+		left: calc(var(--fx, 50vw) + var(--dx) * var(--u, 1px) * var(--fold));
+		top: calc(var(--fy, 95vh) - var(--dy) * var(--u, 1px));
+		width: calc(var(--w) * var(--u, 1px) * var(--s, 1) * var(--shrink));
+		height: calc((var(--h) + 16) * var(--u, 1px) * var(--s, 1) * var(--shrink));
+		translate: -50% calc(-100% + 16 * var(--u, 1px) * var(--s, 1) * var(--shrink));
+		overflow: visible;
+	}
+
+	/* Furniture boils like the rest of the ink; the hobbies boil inside themselves so their tags stay sharp. */
+	.base :global(.thing) {
+		filter: url(#doodle-frame-1);
+		animation: var(--ink-boil);
+	}
+
+	@media (max-width: 767px) {
+		.base {
+			--fold: 0.5;
+			--shrink: 0.7;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.base-boil,
+		.base :global(.thing) {
+			animation: none;
+		}
+	}
+</style>

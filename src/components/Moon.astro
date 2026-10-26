@@ -1,0 +1,269 @@
+---
+// The off-duty moon past the solar system: a small cratered world along the bottom of the screen with the Earth
+// in its sky, and his base on it. Inked three times and boiled like the meadow (see Meadow.astro).
+// src/lib/launch.ts slides it in from the right when the rocket flies on from the work, then pushes in through
+// the dome's window to his room (Base.astro).
+const frames = [0, 1, 2];
+const f = (v: number) => v.toFixed(1);
+
+let seed = 31;
+const rnd = () => {
+	seed = (seed * 9301 + 49297) % 233280;
+	return seed / 233280;
+};
+
+// The moon is a small world: its surface is the top of a big circle, so its edges curve away on both sides
+// and it slides in with a rounded limb rather than a straight cut.
+const MOON = { cx: 800, cy: 1400, r: 1350 };
+const surface = (x: number) => MOON.cy - Math.sqrt(Math.max(0, MOON.r ** 2 - (x - MOON.cx) ** 2));
+const inside = (x: number, y: number, pad = 0) => y > surface(x) + pad;
+
+// Craters: position on the 1600×360 surface, half width, and how flat perspective makes them.
+const craters = [
+	{ x: 300, y: 214, rx: 60, k: 0.18 },
+	{ x: 640, y: 96, rx: 40, k: 0.16 },
+	{ x: 1060, y: 102, rx: 56, k: 0.17 },
+	{ x: 1330, y: 214, rx: 46, k: 0.18 },
+	{ x: 470, y: 250, rx: 98, k: 0.21 },
+	{ x: 930, y: 262, rx: 120, k: 0.22 },
+	{ x: 1250, y: 300, rx: 76, k: 0.22 },
+	{ x: 200, y: 318, rx: 60, k: 0.23 },
+].filter(({ x, y, rx, k }) => inside(x - rx, y, rx * k + 6) && inside(x + rx, y, rx * k + 6));
+const crater = ({ x, y, rx, k }: (typeof craters)[number]) => {
+	const ry = rx * k;
+	const hatch = Array.from({ length: Math.round(rx / 14) }, (_, i) => {
+		const hx = x - rx * 0.55 + i * 14;
+		return `M${f(hx)} ${f(y + ry * 0.2)}l${f(8 + rx * 0.04)} ${f(-ry * 0.7)}`;
+	}).join('');
+	return {
+		rim: `M${f(x - rx)} ${f(y)}A${f(rx)} ${f(ry)} 0 1 0 ${f(x + rx)} ${f(y)}A${f(rx)} ${f(ry)} 0 1 0 ${f(x - rx)} ${f(y)}Z`,
+		lip: `M${f(x - rx * 0.86)} ${f(y + ry * 0.1)}Q${f(x)} ${f(y - ry * 1.5)} ${f(x + rx * 0.86)} ${f(y + ry * 0.1)}`,
+		hatch,
+	};
+};
+
+const rocks = Array.from({ length: 22 }, () => {
+	const x = 40 + rnd() * 1520;
+	const y = 90 + rnd() * 250;
+	if (!inside(x, y, 18)) return '';
+	const s = 4 + ((y - 90) / 250) * 10 + rnd() * 4;
+	return `M${f(x - s)} ${f(y)}Q${f(x - s * 0.9)} ${f(y - s * 0.9)} ${f(x)} ${f(y - s)}Q${f(x + s * 1.1)} ${f(y - s * 0.7)} ${f(x + s)} ${f(y)}Z`;
+});
+const specks = Array.from({ length: 80 }, () => ({ x: rnd() * 1600, y: 80 + rnd() * 270, r: 0.8 + rnd() * 1.6 })).filter(
+	({ x, y }) => inside(x, y, 6),
+);
+const arc = (r: number) => `M${f(MOON.cx - r)} ${MOON.cy}A${r} ${r} 0 0 1 ${f(MOON.cx + r)} ${MOON.cy}`;
+const stars = Array.from({ length: 14 }, () => ({ x: 4 + rnd() * 92, y: 4 + rnd() * 50, s: 0.6 + rnd() * 0.8, kind: rnd() > 0.5 }));
+---
+
+<div class="moon" data-moon aria-hidden="true">
+	<svg class="moon-sky" viewBox="0 0 100 100" preserveAspectRatio="none">
+		{
+			stars.map(({ x, y, s, kind }) =>
+				kind ? (
+					<path d={`M${f(x)} ${f(y - s)}v${f(s * 2)}M${f(x - s)} ${f(y)}h${f(s * 2)}`} vector-effect="non-scaling-stroke" />
+				) : (
+					<circle cx={f(x)} cy={f(y)} r="0.25" vector-effect="non-scaling-stroke" />
+				),
+			)
+		}
+	</svg>
+
+	<svg class="moon-defs" width="0" height="0" focusable="false">
+		<defs>
+			<clipPath id="earth-disc"><circle r="38" /></clipPath>
+			<g id="earth-art">
+				<circle r="38" fill="#7aa6d9" />
+				<g clip-path="url(#earth-disc)">
+					<path d="M-30-14c8-10 20-8 22 0s-6 14 2 20-4 12-14 8-18-14-10-28zM6-30c10-4 22 2 24 10s-8 8-14 6-14-10-10-16zM14 10c8-2 16 4 14 12s-12 10-18 4-2-14 4-16z" fill="#8fbf7f" stroke="#17130f" stroke-width="2.2" />
+					<path d="M8 22l22-26M14 30l22-26M20 36l20-24M-4 34l12-14" stroke="#17130f" stroke-width="1.6" opacity="0.35" />
+				</g>
+				<circle r="38" fill="none" stroke="#17130f" stroke-width="3" />
+				<path d="M-26-18q8-12 22-16" fill="none" stroke="#fff" stroke-width="4" stroke-linecap="round" opacity="0.6" />
+			</g>
+			<!-- The base: a dome on the surface beside the rocket's pad, origin at the foot of the dome's middle. -->
+			<g id="outpost-art" stroke="#17130f" stroke-linecap="round" stroke-linejoin="round">
+				<path d="M-262 0V-96M-262 -96l-40-66M-262 -96l40-66" fill="none" stroke-width="5" />
+				<path d="M-332 -250L-196 -250L-212 -170L-316 -170Z" fill="#7aa6d9" stroke-width="3" />
+				<path d="M-300 -250L-310 -170M-264 -250L-264 -170M-228 -250L-218 -170M-324 -210H-204" fill="none" stroke-width="1.8" />
+				<rect x="-246" y="-96" width="96" height="96" rx="18" fill="#e9e4d8" stroke-width="3" />
+				<path d="M-246 -60H-150M-246 -30H-150" fill="none" stroke-width="1.8" opacity="0.5" />
+				<path d="M-176 0A176 176 0 0 1 176 0Z" fill="#fbf7ef" stroke-width="3.4" />
+				<path d="M-176 0A176 176 0 0 1 176 0" fill="none" stroke-width="1.6" opacity="0.4" transform="translate(0 -8) scale(0.95 0.95)" />
+				<path d="M0 -176Q-90 -150-124 0M0 -176Q90 -150 124 0M0 -176V0M-160 -70Q0 -96 160 -70M-176 -10Q0 -30 176 -10" fill="none" stroke-width="1.8" opacity="0.45" />
+				<path d="M60 -150l50 70" fill="none" stroke-width="1.6" opacity="0.4" />
+				<path d="M110 -136q30 30 36 70" fill="none" stroke-width="1.8" stroke-dasharray="3 12" opacity="0.5" />
+				<circle cx="0" cy="-110" r="34" fill="#f2c46a" stroke-width="3" />
+				<circle cx="0" cy="-110" r="42" fill="none" stroke-width="3" />
+				<path d="M-18 -126q10 -10 24 -10" fill="none" stroke="#fff" stroke-width="5" opacity="0.7" />
+				<path d="M-30 -176V-232M-30 -232l-22 -14M-58 -262Q-30 -232 0 -262Q-30 -250-58 -262Z" fill="#d6cdbf" stroke-width="3" />
+				<rect x="146" y="-214" width="48" height="214" rx="14" fill="#d6cdbf" stroke-width="3" />
+				<rect x="156" y="-194" width="28" height="76" rx="8" fill="#c9c0b2" stroke-width="2.4" />
+				<path d="M146 -96H194M146 -60H194" fill="none" stroke-width="1.8" opacity="0.5" />
+				<path d="M-176 0H190" fill="none" stroke-width="3" />
+				<path d="M-150 0l10 10M-80 0l10 10M60 0l10 10M130 0l10 10" fill="none" stroke-width="2.4" />
+			</g>
+		</defs>
+	</svg>
+
+	<div class="earth">
+		{
+			frames.map((n) => (
+				<svg class="boil" data-bake style={`--f: ${n}`} viewBox="-60 -60 120 120">
+					<use href="#earth-art" filter={`url(#doodle-frame-${n + 1})`} />
+				</svg>
+			))
+		}
+	</div>
+
+	<!-- launch.ts places and sizes the base in his units, and runs the docking tube out from the airlock to the
+	     rocket's hull. The camera pushes in on it, so it is baked at twice the detail (src/lib/bake.ts). -->
+	<div class="outpost" data-outpost>
+		{
+			frames.map((n) => (
+				<svg class="boil" data-bake="2" style={`--f: ${n}`} viewBox="-300 -330 760 350">
+					<use href="#outpost-art" filter={`url(#doodle-frame-${n + 1})`} />
+				</svg>
+			))
+		}
+		<svg class="tube-art" viewBox="-300 -330 760 350">
+			<g class="tube" data-tube>
+				<rect data-tube-body x="190" y="-198" width="100" height="76" rx="8" fill="#d6cdbf" stroke="#17130f" stroke-width="3" />
+				<path data-tube-folds d="" fill="none" stroke="#17130f" stroke-width="1.8" opacity="0.55" />
+			</g>
+		</svg>
+	</div>
+
+	<div class="moon-ground">
+		<svg class="moon-defs" width="0" height="0" focusable="false">
+			<defs>
+				<g id="moon-art" stroke="#17130f" stroke-linecap="round" stroke-linejoin="round">
+					<circle cx={MOON.cx} cy={MOON.cy} r={MOON.r} fill="#e8e3d7" stroke-width="3" />
+					<path d={arc(MOON.r - 7)} fill="none" stroke-width="1.4" stroke-dasharray="90 140 50 600" opacity="0.45" />
+					<circle cx={MOON.cx} cy={MOON.cy + 40} r={MOON.r - 120} fill="#e0dacd" stroke="none" />
+					<path d={arc(MOON.r - 34)} fill="none" stroke-width="1.6" stroke-dasharray="4 16" opacity="0.3" />
+					{
+						craters.map((c) => {
+							const p = crater(c);
+							return (
+								<g>
+									<path d={p.rim} fill="#d4cdbd" stroke-width="2.4" />
+									<path d={p.lip} fill="none" stroke="#f6f2e8" stroke-width="3" />
+									<path d={p.hatch} fill="none" stroke-width="1.4" opacity="0.4" />
+								</g>
+							);
+						})
+					}
+					{rocks.filter(Boolean).map((d) => <path d={d} fill="#cfc7b6" stroke-width="2" />)}
+					{specks.map(({ x, y, r }) => <circle cx={f(x)} cy={f(y)} r={f(r)} fill="#17130f" stroke="none" opacity="0.28" />)}
+				</g>
+			</defs>
+		</svg>
+		{
+			frames.map((n) => (
+				<svg class="boil" data-bake style={`--f: ${n}`} viewBox="0 0 1600 360" preserveAspectRatio="xMidYMax slice">
+					<use href="#moon-art" filter={`url(#doodle-frame-${n + 1})`} />
+				</svg>
+			))
+		}
+	</div>
+</div>
+
+<style>
+	/* Off to the right until the rocket brings it in; launch.ts sets its transform and visibility. Its translate3d
+	   keeps it on its own layer; no will-change, or Chrome keeps it rastered at the push's 7x and runs out of tile
+	   memory once the camera pulls back, dropping the whole moon for a frame at every boil step. */
+	.moon {
+		position: absolute;
+		inset: 0;
+		z-index: 0;
+		pointer-events: none;
+		visibility: hidden;
+		transform-origin: 0 0;
+	}
+
+	.moon-sky {
+		position: absolute;
+		inset: 0;
+		width: 100%;
+		height: 62%;
+		fill: #17130f;
+		stroke: #17130f;
+		stroke-width: 1.6;
+		stroke-linecap: round;
+		opacity: 0.4;
+	}
+
+	.earth {
+		position: absolute;
+		top: 16%;
+		right: 14%;
+		width: clamp(56px, 7vw, 96px);
+		aspect-ratio: 1;
+	}
+
+	.outpost {
+		position: absolute;
+		top: 0;
+		left: 0;
+		z-index: 1;
+	}
+
+	.tube-art {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+	}
+
+	.tube {
+		transform-box: view-box;
+	}
+
+	.moon-ground {
+		position: absolute;
+		inset: auto 0 0;
+		height: 40vh;
+	}
+
+	.moon-defs {
+		position: absolute;
+	}
+
+	/* The same cheap boil as the meadow: three inked copies, only which one shows changes. */
+	.boil {
+		animation: moon-boil 0.375s steps(1) calc(var(--f) * -0.125s) infinite;
+	}
+
+	.boil {
+		position: absolute;
+		inset: 0;
+		display: block;
+		width: 100%;
+		height: 100%;
+		overflow: visible;
+		will-change: opacity;
+	}
+
+	.boil + .boil {
+		opacity: 0;
+	}
+
+	@keyframes moon-boil {
+		0% {
+			opacity: 1;
+		}
+		33.4%,
+		100% {
+			opacity: 0;
+		}
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.boil {
+			animation: none;
+		}
+	}
+</style>
