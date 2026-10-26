@@ -1,9 +1,10 @@
 import { Actor } from '../lib/actor';
-import { bake } from '../lib/bake';
+import { bake, bakeDone } from '../lib/bake';
 import { DoodleCursor } from '../lib/cursor';
 import { HungDom } from '../lib/hung';
 import { Flyers } from '../lib/flyers';
 import { bindInkLinks } from '../lib/ink';
+import { onShown, ready } from '../lib/loader';
 
 const reduced = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const root = document.querySelector<HTMLElement>('[data-flyers]') ?? document.body;
@@ -14,12 +15,13 @@ const cursorEl = document.querySelector<HTMLElement>('.cursor');
 const cursor = cursorEl ? new DoodleCursor(cursorEl) : null;
 const flyers = new Flyers(root);
 
-// Info: he waves as the bubble pops, then breathes, blinks and follows the pointer; hover him for another wave.
+// Info: he waves as the bubble pops (once the page is shown), then breathes, blinks and follows the pointer; hover
+// him for another wave.
 const wave = document.querySelector<SVGSVGElement>('[data-wave]');
 const actor = wave ? new Actor(reduced) : null;
 const pose = wave ? new HungDom(wave.querySelector<SVGGElement>('[data-hung]')!) : null;
 if (wave && actor) {
-	window.setTimeout(() => actor.greet(3), 650);
+	onShown(() => window.setTimeout(() => actor.greet(3), 650));
 	let again = 0;
 	wave.parentElement!.addEventListener('pointerenter', () => {
 		if (performance.now() < again || actor.waving) return;
@@ -53,4 +55,4 @@ const loop = (now: number) => {
 };
 requestAnimationFrame(loop);
 
-document.documentElement.classList.add('is-ready');
+ready(bakeDone());

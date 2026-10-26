@@ -1,5 +1,6 @@
 ---
 import '../styles/global.css';
+import Loader from '../components/Loader.astro';
 
 interface Props {
 	title?: string;
@@ -7,6 +8,11 @@ interface Props {
 }
 
 const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = Astro.props;
+
+// Shantell Sans. Fetched without holding up the first paint, so the loading sheet is up at once and waits for it there;
+// a later load in the visit (`.warm`) takes it from the cache as an ordinary stylesheet, so nothing shows in the fallback.
+const FONTS =
+	'https://fonts.googleapis.com/css2?family=Shantell+Sans:ital,wght,INFM@0,300..800,0..100;1,300..800,0..100&display=swap';
 ---
 
 <!doctype html>
@@ -24,9 +30,14 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
-			href="https://fonts.googleapis.com/css2?family=Shantell+Sans:ital,wght,INFM@0,300..800,0..100;1,300..800,0..100&display=swap"
-			rel="stylesheet"
+			rel="preload"
+			as="style"
+			href={FONTS}
+			data-fonts
+			onload="this.onload=null;this.rel='stylesheet'"
+			onerror="this.dataset.failed=''"
 		/>
+		<noscript><link rel="stylesheet" href={FONTS} /></noscript>
 		{['/', '/info', '/contact'].filter((href) => href !== { stage: '/', info: '/info', contact: '/contact' }[page]).map((href) => <link rel="prefetch" href={href} />)}
 		<title>{title}</title>
 		<script is:inline>
@@ -39,8 +50,17 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 					document.documentElement.style.setProperty('--ink-arrive', ink);
 					document.documentElement.classList.add('ink-arrive');
 				}
+				// The loading sheet (Loader.astro) is for the first load of a visit; later ones find it all in the cache.
+				if (ink || sessionStorage.getItem('loaded')) {
+					document.documentElement.classList.add('warm');
+					document.querySelector('link[data-fonts]').rel = 'stylesheet';
+				}
 			} catch {}
-			setTimeout(() => document.documentElement.classList.add('is-ready'), 4500);
+			// Shows the page should its scripts never run (past the loading sheet's latest, when it is up).
+			setTimeout(
+				() => document.documentElement.classList.add('is-ready'),
+				document.documentElement.classList.contains('warm') ? 4500 : 10000,
+			);
 		</script>
 	</head>
 	<body>
@@ -89,6 +109,7 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 			// SMIL ignores reduced motion, so hold the boiling filters on their first frame.
 			if (matchMedia('(prefers-reduced-motion: reduce)').matches) document.currentScript.previousElementSibling.pauseAnimations();
 		</script>
+		<Loader />
 		<slot />
 	</body>
 </html>

@@ -116,6 +116,9 @@ async function bakeOne(svg: SVGSVGElement) {
 
 let queue = Promise.resolve();
 
+/** Resolves once the copies queued so far are drawn (at once outside Safari). */
+export const bakeDone = () => queue;
+
 function run(svgs: SVGSVGElement[]) {
 	// One at a time, so a phone gets frames in between.
 	for (const svg of svgs) queue = queue.then(() => bakeOne(svg).catch(() => {}));
