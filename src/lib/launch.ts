@@ -55,6 +55,8 @@ const STRIDE_LIFT = 26;
 const BEAT = 0.31;
 // A stroll across his room turns to go, head first, and takes its first step this long after setting off.
 const TURN = 0.12;
+// How far he dips (his units) before a turn: the anticipation that makes a turn read.
+const DIP = 6;
 // The share of a side-on step the back foot stays down, its heel rising, while the front one takes his weight.
 const HEEL_OFF = 0.16;
 // Of the rise between his feet on a walk into the distance, the share left for his knees; the rest foreshortens
@@ -145,7 +147,7 @@ const MOON_IN = {
 	portOff: [2.25, 2.4],
 	zoom: [2.35, 3.15],
 	room: [2.75, 3.15],
-	// The three strides between the airlock and his spot (two on a phone).
+	// Three strides from the airlock at the walk's beat; a phone folds the room to two, slower, as on the meadow.
 	walk: [3.15, 3.15 + 3 * BEAT],
 	face: [3.15 + 3 * BEAT, 3.25 + 3 * BEAT],
 	end: 3.3 + 3 * BEAT,
@@ -580,7 +582,7 @@ export class Launch {
 		// A small dip before each turn, the anticipation that makes a turn read.
 		const dip = up ? pulse(t, 0, UP.turn[1]) + pulse(t, UP.face[0] - 0.04, UP.face[1]) : pulse(t, ...(DOWN.turn as [number, number])) + pulse(t, ...(DOWN.face as [number, number]));
 		const at = this.stand(p, t);
-		p.bob += dip * 6;
+		p.bob += dip * DIP;
 		if (p.body === 'side' && (up ? t < UP.walk[0] || t > UP.walk[1] : t < DOWN.walk[0] || t > DOWN.walk[1])) {
 			p.feet = rest('side').feet;
 			p.hands = rest('side').hands;
@@ -614,7 +616,7 @@ export class Launch {
 		}
 		const at = this.stand(p, t);
 		// The dip before a turn, as on the meadow.
-		p.bob += (up ? pulse(t, 0, w0) : pulse(t, ...(MOON_IN.face as [number, number]))) * 6;
+		p.bob += (up ? pulse(t, 0, w0) : pulse(t, ...(MOON_IN.face as [number, number]))) * DIP;
 		if (p.body === 'side' && (t < w0 || t > w1)) {
 			p.feet = rest('side').feet;
 			p.hands = rest('side').hands;
@@ -650,7 +652,7 @@ export class Launch {
 			];
 		}
 		const at = this.stand(p, Math.min(t, st.end));
-		p.bob += (pulse(t, 0, TURN) + pulse(t, st.land, st.end - 0.06)) * 6;
+		p.bob += (pulse(t, 0, TURN) + pulse(t, st.land, st.end - 0.06)) * DIP;
 		if (p.body === 'side' && t < TURN) {
 			p.feet = rest('side').feet;
 			p.hands = rest('side').hands;
@@ -847,6 +849,13 @@ export class Launch {
 		else el.setAttribute('transform', value);
 	}
 
+	private flag(key: string, el: Element, cls: string, on: boolean) {
+		const value = String(on);
+		if (this.last[key] === value) return;
+		this.last[key] = value;
+		el.classList.toggle(cls, on);
+	}
+
 	// `pointer` is the pointer in px, or null when there is none to follow.
 	update(dt: number, now: number, pointer: { x: number; y: number } | null) {
 		this.clock += dt;
@@ -895,12 +904,7 @@ export class Launch {
 			this.set(`s${i}`, el, 'transform', sky);
 			this.set(`sv${i}`, el, 'opacity', meadowY > this.h * 0.8 ? '0' : '1');
 		});
-		// Into the base: the camera pushes in through the dome's window and his room opens out of its glass. The room
-		// keeps its size: scaled in, each of its inked copies was filtered again at every frame's scale, and the ones
-		// not redrawn in time dropped out for a frame. A copy is only drawn the first time it shows, so the room is
-		// up, all but transparent, from when the tube runs out, and every copy has shown before it opens. It keeps
-		// its circle throughout, as dropping the clip has the browser lay the room out in layers afresh, blank for a
-		// frame.
+		// Into the base: the camera pushes in through the dome's window and his room opens out of it.
 		const view = this.baseView(t);
 		const W = { x: this.dome.x, y: this.dome.y - 110 * U };
 		const push = view.zoom === 1 ? '' : `translate(${W.x.toFixed(1)}px, ${W.y.toFixed(1)}px) scale(${view.zoom.toFixed(3)}) translate(${(-W.x).toFixed(1)}px, ${(-W.y).toFixed(1)}px) `;
@@ -908,27 +912,9 @@ export class Launch {
 		this.set('moon', this.els.moon, 'transform', `${push}translate3d(${(moonX + sx).toFixed(1)}px, ${sy.toFixed(1)}px, 0)`);
 		this.set('moonOn', this.els.moon, 'shown', moonX < this.w * 1.02 && outside ? 'visible' : 'hidden');
 		this.set('tube', this.outpost.tube as unknown as Styled, 'attr', `translate(190 0) scale(${Math.max(0.001, view.tube).toFixed(3)} 1) translate(-190 0)`);
-		const far = Math.hypot(Math.max(W.x, this.w - W.x), Math.max(W.y, this.h - W.y)) + 8;
-		const open = view.room > 0;
-		const warm = open || (onMoon && this.phase === 'down' && t >= MOON_IN.tube[0]);
-		const r = open ? far * view.room : far;
-		this.set('baseClip', this.els.base, 'clip', `circle(${r.toFixed(1)}px at ${W.x.toFixed(1)}px ${W.y.toFixed(1)}px)`);
-		this.set('baseFade', this.els.base, 'opacity', open ? '1' : '0.01');
-		this.set('baseOn', this.els.base, 'shown', warm ? 'visible' : 'hidden');
-		if (this.els.base.inert === open) this.els.base.inert = !open;
-		// As the room closes the moon is drawn afresh at every step of the pull back, and the browser makes room for
-		// it by dropping the room's copies that are not showing; so the room stops boiling, or it would flick to a
-		// dropped one.
-		const closing = onMoon && this.phase === 'up' && outside;
-		if (this.last.closing !== String(closing)) {
-			this.last.closing = String(closing);
-			this.els.base.classList.toggle('is-closing', closing);
-		}
+		this.drawBase(t, view, W, outside);
 		this.set('smoke', this.els.smoke as unknown as Styled, 'transform', `${push}translate3d(${(ground.x + sx).toFixed(1)}px, ${(ground.y + sy).toFixed(1)}px, 0)`);
-		if (this.last.dust !== String(onMoon)) {
-			this.last.dust = String(onMoon);
-			this.els.smoke.classList.toggle('is-dust', onMoon);
-		}
+		this.flag('dust', this.els.smoke, 'is-dust', onMoon);
 		this.set('pad', this.els.pad, 'transform', `translate3d(${(this.R.x - 200 * U + sx).toFixed(1)}px, ${(this.R.y - 20 * U + meadowY + sy).toFixed(1)}px, 0)`);
 
 		this.drawRocket(t, now, amp, ground, sx, sy, view.zoom, W, outside);
@@ -941,6 +927,29 @@ export class Launch {
 			this.drawSmoke(now, dt);
 		}
 		this.drawFigure(t, dt, ground, sx, sy, pointer);
+	}
+
+	// His room opens out of the dome window at its own size: scaled, its inked copies were filtered again at every
+	// scale and blinked out. A copy is drawn when first shown, so the room is up all but transparent from when the
+	// tube starts out; and it keeps its circle, as dropping the clip re-layers it blank for a frame.
+	private drawBase(t: number, view: { zoom: number; room: number }, W: { x: number; y: number }, outside: boolean) {
+		const onMoon = this.place === 'moon';
+		const base = this.els.base;
+		const far = Math.hypot(Math.max(W.x, this.w - W.x), Math.max(W.y, this.h - W.y)) + 8;
+		const open = view.room > 0;
+		const warm = open || (onMoon && this.phase === 'down' && t >= MOON_IN.tube[0]);
+		const r = open ? far * view.room : far;
+		this.set('baseClip', base, 'clip', `circle(${r.toFixed(1)}px at ${W.x.toFixed(1)}px ${W.y.toFixed(1)}px)`);
+		this.set('baseFade', base, 'opacity', open ? '1' : '0.01');
+		this.set('baseOn', base, 'shown', warm ? 'visible' : 'hidden');
+		if (base.inert === open) base.inert = !open;
+		// Closing, it holds still: the moon redrawn at each step pushes its hidden copies out of memory.
+		this.flag('closing', base, 'is-closing', onMoon && this.phase === 'up' && outside);
+		// Pushed in, the moon's ink stops boiling and goes (big, it starved the room's), and going in it is scaled as
+		// drawn; held at 7x on the way out it would run out of tile memory.
+		const zoomed = view.zoom > 1.02;
+		this.flag('moonZoomed', this.els.moon, 'is-zoomed', zoomed);
+		this.flag('moonPushing', this.els.moon, 'is-pushing', zoomed && this.phase === 'down');
 	}
 
 	private drawRocket(
@@ -970,35 +979,18 @@ export class Launch {
 		const st = this.stretch(t);
 		const k = rp.scale * zoom;
 		// Pushed in past it, it is off the screen; and while the camera moves in or out its rough ink edge is
-		// left off, since filtering it that big costs whole frames. The moon's ink stops boiling and goes too: its
-		// filtered copies that big took the tile memory his room needs, and the room blinked out at every boil step.
-		// On the way in the moon and the rocket are scaled up as they were drawn at the start of the push (they only
-		// get bigger); on the way out they are drawn afresh, or the browser would keep them at the push's 7x as they
-		// came back into view whole.
+		// left off, since filtering it that big costs whole frames.
 		this.set('rocketOn', this.els.rocket, 'shown', outside && bx - 200 * U * k < this.w ? 'visible' : 'hidden');
 		const zoomed = zoom > 1.02;
-		if (this.last.zoomed !== String(zoomed)) {
-			this.last.zoomed = String(zoomed);
-			this.els.rocket.classList.toggle('is-zoomed', zoomed);
-			this.els.moon.classList.toggle('is-zoomed', zoomed);
-		}
-		const pushing = zoomed && this.phase === 'down';
-		if (this.last.pushing !== String(pushing)) {
-			this.last.pushing = String(pushing);
-			this.els.moon.classList.toggle('is-pushing', pushing);
-			this.els.rocket.classList.toggle('is-pushing', pushing);
-		}
+		this.flag('zoomed', this.els.rocket, 'is-zoomed', zoomed);
+		this.flag('pushing', this.els.rocket, 'is-pushing', zoomed && this.phase === 'down');
 		this.set(
 			'rocket',
 			this.els.rocket,
 			'transform',
 			`translate3d(${x.toFixed(1)}px, ${y.toFixed(1)}px, 0) rotate(${(rp.angle + bobA).toFixed(2)}deg) scale(${(k * (1 - st * 0.6)).toFixed(3)}, ${(k * (1 + st)).toFixed(3)})`,
 		);
-		const flying = !onPad && this.phase !== 'ground';
-		if (this.last.flying !== String(flying)) {
-			this.last.flying = String(flying);
-			this.els.rocket.classList.toggle('is-flying', flying);
-		}
+		this.flag('flying', this.els.rocket, 'is-flying', !onPad && this.phase !== 'ground');
 
 		const thr = this.throttle(t);
 		if (now - this.flickAt > 70) {
