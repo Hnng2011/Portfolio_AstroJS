@@ -304,6 +304,11 @@ const pins = [
 		border-radius: inherit;
 		background: #fbf7ef;
 		filter: url(#doodle-frame-1);
+	}
+
+	/* Only a tag that is up boils. */
+	.hobby:hover .hobby-label::before,
+	.hobby:focus-visible .hobby-label::before {
 		animation: var(--ink-boil);
 	}
 

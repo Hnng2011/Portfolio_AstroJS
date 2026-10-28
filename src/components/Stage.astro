@@ -327,6 +327,11 @@ const puffs = Array.from({ length: 26 }, () => {
 		filter: brightness(var(--lit, 1));
 	}
 
+	/* Pulled back out of the moon base, it is drawn afresh at each step (launch.ts). */
+	.rocket:global(.is-zoomed:not(.is-pushing)) {
+		will-change: auto;
+	}
+
 	.rocket {
 		z-index: 4;
 	}
