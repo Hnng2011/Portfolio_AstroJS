@@ -251,6 +251,20 @@ const stars = Array.from({ length: 14 }, () => ({ x: 4 + rnd() * 92, y: 4 + rnd(
 		opacity: 0;
 	}
 
+	/* While the camera is pushed in on the base, one copy shows, without its ink; and as it pushes in, the moon is
+	   scaled as it was drawn rather than drawn again at every step (launch.ts). */
+	.moon:global(.is-pushing) {
+		will-change: transform;
+	}
+
+	.moon:global(.is-zoomed) .boil {
+		animation: none;
+	}
+
+	.moon:global(.is-zoomed) .boil use {
+		filter: none;
+	}
+
 	@keyframes moon-boil {
 		0% {
 			opacity: 1;
