@@ -13,6 +13,11 @@ const { title = 'Phi Hung — Creative Frontend Engineer', page = 'stage' } = As
 // a later load in the visit (`.warm`) takes it from the cache as an ordinary stylesheet, so nothing shows in the fallback.
 const FONTS =
 	'https://fonts.googleapis.com/css2?family=Shantell+Sans:ital,wght,INFM@0,300..800,0..100;1,300..800,0..100&display=swap';
+const description =
+	'Phi Hung — frontend engineer in Vietnam building product UI for dashboards, research tooling and Web3 with React, Next.js and TypeScript.';
+const site = Astro.site ?? new URL('https://hnng.site');
+const pageUrl = new URL(Astro.url.pathname, site).href;
+const ogImage = new URL('/og.png', site).href;
 ---
 
 <!doctype html>
@@ -23,10 +28,22 @@ const FONTS =
 		<meta name="theme-color" content="#f0e9dc" />
 		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 		<meta name="generator" content={Astro.generator} />
-		<meta
-			name="description"
-			content="Phi Hung — frontend engineer in Vietnam building product UI for dashboards, research tooling and Web3 with React, Next.js and TypeScript."
-		/>
+		<meta name="description" content={description} />
+		<link rel="canonical" href={pageUrl} />
+		<meta property="og:type" content="website" />
+		<meta property="og:site_name" content="Phi Hung" />
+		<meta property="og:title" content={title} />
+		<meta property="og:description" content={description} />
+		<meta property="og:url" content={pageUrl} />
+		<meta property="og:image" content={ogImage} />
+		<meta property="og:image:type" content="image/png" />
+		<meta property="og:image:width" content="1200" />
+		<meta property="og:image:height" content="630" />
+		<meta property="og:image:alt" content="A doodle of Phi Hung standing in a meadow beside a rocket whose door is labelled “my work”, next to the words Creative Frontend Engineer." />
+		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={title} />
+		<meta name="twitter:description" content={description} />
+		<meta name="twitter:image" content={ogImage} />
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 		<link
